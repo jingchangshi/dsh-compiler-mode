@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "description": "AI Compiler Engineering agent preset for DSH: PTC base + native spill/compaction + LSP + Agent Teams.",
+  "exports": {
+    ".": "./package.json",
+    "./plugins/agentgates-policy": "./plugins/agentgates-policy/index.ts"
+  },
   "dsh": {
     "bundle": {
       "patch": [

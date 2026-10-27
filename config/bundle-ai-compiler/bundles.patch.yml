@@ -91,11 +91,15 @@
     # and reports that verdict. Duplicating the Python verification here would
     # create a second authority that could disagree with the receipt.
     #
+    # The row resolves through the bundle's own package exports map, so the
+    # row names a stable module id rather than a filesystem path: moving this
+    # checkout cannot leave the policy unresolvable.
+    #
     # It is inert for tasks that declare no agentgates requirement: the Team
     # domain never consults a policy for a task without requirements, so this
     # row cannot force a build onto ordinary tasks.
     - id: agentgates-completion-policy
-      name: './plugins/agentgates-policy/index.ts'
+      name: '@local/dsh-ai-compiler-preset/plugins/agentgates-policy'
       config:
         python: !!js process.env.AGENT_GATES_MCP_PYTHON ?? '/home/s00653124/workspace/AgentGates/.venv/bin/python'
         packageRoot: !!js process.env.AGENT_GATES_ROOT ?? '/home/s00653124/workspace/AgentGates'

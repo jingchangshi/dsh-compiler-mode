@@ -22,7 +22,7 @@ import { existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
-import { createPolicy, REJECTION_CODES, REQUIREMENT_KIND } from '../../plugins/agentgates-policy/index.ts'
+import { createPolicy, REJECTION_CODES, REQUIREMENT_KIND } from '../../config/bundle-ai-compiler/plugins/agentgates-policy/index.ts'
 
 const run = promisify(execFile)
 const here = dirname(fileURLToPath(import.meta.url))
