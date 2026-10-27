@@ -6,41 +6,41 @@
   "steps": [
     {
       "step": "create",
-      "at": 34,
+      "at": 36,
       "value": {
-        "sessionId": "session-fc876d5c-053a-4ca7-9e15-77bbeef3753b",
+        "sessionId": "session-54abca98-dd67-4401-9fa7-819e6c8ab17f",
         "agentPreset": "ai-compiler"
       }
     },
     {
       "step": "prompt",
-      "at": 53,
+      "at": 52,
       "value": {
         "accepted": true
       }
     },
     {
       "step": "idle",
-      "at": 3083,
+      "at": 3077,
       "projections": {
         "kind": "sequenced",
         "asOfSeq": 18,
         "values": {
-          "title": "Smoke test reply request",
+          "title": "Reply exactly with SMOKE_OK",
           "goal": null,
           "tokenUsage": {
-            "uncachedInputTokens": 460,
+            "uncachedInputTokens": 412,
             "outputTokens": 4,
-            "cacheReadTokens": 11392,
+            "cacheReadTokens": 11776,
             "cacheWriteTokens": 0
           },
           "contextPressure": {
-            "pressureTokens": 11852,
-            "projectedTokens": 11862,
+            "pressureTokens": 12188,
+            "projectedTokens": 12198,
             "contextWindow": 1048576
           },
           "contextBreakdown": {
-            "systemTokens": 11217,
+            "systemTokens": 11538,
             "toolsTokens": 628,
             "messageTokens": 315
           },
@@ -68,11 +68,11 @@
           "sessionStats": {
             "turns": 1,
             "steps": 1,
-            "llmMs": 2414,
+            "llmMs": 1939,
             "toolMs": 0,
-            "ttftMs": 2273,
+            "ttftMs": 1747,
             "ttftSteps": 1,
-            "decodeMs": 141,
+            "decodeMs": 192,
             "decodeTokens": 4
           },
           "subagentCatalog": [],
@@ -83,7 +83,7 @@
           "agentTeam": {
             "members": [
               {
-                "id": "session-fc876d5c-053a-4ca7-9e15-77bbeef3753b",
+                "id": "session-54abca98-dd67-4401-9fa7-819e6c8ab17f",
                 "name": "lead",
                 "role": "lead",
                 "phase": "active"
@@ -108,7 +108,7 @@
           },
           "sessionListMetadata": {
             "blank": false,
-            "lastPromptAt": 1793093678949
+            "lastPromptAt": 1793095110525
           },
           "imageLimits": {
             "maxImageBytes": 20971520,
@@ -128,15 +128,15 @@
     }
   ],
   "rpc": [],
-  "sessionId": "session-fc876d5c-053a-4ca7-9e15-77bbeef3753b",
+  "sessionId": "session-54abca98-dd67-4401-9fa7-819e6c8ab17f",
   "agentPreset": "ai-compiler",
   "lastEvent": {
-    "type": "turn/end",
+    "type": "session/title",
     "seq": 18
   },
   "transcript": [
     {
-      "seq": 16,
+      "seq": 15,
       "text": "SMOKE_OK"
     }
   ],
@@ -144,21 +144,21 @@
   "sessionStats": {
     "turns": 1,
     "steps": 1,
-    "llmMs": 2414,
+    "llmMs": 1939,
     "toolMs": 0,
-    "ttftMs": 2273,
+    "ttftMs": 1747,
     "ttftSteps": 1,
-    "decodeMs": 141,
+    "decodeMs": 192,
     "decodeTokens": 4
   },
   "tokenUsage": {
-    "uncachedInputTokens": 460,
+    "uncachedInputTokens": 412,
     "outputTokens": 4,
-    "cacheReadTokens": 11392,
+    "cacheReadTokens": 11776,
     "cacheWriteTokens": 0
   },
   "contextBreakdown": {
-    "systemTokens": 11217,
+    "systemTokens": 11538,
     "toolsTokens": 628,
     "messageTokens": 315
   },
@@ -170,7 +170,7 @@
       "response": "SMOKE_OK"
     }
   ],
-  "elapsedMs": 3086,
+  "elapsedMs": 3081,
   "status": "PASS",
   "sessionEvidence": {
     "eventCount": 19,
@@ -196,8 +196,8 @@
     "errors": [],
     "header": {
       "version": 4,
-      "id": "session-fc876d5c-053a-4ca7-9e15-77bbeef3753b",
-      "createdAt": 1793093678897,
+      "id": "session-54abca98-dd67-4401-9fa7-819e6c8ab17f",
+      "createdAt": 1793095110477,
       "cwd": "/home/s00653124/workspace/dsh-compiler-mode",
       "isSeeded": false,
       "delegationDepth": 0,
