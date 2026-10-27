@@ -215,8 +215,12 @@ resulting acceptance method: `docs/05-permissions.md`.
 - **Compiler Adapter**: a future host- or preset-scoped provider that registers additional tools
   (e.g. IR dump analysis) through the ordinary `ctx.tools.register` path. No protocol is defined
   here because none has been validated.
-- **MCP / external tool providers**: already reachable through the shipped `mcp-resources` host row;
-  `ai-compiler` adds nothing.
+- **MCP / external tool providers**: `ai-compiler` DOES add one, and it is no longer reserved: the
+  compiler presets mount `@deepseek-ai/dsh-mcp-client` as `mcp-agentgates` to reach the AgentGates
+  gate server over stdio. It is preset-scoped rather than host-scoped precisely so the other modes
+  cannot see the gate tools. Cost, visibility and the measured numbers: `docs/10-mcp-wiring.md`.
+- **Other MCP servers**: any further `mcp-*` row may be added the same way; the shipped
+  `mcp-resources` host row remains the way to bridge resources rather than tools.
 - **Multi-writer Worktree isolation**: `@deepseek-ai/dsh-experimental-tool-worktree` exists as an
   official optional bundle; it is documented in `docs/08-compatibility.md` but is not a dependency of
   this mode.

@@ -36,9 +36,14 @@ if [ "$dry" = 0 ]; then
   say "backup   : $backup"
 fi
 
-# 2. lsp-stdio / tool-lsp are not dependencies of the rc.3 installation, so the
-#    profile must carry them itself. `dsh plugin add --link` writes the link.
-for pkg in lsp/lsp lsp/lsp-stdio lsp/tool-lsp; do
+# 2. lsp-stdio / tool-lsp / mcp-client are not dependencies of the rc.3
+#    installation, so the profile must carry them itself. `dsh plugin add --link`
+#    writes the link.
+#
+#    mcp-client is what mounts the AgentGates gate server (the mcp-agentgates
+#    row inside each compiler preset). Without this link that row cannot import
+#    and the compiler modes would silently have no gate tools at all.
+for pkg in lsp/lsp lsp/lsp-stdio lsp/tool-lsp mcp/mcp-client; do
   name="@deepseek-ai/dsh-${pkg##*/}"
   if node -e "process.exit(Object.keys(require('$profile_dir/package.json').dependencies||{}).includes('$name')?0:1)"; then
     say "dep      : $name already present"
@@ -49,6 +54,53 @@ for pkg in lsp/lsp lsp/lsp-stdio lsp/tool-lsp; do
     say "dep      : added $name"
   fi
 done
+
+# 2b. Locate the AgentGates gate server and record it for the preset row.
+#
+#     The row resolves its command from AGENT_GATES_MCP_PYTHON (an !!js
+#     expression evaluated against the DSH process environment), so the machine
+#     parameter stays out of the delivered YAML and out of any shell string. The
+#     value is written to $DSH_HOME/.env, which the launcher loads as the USER
+#     env layer -- one file for every profile.
+#
+#     Both variables are written together: a server reading a different config
+#     than the operator's `agent-gates` CLI would answer about the wrong
+#     instance, which is worse than not starting.
+agentgates_repo="${AGENT_GATES_REPO:-$repo/../AgentGates}"
+ag_python="${AGENT_GATES_MCP_PYTHON:-$agentgates_repo/.venv/bin/python}"
+ag_config="${AGENT_GATES_CONFIG:-$HOME/.config/agent-gates/config.toml}"
+dsh_env="${DSH_HOME:-$HOME/.dsh}/.env"
+if [ ! -x "$ag_python" ]; then
+  say "gates    : WARNING no interpreter at $ag_python — the bridge will not start"
+  say "gates    : set AGENT_GATES_REPO or AGENT_GATES_MCP_PYTHON and re-run"
+elif [ "$dry" = 1 ]; then
+  say "gates    : would record AGENT_GATES_MCP_PYTHON=$ag_python"
+  say "gates    : would record AGENT_GATES_CONFIG=$ag_config"
+else
+  # Rewrite only these two names; every other line in the user env layer is the
+  # operator's own and is preserved verbatim.
+  node - "$dsh_env" "$ag_python" "$ag_config" <<'NODE'
+const { readFileSync, writeFileSync, existsSync, mkdirSync } = require('node:fs')
+const { dirname } = require('node:path')
+const [path, python, config] = process.argv.slice(2)
+const wanted = { AGENT_GATES_MCP_PYTHON: python, AGENT_GATES_CONFIG: config }
+const kept = existsSync(path)
+  ? readFileSync(path, 'utf8').split('\n').filter(line => (line.split('=')[0] in wanted) === false)
+  : []
+while (kept.length > 0 && kept[kept.length - 1].trim() === '') kept.pop()
+for (const [name, value] of Object.entries(wanted)) kept.push(name + '=' + value)
+mkdirSync(dirname(path), { recursive: true })
+writeFileSync(path, kept.join('\n') + '\n')
+console.log('gates    : recorded in ' + path)
+NODE
+  say "gates    : AGENT_GATES_MCP_PYTHON=$ag_python"
+  say "gates    : AGENT_GATES_CONFIG=$ag_config"
+  if [ -f "$ag_config" ]; then
+    say "gates    : config present"
+  else
+    say "gates    : WARNING no config at $ag_config — the server starts and reports it"
+  fi
+fi
 
 # 3. Install + select the bundle.
 if [ "$dry" = 1 ]; then
@@ -79,4 +131,10 @@ fi
 
 say ""
 say "Next: restart the DSH Web Host so the new rows exist in its composition,"
-say "then run scripts/verify.sh to confirm the roster and the wire tool surface."
+say "then run scripts/verify.sh to confirm the roster, the agentgates tool names"
+say "and the wire tool surface."
+say ""
+say "The agentgates tools only register if the bridge started. If verify.sh"
+say "reports them missing, run the server by hand to see why:"
+say "  $ag_python -s -m agent_gates.mcp_server    # expects JSON-RPC on stdin"
+say "  $ag_python -m agent_gates.cli doctor       # server-side self check"

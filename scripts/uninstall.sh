@@ -5,6 +5,11 @@
 # package. The profile's cordis.patch.yml is never touched. Restart the Host
 # afterwards so the removed rows disappear from its composition.
 #
+# The AGENT_GATES_* lines that install.sh adds to $DSH_HOME/.env are ALSO
+# removed: they are this repository's own machine parameters, and leaving them
+# behind would point the next installation at a stale interpreter. Any other
+# line in that file belongs to the operator and is preserved.
+#
 # Usage: scripts/uninstall.sh [--dry-run] [--keep-deps]
 # Exit: 0 removed, 1 failed, 2 usage error.
 set -euo pipefail
@@ -44,6 +49,35 @@ if [ "$keep" = 0 ] && [ -d "$profile_dir/node_modules/@local/dsh-ai-compiler-pre
     ( cd "$profile_dir" && pnpm remove @local/dsh-ai-compiler-preset >/dev/null 2>&1 ) \
       && say "package  : removed @local/dsh-ai-compiler-preset" \
       || say "package  : removal failed (the layer is already deselected; remove manually if needed)"
+  fi
+fi
+
+# mcp-client is only in the profile because the compiler presets need it.
+if [ "$keep" = 0 ] && [ -d "$profile_dir/node_modules/@deepseek-ai/dsh-mcp-client" ]; then
+  if [ "$dry" = 1 ]; then
+    say "dep      : would remove @deepseek-ai/dsh-mcp-client"
+  else
+    ( cd "$profile_dir" && pnpm remove @deepseek-ai/dsh-mcp-client >/dev/null 2>&1 ) \
+      && say "dep      : removed @deepseek-ai/dsh-mcp-client" \
+      || say "dep      : removal failed (no compiler preset references it now)"
+  fi
+fi
+
+# Drop the two AGENT_GATES_* names install.sh wrote; keep every other line.
+dsh_env="${DSH_HOME:-$HOME/.dsh}/.env"
+if [ -f "$dsh_env" ]; then
+  if [ "$dry" = 1 ]; then
+    say "gates    : would drop AGENT_GATES_* from $dsh_env"
+  else
+    node - "$dsh_env" <<'NODE'
+const { readFileSync, writeFileSync } = require('node:fs')
+const path = process.argv[2]
+const kept = readFileSync(path, 'utf8').split('\n')
+  .filter(line => /^AGENT_GATES_(MCP_PYTHON|CONFIG)=/.test(line) === false)
+while (kept.length > 0 && kept[kept.length - 1].trim() === '') kept.pop()
+writeFileSync(path, kept.length === 0 ? '' : kept.join('\n') + '\n')
+console.log('gates    : dropped AGENT_GATES_* from ' + path)
+NODE
   fi
 fi
 say ""

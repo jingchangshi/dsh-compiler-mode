@@ -19,6 +19,7 @@ Kinds: `unit` = deterministic in-process, `integration` = boots a real compositi
 |---|---|---|
 | Preset derivation | `node tests/preset/verify-preset.mjs` | unit |
 | Composition | `node tests/integration/composition-suite.mjs` | integration |
+| MCP bridge scope + cost | `node tests/mcp/tool-scope.mjs` | integration |
 | Permissions | `node tests/permissions/permission-suite.mjs` | integration |
 | clangd CDB parsing | `node tests/clangd/cdb-parse-audit.mjs <cdb> <root> <file>` | integration |
 | Web smoke (P10.10) | `node tests/e2e/web-smoke.mjs` | integration |
@@ -30,6 +31,12 @@ Kinds: `unit` = deterministic in-process, `integration` = boots a real compositi
 | Metrics | `node tests/e2e/session-metrics.mjs …` | analysis |
 
 Results are written to `evidence/tests/` and `evidence/e2e/`.
+
+The `MCP bridge scope + cost` suite boots the real profile six times (one child
+process per preset, because a single long-lived boot cannot survive that many
+probes — see `docs/10-mcp-wiring.md`), asserts tool visibility per preset, and
+records process count, startup latency and RSS. `--presets a,b` narrows it;
+`--stub` uses a deterministic stand-in server.
 
 ## F1 — Custom Mode
 
@@ -54,6 +61,7 @@ Results are written to `evidence/tests/` and `evidence/e2e/`.
 | F2.7 | timeout / cancel behaviour | **PASS** | case C: `wait_agent` 30 s times out with `timedOut: true` while the PTC program keeps running; a PTC run aborts its sub-dispatches (source `ptc.ts:728-734`) |
 | F2.8 | large output bounded | **PASS** | case C: 64 000-char captured stdout + a 108 894-byte subprocess log; the model saw only the curated object |
 | F2.9 | audit trail | **PASS** | `tool/ptc-dispatch-start` / `tool/ptc-dispatch` pairs present for every nested call |
+| F2.10 | gate tools reachable through `run_code` | **PASS** | `tests/mcp/tool-scope.mjs`: both compiler presets bind all ten `mcp__agentgates__*` names in the PTC SDK section; `standard/ptc/minimal/cordis` bind none |
 
 ## F3 — Agent Teams
 

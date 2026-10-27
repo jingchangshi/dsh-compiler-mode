@@ -189,6 +189,60 @@
             name: '@deepseek-ai/dsh-plugin-market/tools'
             disabled: true
 
+          # ── DIFF: AgentGates tools (A1/B1/E) ──────────────────────────────
+          # The compiler Gates live in a separate Python process. DSH reaches
+          # them through the official MCP client, which registers every server
+          # tool on `ctx.tools` as `mcp__<serverName>__<tool>`.
+          #
+          # WHY THIS ROW IS INSIDE THE PRESET, NOT IN bundles.patch.yml
+          # -----------------------------------------------------------
+          # `tools.register()` writes into `ScopedLayers`, keyed by
+          # `scopeOf(ctx)` (packages/core/tools/src/index.ts). A preset is
+          # mounted under its own `ScopeKey` and an Agent joins it through
+          # `bindScopeParent` (packages/preset/agent-preset-registry), and
+          # `tools.view(scope)` resolves registrations along that scope chain.
+          # So a row owned by THIS preset lands in THIS preset's layer: the two
+          # compiler modes see the tools, and Standard / PTC / Minimal / Cordis
+          # — whose agents' chains do not include this key — cannot. A host row
+          # in bundles.patch.yml would register globally and be visible to
+          # every mode, which is why it is not used here.
+          #
+          # WHY `failOnStartupError: false`
+          # ------------------------------
+          # `mountPreset()` audits rows and rejects the WHOLE preset when any
+          # row fails. With `failOnStartupError: true` an AgentGates server
+          # that is not installed, not configured, or temporarily down would
+          # take the entire compiler mode offline. The bridge therefore starts
+          # in its reconnect loop and logs; the mode still mounts. The cost is
+          # that a broken bridge looks like "no tools", so scripts/verify.sh
+          # asserts the registered tool names instead of trusting the mount,
+          # and `agent-gates doctor` reports the server side.
+          #
+          # Machine parameters arrive through the environment (see
+          # scripts/install.sh), never through a shell string: `command` and
+          # `args` are an argv the SDK spawns with shell:false, and the Python
+          # entrypoint reads its own TOML configuration.
+          - id: mcp-agentgates
+            name: '@deepseek-ai/dsh-mcp-client'
+            config:
+              transport: stdio
+              serverName: agentgates
+              command: !!js process.env.AGENT_GATES_MCP_PYTHON ?? '/home/s00653124/workspace/AgentGates/.venv/bin/python'
+              args:
+                - '-s'
+                - '-m'
+                - 'agent_gates.mcp_server'
+              env:
+                AGENT_GATES_CONFIG: !!js process.env.AGENT_GATES_CONFIG ?? (process.env.HOME + '/.config/agent-gates/config.toml')
+              # One tool call may legitimately run a bounded wait or read a
+              # large evidence tree; the default 60 s is short for a read-only
+              # verification over a compiler checkout. It stays bounded so a
+              # wedged server cannot hang a turn forever.
+              toolCallTimeoutMs: 120000
+              failOnStartupError: false
+              reconnect:
+                enabled: true
+
           # ── DIFF: code intelligence (A5) ──────────────────────────────────
           # `lsp` is a HOST-plane service: `@deepseek-ai/dsh-lsp` is an abstract
           # `Service` base class, not a plugin. With `patch: '@deepseek-ai/dsh-lsp'`
@@ -382,6 +436,60 @@
           - id: tool-plugin-market
             name: '@deepseek-ai/dsh-plugin-market/tools'
             disabled: true
+
+          # ── DIFF: AgentGates tools (A1/B1/E) ──────────────────────────────
+          # The compiler Gates live in a separate Python process. DSH reaches
+          # them through the official MCP client, which registers every server
+          # tool on `ctx.tools` as `mcp__<serverName>__<tool>`.
+          #
+          # WHY THIS ROW IS INSIDE THE PRESET, NOT IN bundles.patch.yml
+          # -----------------------------------------------------------
+          # `tools.register()` writes into `ScopedLayers`, keyed by
+          # `scopeOf(ctx)` (packages/core/tools/src/index.ts). A preset is
+          # mounted under its own `ScopeKey` and an Agent joins it through
+          # `bindScopeParent` (packages/preset/agent-preset-registry), and
+          # `tools.view(scope)` resolves registrations along that scope chain.
+          # So a row owned by THIS preset lands in THIS preset's layer: the two
+          # compiler modes see the tools, and Standard / PTC / Minimal / Cordis
+          # — whose agents' chains do not include this key — cannot. A host row
+          # in bundles.patch.yml would register globally and be visible to
+          # every mode, which is why it is not used here.
+          #
+          # WHY `failOnStartupError: false`
+          # ------------------------------
+          # `mountPreset()` audits rows and rejects the WHOLE preset when any
+          # row fails. With `failOnStartupError: true` an AgentGates server
+          # that is not installed, not configured, or temporarily down would
+          # take the entire compiler mode offline. The bridge therefore starts
+          # in its reconnect loop and logs; the mode still mounts. The cost is
+          # that a broken bridge looks like "no tools", so scripts/verify.sh
+          # asserts the registered tool names instead of trusting the mount,
+          # and `agent-gates doctor` reports the server side.
+          #
+          # Machine parameters arrive through the environment (see
+          # scripts/install.sh), never through a shell string: `command` and
+          # `args` are an argv the SDK spawns with shell:false, and the Python
+          # entrypoint reads its own TOML configuration.
+          - id: mcp-agentgates
+            name: '@deepseek-ai/dsh-mcp-client'
+            config:
+              transport: stdio
+              serverName: agentgates
+              command: !!js process.env.AGENT_GATES_MCP_PYTHON ?? '/home/s00653124/workspace/AgentGates/.venv/bin/python'
+              args:
+                - '-s'
+                - '-m'
+                - 'agent_gates.mcp_server'
+              env:
+                AGENT_GATES_CONFIG: !!js process.env.AGENT_GATES_CONFIG ?? (process.env.HOME + '/.config/agent-gates/config.toml')
+              # One tool call may legitimately run a bounded wait or read a
+              # large evidence tree; the default 60 s is short for a read-only
+              # verification over a compiler checkout. It stays bounded so a
+              # wedged server cannot hang a turn forever.
+              toolCallTimeoutMs: 120000
+              failOnStartupError: false
+              reconnect:
+                enabled: true
 
           # ── DIFF: code intelligence (A5) ──────────────────────────────────
           # `lsp` is a HOST-plane service: `@deepseek-ai/dsh-lsp` is an abstract

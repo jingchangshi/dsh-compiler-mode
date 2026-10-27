@@ -46,6 +46,11 @@ const DECLARED = [
   { kind: 'changed', key: 'delegation.tool-subagent-list-agents', why: 'disabled: Team owns delegation' },
   { kind: 'changed', key: 'delegation.tool-subagent', why: 'disabled: Team owns delegation' },
   { kind: 'changed', key: 'delegation.tool-subagent-fork', why: 'disabled: Team owns delegation' },
+  // E1/E2: the compiler Gates are reached over the official MCP client, so
+  // the compiler modes carry one added row. It is declared here so the diff
+  // stays machine-checked: removing or retargeting the bridge fails this
+  // script instead of silently changing which tools a compiler Agent can call.
+  { kind: 'added', key: 'mcp-agentgates', why: 'stdio MCP bridge to the AgentGates gate server (mcp__agentgates__*)' },
 ]
 
 /** Flatten a preset child list into id → row, descending into `cordis:group` rows. */
