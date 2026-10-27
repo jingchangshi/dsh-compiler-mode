@@ -1,6 +1,6 @@
 {
-  "at": "2026-10-27T09:32:15.284Z",
-  "root": "/tmp/dsh-perm-root-vlxd2X",
+  "at": "2026-10-27T09:45:24.542Z",
+  "root": "/tmp/dsh-perm-root-pFjJ0A",
   "results": [
     {
       "kind": "PASS",
@@ -10,7 +10,7 @@
     {
       "kind": "PASS",
       "name": "workspace-write denies a write outside the workspace root and /tmp",
-      "detail": "DENIED: FS_SANDBOX_DENIED (outside=/home/s00653124/.dsh-perm-outside-dOkjpB)"
+      "detail": "DENIED: FS_SANDBOX_DENIED (outside=/home/s00653124/.dsh-perm-outside-uoj1JF)"
     },
     {
       "kind": "PASS",

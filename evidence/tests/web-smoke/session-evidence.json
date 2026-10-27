@@ -1,9 +1,9 @@
 {
-  "sessionId": "session-0e0724fa-fae5-4a01-a82f-27a43f8919da",
+  "sessionId": "session-fc876d5c-053a-4ca7-9e15-77bbeef3753b",
   "header": {
     "version": 4,
-    "id": "session-0e0724fa-fae5-4a01-a82f-27a43f8919da",
-    "createdAt": 1793086883754,
+    "id": "session-fc876d5c-053a-4ca7-9e15-77bbeef3753b",
+    "createdAt": 1793093678897,
     "cwd": "/home/s00653124/workspace/dsh-compiler-mode",
     "isSeeded": false,
     "delegationDepth": 0,
@@ -34,18 +34,18 @@
   "errors": [],
   "projections": {
     "tokenUsage": {
-      "uncachedInputTokens": 10997,
+      "uncachedInputTokens": 460,
       "outputTokens": 4,
-      "cacheReadTokens": 768,
+      "cacheReadTokens": 11392,
       "cacheWriteTokens": 0
     },
     "contextPressure": {
-      "pressureTokens": 11765,
-      "projectedTokens": 11775,
+      "pressureTokens": 11852,
+      "projectedTokens": 11862,
       "contextWindow": 1048576
     },
     "contextBreakdown": {
-      "systemTokens": 11125,
+      "systemTokens": 11217,
       "toolsTokens": 628,
       "messageTokens": 315
     }
