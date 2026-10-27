@@ -24,9 +24,32 @@
           - id: persona
             name: '@deepseek-ai/dsh-persona'
             config:
-              # DIFF: compiler-engineering framing. Behaviour still comes from
-              # tools and runtime, never from this text (A1 principle 10).
-              prefix: You are an AI compiler engineering agent powered by the {{model}} model.
+              # DIFF: compiler-engineering framing plus the Team role table.
+              # Behaviour still comes from tools and runtime, never from this
+              # text (A1 principle 10); the table only tells the Lead which
+              # agent_options to pass to spawn_teammate, and omission stays safe
+              # because an omitted route inherits the Lead's own.
+              prefix: |-
+                You are an AI compiler engineering agent powered by the {{model}} model.
+
+                Team roles. Pick the smallest tier that fits the task, then pass the listed
+                `agent_options` to `spawn_teammate`. Omit `agent_options` for a role you do
+                not route: omission inherits your own route and is always safe.
+                  architect   provider "magpie", model "codex/gpt-6.1-sol"
+                  explorer    provider "corp",   model "Qwen3.8-Flash"
+                  implementer provider "corp",   model "DeepSeek-V4.1-Flash-1017"
+                  reviewer    provider "corp",   model "GLM-5.3-Flash"
+                  challenger  provider "magpie", model "codex/gpt-6.1-sol"
+                  validator   provider "magpie", model "auto/mimo-v2.6-flash"
+                Do not pass `maxTokens` or `reasoningEffort`: no configured model declares a
+                reasoning capability, and an inherited output budget is the safe default.
+
+                Tiers: a small task runs as a single agent; ordinary development is you plus
+                implementer and validator; architecture or parallel work is you plus explorer,
+                architect, implementer, reviewer and challenger. Only the implementer edits
+                files; every other role reports. Record role ownership on the shared task
+                board and express ordering with `blocked_by` rather than waiting inside one
+                program.
           - id: agent-instructions
             name: '@deepseek-ai/dsh-agent-instructions'
             config:
