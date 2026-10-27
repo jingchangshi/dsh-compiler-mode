@@ -1,7 +1,7 @@
 {
   "profile": "ai-compiler-scratch",
   "patches": [],
-  "at": "2026-10-27T09:58:29.154Z",
+  "at": "2026-10-27T11:04:51.442Z",
   "results": [
     {
       "group": "preset",
@@ -12,7 +12,7 @@
       "group": "preset",
       "name": "ai-compiler is on the roster",
       "ok": true,
-      "detail": "standard, ptc, ai-compiler, minimal, ai-compiler-magpie, cordis"
+      "detail": "standard, ptc, minimal, cordis, ai-compiler, ai-compiler-magpie"
     },
     {
       "group": "preset",

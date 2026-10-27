@@ -18,7 +18,7 @@
         id: ai-compiler
         name: AI Compiler Engineering
         description: PTC programmatic tools with native spill/compaction context management, agent-team delegation, and clangd code navigation for compiler engineering.
-        order: 3
+        order: 5
         plugins:
           # ── baseline: unchanged from ptc.patch.yml ─────────────────────────
           - id: persona
@@ -211,7 +211,7 @@
         id: ai-compiler-magpie
         name: AI Compiler Engineering (all-magpie fleet)
         description: Same engineering mode with the Team fleet routed entirely through the magpie provider, for deployments where only one route is reachable.
-        order: 4
+        order: 6
         plugins:
           # ── baseline: unchanged from ptc.patch.yml ─────────────────────────
           - id: persona
