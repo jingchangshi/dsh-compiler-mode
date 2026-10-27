@@ -2,7 +2,7 @@
   "profile": "ai-compiler-scratch",
   "server": "/home/s00653124/workspace/AgentGates/.venv/bin/python",
   "stub": false,
-  "at": "2026-10-27T12:30:28.733Z",
+  "at": "2026-10-27T12:36:57.887Z",
   "expectedTools": [
     "mcp__agentgates__cancel",
     "mcp__agentgates__doctor",
@@ -23,13 +23,13 @@
     "perPreset": [
       {
         "preset": "ai-compiler",
-        "bootMs": 1619.3,
-        "agentCreateMs": 10.6,
+        "bootMs": 1696.1,
+        "agentCreateMs": 15.3,
         "bridgesAtBoot": 2,
         "bridgesWithAgent": 2,
         "bridgeRssMiB": [
           67.5,
-          67.7
+          67.6
         ],
         "childCmdlines": [
           "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
@@ -38,13 +38,13 @@
       },
       {
         "preset": "standard",
-        "bootMs": 1332.9,
-        "agentCreateMs": 14.7,
+        "bootMs": 1349.3,
+        "agentCreateMs": 11.7,
         "bridgesAtBoot": 2,
         "bridgesWithAgent": 2,
         "bridgeRssMiB": [
-          67.7,
-          67.5
+          67.6,
+          67.6
         ],
         "childCmdlines": [
           "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
@@ -130,7 +130,7 @@
       "group": "resources",
       "name": "every bridge holds a measurable RSS",
       "ok": true,
-      "detail": "ai-compiler=67.5+67.7 MiB, standard=67.7+67.5 MiB"
+      "detail": "ai-compiler=67.5+67.6 MiB, standard=67.6+67.6 MiB"
     }
   ],
   "verdict": "PASS"
