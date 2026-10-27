@@ -23,6 +23,51 @@ fail() { printf 'install: %s\n' "$*" >&2; exit 1; }
 [ -f "$bundle/cordis.patch.yml" ] || fail "preset patch missing"
 [ -d "$profile_dir" ] || fail "profile not found: $profile_dir"
 
+say "== prerequisite checks =="
+
+# Every dependency this bundle needs EXTERNAL to the DSH installation is checked
+# here, and a missing one FAILS the install. The alternative, letting the rows
+# fail to activate at runtime, produces a mode that looks installed and is
+# silently half-alive: lsp-stdio reports only a startup warning while the lsp
+# tool never appears, and the model discovers the gap by being denied a call.
+#
+# Dependency: why it is needed, and how to satisfy it.
+missing=0
+require() {
+  name="$1"; why="$2"; hint="$3"
+  if command -v "$name" >/dev/null 2>&1; then
+    say "prereq   : $name  -> $(command -v "$name")"
+  else
+    printf "install: MISSING PREREQUISITE %s\n" "$name" >&2
+    printf "  needed for : %s\n" "$why" >&2
+    printf "  install    : %s\n" "$hint" >&2
+    missing=$((missing + 1))
+  fi
+}
+
+# clangd backs the code-navigation surface: host row lsp-stdio, consumed by the
+# lsp tool both compiler presets declare.
+require clangd \
+  "code navigation: the presets declare the lsp tool, served by host row lsp-stdio" \
+  "install LLVM/clangd, or put a clangd binary on PATH"
+
+# docker runs every compiler gate for both adapters.
+require docker \
+  "compiler gates: both adapters exec a container" \
+  "install Docker Engine and ensure this user can reach the daemon"
+
+# The AgentGates bridge is a Python program; the interpreter recorded for the
+# preset row must exist before the install claims success.
+require python3 \
+  "the AgentGates MCP bridge and CLI" \
+  "install Python >= 3.11"
+
+if [ "$missing" -ne 0 ]; then
+  printf "install: %d prerequisite(s) missing; nothing was changed\n" "$missing" >&2
+  exit 1
+fi
+
+say ""
 say "== ai-compiler install =="
 say "bundle   : $bundle"
 say "profile  : $profile_dir"

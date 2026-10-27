@@ -21,7 +21,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = join(here, "../..")
 const checkout = process.env.DSH_CHECKOUT ?? '/home/s00653124/workspace/deepseek-harness'
-const profile = process.env.DSH_PROFILE ?? 'ai-compiler-scratch'
+// The profile comes from --profile only. Reading an ambient DSH_PROFILE would
+// let an unrelated export silently redirect an acceptance script at a profile
+// nobody chose, and its failure would be reported against the wrong one.
+function readProfileArg() {
+  const index = process.argv.indexOf('--profile')
+  return index === -1 ? 'ai-compiler-scratch' : process.argv[index + 1]
+}
+const profile = readProfileArg()
 const AGENT_GATES = process.env.AGENT_GATES_ROOT ?? '/home/s00653124/workspace/AgentGates'
 const PYTHON = process.env.AGENT_GATES_PYTHON ?? join(AGENT_GATES, '.venv/bin/python')
 
@@ -52,6 +59,25 @@ function findReceipt() {
   }
 }
 
+// PROVIDER CREDENTIALS.
+//
+// A DSH profile declares model providers, and a provider with no resolvable
+// key is a FATAL boot condition: the profile disposes itself, closes the Lead
+// session, and the next team/task append fails on a closed handle. So this
+// scenario cannot run unless a key resolves.
+//
+// The precedence chain is the launch environment, then ~/.dsh/.env. The stored
+// .credentials.yaml refs are NOT consulted on this path: the profile
+// composition does not mount the credentials service, so a key that exists
+// only in that file resolves to nothing. Exporting it is the requirement.
+if (process.env.MAGPIE_API_KEY === undefined && process.env.DEEPSEEK_API_KEY === undefined) {
+  console.log('SKIP: no provider credential in the environment.')
+  console.log('  This scenario boots a real DSH profile, where a provider with no')
+  console.log('  resolvable key is fatal at boot. Export MAGPIE_API_KEY (or')
+  console.log('  DEEPSEEK_API_KEY) and run again.')
+  process.exit(2)
+}
+
 const receipt = findReceipt()
 
 const { runProfile } = await import(pathToFileURL(join(checkout, "apps/cli/lib/profile-boot.js")).href)
@@ -62,7 +88,13 @@ const launch = { entries, get: name => entries[name], has: name => entries[name]
 // An EMPTY args array is not equivalent: the launcher treats "no task" as a
 // request to start a session, which makes the web bundle bind its port and
 // collides with the live UI. A label is neither a task nor a session request.
-const booted = await runProfile({ environment: launch, profile, patchFiles: [], args: ['team-gate'] })
+// A profile whose bundles do not declare a task-taking command (the live Web
+// profile is one) rejects ANY positional argv, so the label cannot be passed
+// there. It is not needed either: this script drives the Team service directly
+// and never asks a model anything, so there is no task to hand the launcher.
+const bootLabel = process.env.DSH_BOOT_LABEL
+const args = bootLabel === undefined ? [] : [bootLabel]
+const booted = await runProfile({ environment: launch, profile, patchFiles: [], args })
 const ctx = booted.ctx
 const shutdown = booted.shutdown
 
