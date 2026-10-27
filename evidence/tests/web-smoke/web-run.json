@@ -8,39 +8,39 @@
       "step": "create",
       "at": 33,
       "value": {
-        "sessionId": "session-f0c7cfe5-c76f-4e8a-82ce-e1681fbcaabd",
+        "sessionId": "session-0e0724fa-fae5-4a01-a82f-27a43f8919da",
         "agentPreset": "ai-compiler"
       }
     },
     {
       "step": "prompt",
-      "at": 50,
+      "at": 53,
       "value": {
         "accepted": true
       }
     },
     {
       "step": "idle",
-      "at": 3084,
+      "at": 3082,
       "projections": {
         "kind": "sequenced",
         "asOfSeq": 18,
         "values": {
-          "title": "Smoke test reply",
+          "title": "SMOKE_OK reply request",
           "goal": null,
           "tokenUsage": {
-            "uncachedInputTokens": 401,
+            "uncachedInputTokens": 10997,
             "outputTokens": 4,
-            "cacheReadTokens": 11904,
+            "cacheReadTokens": 768,
             "cacheWriteTokens": 0
           },
           "contextPressure": {
-            "pressureTokens": 12305,
-            "projectedTokens": 12315,
+            "pressureTokens": 11765,
+            "projectedTokens": 11775,
             "contextWindow": 1048576
           },
           "contextBreakdown": {
-            "systemTokens": 11754,
+            "systemTokens": 11125,
             "toolsTokens": 628,
             "messageTokens": 315
           },
@@ -68,11 +68,11 @@
           "sessionStats": {
             "turns": 1,
             "steps": 1,
-            "llmMs": 2703,
+            "llmMs": 2513,
             "toolMs": 0,
-            "ttftMs": 2471,
+            "ttftMs": 2507,
             "ttftSteps": 1,
-            "decodeMs": 232,
+            "decodeMs": 6,
             "decodeTokens": 4
           },
           "subagentCatalog": [],
@@ -80,17 +80,6 @@
             "settledMs": 0
           },
           "subagent": null,
-          "agentTeam": {
-            "members": [
-              {
-                "id": "session-f0c7cfe5-c76f-4e8a-82ce-e1681fbcaabd",
-                "name": "lead",
-                "role": "lead",
-                "phase": "active"
-              }
-            ],
-            "tasks": []
-          },
           "todos": null,
           "plan": {
             "active": false,
@@ -108,7 +97,7 @@
           },
           "sessionListMetadata": {
             "blank": false,
-            "lastPromptAt": 1793082845658
+            "lastPromptAt": 1793086883812
           },
           "imageLimits": {
             "maxImageBytes": 20971520,
@@ -122,21 +111,32 @@
               "image/webp",
               "image/gif"
             ]
+          },
+          "agentTeam": {
+            "members": [
+              {
+                "id": "session-0e0724fa-fae5-4a01-a82f-27a43f8919da",
+                "name": "lead",
+                "role": "lead",
+                "phase": "active"
+              }
+            ],
+            "tasks": []
           }
         }
       }
     }
   ],
   "rpc": [],
-  "sessionId": "session-f0c7cfe5-c76f-4e8a-82ce-e1681fbcaabd",
+  "sessionId": "session-0e0724fa-fae5-4a01-a82f-27a43f8919da",
   "agentPreset": "ai-compiler",
   "lastEvent": {
-    "type": "turn/end",
+    "type": "session/title",
     "seq": 18
   },
   "transcript": [
     {
-      "seq": 16,
+      "seq": 15,
       "text": "SMOKE_OK"
     }
   ],
@@ -144,21 +144,21 @@
   "sessionStats": {
     "turns": 1,
     "steps": 1,
-    "llmMs": 2703,
+    "llmMs": 2513,
     "toolMs": 0,
-    "ttftMs": 2471,
+    "ttftMs": 2507,
     "ttftSteps": 1,
-    "decodeMs": 232,
+    "decodeMs": 6,
     "decodeTokens": 4
   },
   "tokenUsage": {
-    "uncachedInputTokens": 401,
+    "uncachedInputTokens": 10997,
     "outputTokens": 4,
-    "cacheReadTokens": 11904,
+    "cacheReadTokens": 768,
     "cacheWriteTokens": 0
   },
   "contextBreakdown": {
-    "systemTokens": 11754,
+    "systemTokens": 11125,
     "toolsTokens": 628,
     "messageTokens": 315
   },
@@ -170,7 +170,7 @@
       "response": "SMOKE_OK"
     }
   ],
-  "elapsedMs": 3087,
+  "elapsedMs": 3085,
   "status": "PASS",
   "sessionEvidence": {
     "eventCount": 19,
@@ -196,8 +196,8 @@
     "errors": [],
     "header": {
       "version": 4,
-      "id": "session-f0c7cfe5-c76f-4e8a-82ce-e1681fbcaabd",
-      "createdAt": 1793082845601,
+      "id": "session-0e0724fa-fae5-4a01-a82f-27a43f8919da",
+      "createdAt": 1793086883754,
       "cwd": "/home/s00653124/workspace/dsh-compiler-mode",
       "isSeeded": false,
       "delegationDepth": 0,

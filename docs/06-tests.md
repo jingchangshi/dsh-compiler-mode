@@ -61,7 +61,8 @@ Results are written to `evidence/tests/` and `evidence/e2e/`.
 |---|---|---|---|
 | F3.1 | ≥2 teammates | **PASS** | case A: `explorer` + `reviewer`; `team/member` × 4 (2 members × provisioning/active) |
 | F3.2 | messages + task board | **PASS** | case A `send_message` 1, `team_task_create` 2, `team_task_update` claim/complete; case B/C same |
-| F3.3 | Fresh / Fork verified | **PASS (fresh) / FAIL (fork)** | every teammate used `context: 'fresh'`; the model never chose `fork`. **The `fork` path could not be exercised**: with the delegation group now disabled the SDK no longer binds `subagent_fork`, and `spawn_teammate` exposes `context:'fork'` but the run never selected it. A deterministic check of the fork provider is in `tests/integration/composition-suite.mjs` (provider registered) but an end-to-end fork teammate is **NOT_TESTED** |
+| F3.3 | Fresh verified | **PASS** | every case teammate used `context: 'fresh'` and reported back; `team/member` edges = 2 per teammate |
+| F3.3b | Fork verified | **PASS (mechanism) — with a measured caveat** | the model *did* pass `context: "fork"` (program verified) yet both children came back `isSeeded:false, inherited:0`. Cause found in source: the fork provider seeds only the Lead's **completed** turns (`subagent-fork-in-process/src/index.ts:46-53`). Deterministic proof: with **0** completed Lead turns → `isSeeded:false, inherited:0`; after **1** completed turn → **`isSeeded:true, inherited:10`**. So fork works, but a fork requested before the Lead finishes a turn is silently unseeded — recorded in `docs/08-compatibility.md` |
 | F3.4 | teammate preset binding | **PASS** | source `child-agent.ts:142` + `composeFrom()`; measured: teammates ran `run_code`/`grep`/`read` and Team tools under the same mode |
 | F3.5 | PTC + Team joint | **PASS** | case A ptc dispatches include `spawn_teammate`, `send_message`, `team_task_*`, `wait_agent`, `interrupt_agent` |
 | F3.6 | recovery | **PASS** | case C: `interrupt_agent` → `previousStatus: running` → `inactive` → `send_message` → resumed and finished |
@@ -70,7 +71,7 @@ Results are written to `evidence/tests/` and `evidence/e2e/`.
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| F4.1 | spill saves and restores a large result | **FAIL (framing corrected)** | the *bash* tool's own subprocess capture truncates to 64 000 chars and spills the full text to `/tmp/dsh-subprocess-*/…-stdout.log` (verified: file has all 20 000 lines, model saw 10 800). The **spill-policy** layer (`maxInlineTokens: 12500`) did **not** fire on the observed results: `write`/`read`/`grep` results stayed below it, so no `(Omitted … stored at: …)` notice was produced. Measured, not assumed — see `docs/07-benchmarks.md` |
+| F4.1 | spill saves and restores a large result | **PARTIAL** | the *bash* tool's own subprocess capture truncates to 64 000 chars and spills the full text to `/tmp/dsh-subprocess-*/…-stdout.log` (verified: file has all 20 000 lines, model saw 10 800). The **spill-policy** layer (`maxInlineTokens: 12500`) did **not** fire on the observed results: `write`/`read`/`grep` results stayed below it, so no `(Omitted … stored at: …)` notice was produced. Measured, not assumed — see `docs/07-benchmarks.md` |
 | F4.2 | completeness of the artifact | **PASS** | `wc -l /tmp/dsh-subprocess-…-stdout.log` = 20 000; `big.txt` written = 64 108 bytes = source size |
 | F4.3 | spill path + permissions | **PASS** | `<root>/session-<sha256(id)[:12]>/<rand>-<name>.txt`, dir `0700`, file `0600` (measured) |
 | F4.4 | read-back | **PASS** | `tools.read` on the artifact path returned `totalLines: 20000` in 2000-line pages; `limit: 20000` is rejected (`limit must be less than or equal to 2000`) |
@@ -120,7 +121,7 @@ Results are written to `evidence/tests/` and `evidence/e2e/`.
 | Q03 PTC scope | PASS — host runtime, per-agent bindings |
 | Q04 Team tools in PTC SDK | PASS — 35 bindings incl. 9 Team tools **after the server restart** |
 | Q05 child preset | PASS — inherits the Lead's revision (`composeFrom`) |
-| Q06 fresh vs fork | fresh PASS; fork NOT_TESTED |
+| Q06 fresh vs fork | fresh PASS; fork PASS with the seeding-boundary caveat above |
 | Q07 permission propagation | PASS — approval pinned to `never`; sandbox override inherited |
 | Q08 PTC bypasses guard? | PASS — no: same scheduler path |
 | Q09 spill across members | PASS — shared, unauthenticated by design (user-level) |
