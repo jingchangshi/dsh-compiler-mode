@@ -1,0 +1,52 @@
+{
+  "workdir": "/home/s00653124/workspace/dsh-compiler-mode/evidence/e2e/case-b/workdir",
+  "at": "2026-10-27T06:11:09.589Z",
+  "checks": [
+    {
+      "name": "run-tests.sh exits 0",
+      "ok": true,
+      "detail": "exit=0"
+    },
+    {
+      "name": "every assertion reports ok",
+      "ok": true,
+      "detail": "4 ok, 0 FAIL"
+    },
+    {
+      "name": "the merged-source assertion is present",
+      "ok": true
+    },
+    {
+      "name": "include/ircount.h is unmodified",
+      "ok": true,
+      "detail": "hash equal"
+    },
+    {
+      "name": "tests/test_ircount.cpp is unmodified",
+      "ok": true,
+      "detail": "hash equal"
+    },
+    {
+      "name": "run-tests.sh is unmodified",
+      "ok": true,
+      "detail": "hash equal"
+    },
+    {
+      "name": "src/ircount.cpp was modified",
+      "ok": true,
+      "detail": "changed (expected)"
+    },
+    {
+      "name": "the defect is gone (its patch no longer reverses)",
+      "ok": true,
+      "detail": "reverse refused — the bugged line is absent"
+    },
+    {
+      "name": "mergeFrom clears the source again",
+      "ok": true,
+      "detail": "void Counter::mergeFrom(Counter &other) { ⏎   total_ += other.total_; ⏎   other.reset(); ⏎ } ⏎ } // namespace ircount ⏎ "
+    }
+  ],
+  "verdict": "PASS",
+  "testOutput": "ok   add accumulates\nok   reset clears\nok   merge adds\nok   merge clears source\n"
+}

@@ -1,0 +1,81 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# @local/dsh-ai-compiler-preset — HOST-plane layer
+#
+# Everything here is a profile-wide service or a profile-wide capability that
+# must exist BEFORE any preset mounts, exactly like the shipped host rows in
+# @deepseek-ai/dsh-base / @deepseek-ai/dsh-web-app:
+#
+#   lsp / lsp-stdio / tool-lsp   code-navigation seam, clangd provider, `lsp` tool
+#   agent-team / tool-agent-team / ui-agent-team
+#                                Agent Teams service, tools and Web UI — the
+#                                rows the shipped optional bundle
+#                                `@deepseek-ai/dsh-experimental-agent-team-profile`
+#                                declares, restated here so ONE `ai-compiler`
+#                                bundle install can be enabled and rolled back.
+#
+# The preset (`cordis.patch.yml`) claims neither: a preset plugin that supplies
+# a service must isolate the provider AND all consumers in one realm
+# (agent-preset-registry/mount.ts), and `@deepseek-ai/dsh-lsp` is an abstract
+# Service base class rather than a plugin, so a preset row for it never starts.
+#
+# Bundle order matters: this layer is applied after dsh-base and dsh-web-app
+# (install appends to `dsh.profile.bundles`). `dsh-experimental-agent-team-profile`
+# disables the four direct-delegation rows; those disables are NOT repeated here
+# because the preset declares the same four ids, so an installation that does
+# not select the experimental bundle would still get direct delegation.
+# ─────────────────────────────────────────────────────────────────────────────
+- insert:
+    # ── code intelligence (A5) ────────────────────────────────────────────────
+    - id: lsp
+      name: '@deepseek-ai/dsh-lsp'
+
+    - id: lsp-stdio
+      name: '@deepseek-ai/dsh-lsp-stdio'
+      config:
+        servers:
+          clangd:
+            command: clangd
+            args:
+              # A 4900-entry compile_commands.json plus a 12k-file index would
+              # otherwise re-index in the background and hold a .cache dir in
+              # the tree under test; both are off for an on-demand navigator.
+              - '--background-index=0'
+              - '--pch-storage=memory'
+              - '--log=error'
+            extensionToLanguage:
+              '.c': c
+              '.h': c
+              '.cc': cpp
+              '.cpp': cpp
+              '.cxx': cpp
+              '.c++': cpp
+              '.hh': cpp
+              '.hpp': cpp
+              '.hxx': cpp
+              '.cu': cuda
+              '.cuh': cuda
+            # clangd itself derives the compile command from the nearest
+            # `compile_commands.json` at or above each opened file (checked in
+            # evidence/code-intelligence/cdb-parse-*.json), so no
+            # --compile-commands-dir is pinned here: every project keeps its own.
+
+    - id: tool-lsp
+      name: '@deepseek-ai/dsh-tool-lsp'
+
+    # ── Agent Teams (A4) — the shipped optional bundle's rows, unchanged ──────
+    - id: agent-team
+      name: '@deepseek-ai/dsh-experimental-agent-team'
+      config:
+        maxMembers: 8
+        maxTasks: 256
+        maxMessageBytes: 65536
+        disposalTimeoutMs: 5000
+
+    - id: tool-agent-team
+      name: '@deepseek-ai/dsh-experimental-tool-agent-team'
+      config:
+        freshProvider: spawn
+        forkProvider: fork
+
+    - id: ui-agent-team
+      name: '@deepseek-ai/dsh-experimental-client-ui-agent-team'

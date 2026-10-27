@@ -1,0 +1,9 @@
+--- a/src/ircount.cpp
++++ b/src/ircount.cpp
+@@ -6,6 +6,5 @@ namespace ircount {
+ std::size_t Counter::count() const { return total_; }
+ void Counter::mergeFrom(Counter &other) {
+   total_ += other.total_;
+-  other.reset();
+ }
+ } // namespace ircount

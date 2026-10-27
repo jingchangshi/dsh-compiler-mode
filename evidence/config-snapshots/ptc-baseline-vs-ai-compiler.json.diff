@@ -1,0 +1,73 @@
+--- /tmp/base.json	2026-10-27 12:23:53.966712902 +0800
++++ /tmp/deliv.json	2026-10-27 12:23:53.967712902 +0800
+@@ -3,7 +3,7 @@
+   "id": "persona",
+   "name": "@deepseek-ai/dsh-persona",
+   "config": {
+-   "prefix": "You are a coding agent powered by the {{model}} model."
++   "prefix": "You are an AI compiler engineering agent powered by the {{model}} model."
+   }
+  },
+  {
+@@ -91,9 +91,9 @@
+     "id": "tool-result-pruner",
+     "name": "@deepseek-ai/dsh-compaction-tool-result-pruner",
+     "config": {
+-     "thresholdChars": 8192,
+-     "headChars": 4096,
+-     "tailChars": 1024
++     "thresholdChars": 20480,
++     "headChars": 12288,
++     "tailChars": 4096
+     }
+    }
+   ]
+@@ -181,5 +181,48 @@
+   "id": "tool-plugin-market",
+   "name": "@deepseek-ai/dsh-plugin-market/tools",
+   "disabled": true
++ },
++ {
++  "id": "code-intelligence",
++  "name": "cordis:group",
++  "config": [
++   {
++    "id": "lsp",
++    "name": "@deepseek-ai/dsh-lsp"
++   },
++   {
++    "id": "lsp-stdio",
++    "name": "@deepseek-ai/dsh-lsp-stdio",
++    "config": {
++     "servers": {
++      "clangd": {
++       "command": "clangd",
++       "args": [
++        "--background-index=0",
++        "--pch-storage=memory",
++        "--log=error"
++       ],
++       "extensionToLanguage": {
++        ".c": "c",
++        ".h": "c",
++        ".cc": "cpp",
++        ".cpp": "cpp",
++        ".cxx": "cpp",
++        ".c++": "cpp",
++        ".hh": "cpp",
++        ".hpp": "cpp",
++        ".hxx": "cpp",
++        ".cu": "cuda",
++        ".cuh": "cuda"
++       }
++      }
++     }
++    }
++   },
++   {
++    "id": "tool-lsp",
++    "name": "@deepseek-ai/dsh-tool-lsp"
++   }
++  ]
+  }
+ ]

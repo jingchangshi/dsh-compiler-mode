@@ -1,0 +1,22 @@
+{
+  "dshCheckout": "/home/s00653124/workspace/deepseek-harness",
+  "dshHome": "/home/s00653124/.dsh",
+  "profiles": {
+    "web": "/home/s00653124/.dsh/profiles/web"
+  },
+  "references": {
+    "ascendNpuIr": "/home/s00653124/workspace/AscendNPU-IR-1",
+    "ascendCompileCommands": "/home/s00653124/workspace/AscendNPU-IR-1/build/compile_commands.json",
+    "tilelang": "/home/s00653124/workspace/tilelang",
+    "piEngineeringHarness": "/home/s00653124/workspace/PiEngineeringHarness",
+    "agentGates": "/home/s00653124/workspace/AgentGates"
+  },
+  "toolchain": {
+    "node": "v24.20.0",
+    "pnpm": "11.28.5",
+    "clangdDefault": "clangd 15.0.6 (Softwares/clang+llvm-15.0.6/bin, first on PATH)",
+    "clangdLLVM22": "/home/s00653124/Softwares/clangd/bin/clangd (clangd 22.1.0)",
+    "bwrap": "0.4.0 (/home/s00653124/.local/bin)"
+  },
+  "webUrl": "http://127.0.0.1:3092"
+}

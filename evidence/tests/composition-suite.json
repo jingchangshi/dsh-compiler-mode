@@ -1,0 +1,256 @@
+{
+  "profile": "ai-compiler-scratch",
+  "patches": [],
+  "at": "2026-10-27T07:39:26.162Z",
+  "results": [
+    {
+      "group": "preset",
+      "name": "agentPresets service mounted",
+      "ok": true
+    },
+    {
+      "group": "preset",
+      "name": "ai-compiler is on the roster",
+      "ok": true,
+      "detail": "standard, ptc, ai-compiler, minimal, cordis"
+    },
+    {
+      "group": "preset",
+      "name": "ai-compiler declaration is healthy",
+      "ok": true,
+      "detail": "no diagnostic"
+    },
+    {
+      "group": "preset",
+      "name": "display name is set",
+      "ok": true,
+      "detail": "AI Compiler Engineering"
+    },
+    {
+      "group": "preset",
+      "name": "shipped presets still present",
+      "ok": true
+    },
+    {
+      "group": "plane",
+      "name": "host provides lsp",
+      "ok": true
+    },
+    {
+      "group": "plane",
+      "name": "host provides agentTeams",
+      "ok": true
+    },
+    {
+      "group": "plane",
+      "name": "host provides ptcRuntime",
+      "ok": true
+    },
+    {
+      "group": "plane",
+      "name": "host provides spillStore",
+      "ok": true
+    },
+    {
+      "group": "plane",
+      "name": "host provides tokenMeter",
+      "ok": true
+    },
+    {
+      "group": "plane",
+      "name": "host provides agents",
+      "ok": true
+    },
+    {
+      "group": "plane",
+      "name": "spill policy is host-plane",
+      "ok": true
+    },
+    {
+      "group": "plane",
+      "name": "compaction is NOT resolvable from the host realm (preset-owned)",
+      "ok": true,
+      "detail": "preset isolate realm"
+    },
+    {
+      "group": "tools",
+      "name": "ai-compiler wire view is exactly [run_code]",
+      "ok": true,
+      "detail": "run_code"
+    },
+    {
+      "group": "tools",
+      "name": "ptc wire view is exactly [run_code] (baseline intact)",
+      "ok": true,
+      "detail": "run_code"
+    },
+    {
+      "group": "tools",
+      "name": "literal reasoning-effort/model override is absent (single route inherited)",
+      "ok": true,
+      "detail": "children inherit provider/model/reasoningEffort from the Lead; no per-member override exists in RC.3"
+    },
+    {
+      "group": "tools",
+      "name": "the agent is bound to the ai-compiler revision",
+      "ok": true,
+      "detail": "ai-compiler"
+    },
+    {
+      "group": "tools",
+      "name": "PTC-only rule section present",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "generated SDK section present",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds bash",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds read",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds write",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds edit",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds glob",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds grep",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds job_output",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds web_fetch",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds lsp",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds spawn_teammate",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds send_message",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds list_agents",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds wait_agent",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds interrupt_agent",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds team_task_create",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds team_task_list",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds team_task_get",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK binds team_task_update",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "SDK does not bind run_code recursively",
+      "ok": true
+    },
+    {
+      "group": "tools",
+      "name": "direct delegation \"subagent\" is not bound (Team owns delegation)",
+      "ok": true,
+      "detail": "absent"
+    },
+    {
+      "group": "tools",
+      "name": "direct delegation \"subagent_fork\" is not bound (Team owns delegation)",
+      "ok": true,
+      "detail": "absent"
+    },
+    {
+      "group": "tools",
+      "name": "ai-compiler binds every LSP + Team tool",
+      "ok": true,
+      "detail": "all present"
+    },
+    {
+      "group": "tools",
+      "name": "the only PTC tools removed are the direct-delegation pair",
+      "ok": true,
+      "detail": "subagent,subagent_fork"
+    },
+    {
+      "group": "context",
+      "name": "compaction backend resolves inside the ai-compiler realm",
+      "ok": true
+    },
+    {
+      "group": "context",
+      "name": "tool-result pruner resolves inside the ai-compiler realm",
+      "ok": true
+    },
+    {
+      "group": "context",
+      "name": "plan-mode resolves inside the ai-compiler realm",
+      "ok": true
+    },
+    {
+      "group": "isolation",
+      "name": "preset services are invisible from the host realm",
+      "ok": true
+    },
+    {
+      "group": "context",
+      "name": "spill store is shared (host) — artifacts are profile-wide",
+      "ok": true,
+      "detail": "host service read through scope chain"
+    }
+  ],
+  "verdict": "PASS"
+}

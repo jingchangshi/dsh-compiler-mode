@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-27T07:39:27.099Z",
+  "root": "/tmp/dsh-perm-root-AOmsBT",
+  "results": [
+    {
+      "kind": "PASS",
+      "name": "workspace-write allows a write inside the workspace root",
+      "detail": "ALLOWED"
+    },
+    {
+      "kind": "PASS",
+      "name": "workspace-write denies a write outside the workspace root and /tmp",
+      "detail": "DENIED: FS_SANDBOX_DENIED (outside=/home/s00653124/.dsh-perm-outside-DonG0N)"
+    },
+    {
+      "kind": "PASS",
+      "name": "read-only denies even an in-root write",
+      "detail": "DENIED: FS_SANDBOX_DENIED"
+    },
+    {
+      "kind": "PASS",
+      "name": "danger-full-access allows a write outside the workspace root",
+      "detail": "ALLOWED"
+    },
+    {
+      "kind": "INFO",
+      "name": "sandbox backend CANNOT confine read-only on this host",
+      "detail": "SandboxUnavailableError: sandbox mode \"read-only\" is requested but no sandbox backend is usable on this host; refusing to run the command unconfined. Install bubblewrap or run a Landlock-enforcing kernel (Linux), ensure sandbox-exec is usable (macOS), or ensure the ACL restricted-token runner can start (Windows) — otherwise switch the consumer to danger-full-access."
+    },
+    {
+      "kind": "INFO",
+      "name": "sandbox backend CANNOT confine workspace-write on this host",
+      "detail": "SandboxUnavailableError: sandbox mode \"workspace-write\" is requested but no sandbox backend is usable on this host; refusing to run the command unconfined. Install bubblewrap or run a Landlock-enforcing kernel (Linux), ensure sandbox-exec is usable (macOS), or ensure the ACL restricted-token runner can start (Windows) — otherwise switch the consumer to danger-full-access."
+    },
+    {
+      "kind": "INFO",
+      "name": "danger-full-access is never confined",
+      "detail": "bash/PTC child run unconfined by design"
+    },
+    {
+      "kind": "INFO",
+      "name": "bash executor sandbox reporting",
+      "detail": "bash tool not registered in this composition"
+    }
+  ],
+  "verdict": "PASS",
+  "note": "INFO rows record host facts that are not pass/fail of the mode itself."
+}

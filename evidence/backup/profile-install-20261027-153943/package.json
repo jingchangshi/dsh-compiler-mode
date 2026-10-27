@@ -1,0 +1,16 @@
+{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "@deepseek-ai/dsh-lsp-stdio": "link:/home/s00653124/workspace/deepseek-harness/packages/lsp/lsp-stdio",
+    "@deepseek-ai/dsh-tool-lsp": "link:/home/s00653124/workspace/deepseek-harness/packages/lsp/tool-lsp"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app"
+      ]
+    }
+  }
+}

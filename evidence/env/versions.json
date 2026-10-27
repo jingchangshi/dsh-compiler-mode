@@ -1,0 +1,292 @@
+{
+  "generatedAt": "2026-10-27T04:06:59.189Z",
+  "runtime": {
+    "node": "v24.20.0",
+    "pnpm": "11.24.0",
+    "os": "Linux 6.8.0-147-generic",
+    "kernelLsm": "lockdown,capability,landlock,yama,apparmor",
+    "apparmorRestrictUnprivilegedUserns": "1"
+  },
+  "dsh": {
+    "version": "0.2.1-rc.3",
+    "commit": "1f81c047fc48fa190a683e469daa699857e9afe8",
+    "branch": "dsh-v0.2.1-rc.3",
+    "tags": []
+  },
+  "toolchain": {
+    "clangdPath": "/home/s00653124/Softwares/clang+llvm-15.0.6/bin/clangd",
+    "clangdVersion": "clangd version 15.0.6",
+    "clangdLLVM22": "/home/s00653124/Softwares/clangd/bin/clangd",
+    "clangdLLVM22Version": "clangd version 22.1.0 (https://github.com/llvm/llvm-project 4434dabb69916856b824f68a64b029c67175e532)",
+    "clang": "clang version 15.0.6",
+    "cmake": "cmake version 4.4.3",
+    "ninja": "1.13.2",
+    "ripgrep": "ripgrep 15.1.0 (rev af60c2de9d)",
+    "bwrap": "bubblewrap 0.4.0"
+  },
+  "composedPackages": [
+    {
+      "dir": "packages/preset/agent-preset",
+      "name": "@deepseek-ai/dsh-agent-preset",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/preset/agent-preset-registry",
+      "name": "@deepseek-ai/dsh-agent-preset-registry",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/preset/persona",
+      "name": "@deepseek-ai/dsh-persona",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/context/agent-instructions",
+      "name": "@deepseek-ai/dsh-agent-instructions",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/context/time-context",
+      "name": "@deepseek-ai/dsh-time-context",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/shell/tool-bash",
+      "name": "@deepseek-ai/dsh-tool-bash",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/fs/tool-fs",
+      "name": "@deepseek-ai/dsh-tool-fs",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/fs/tool-fs-search",
+      "name": "@deepseek-ai/dsh-tool-fs-search",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/jobs/tool-jobs",
+      "name": "@deepseek-ai/dsh-tool-jobs",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/schedule/tool-schedule",
+      "name": "@deepseek-ai/dsh-tool-schedule",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/skill/skill-filesystem",
+      "name": "@deepseek-ai/dsh-skill-filesystem",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/skill/tool-skill",
+      "name": "@deepseek-ai/dsh-tool-skill",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/goal/command-goal",
+      "name": "@deepseek-ai/dsh-command-goal",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/goal/tool-goal",
+      "name": "@deepseek-ai/dsh-tool-goal",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/plan/plan-mode",
+      "name": "@deepseek-ai/dsh-plan-mode",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/compaction/compaction-basic",
+      "name": "@deepseek-ai/dsh-compaction-basic",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/compaction/command-compact",
+      "name": "@deepseek-ai/dsh-command-compact",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/compaction/compaction-tool-result-pruner",
+      "name": "@deepseek-ai/dsh-compaction-tool-result-pruner",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/subagent/tool-subagent-control",
+      "name": "@deepseek-ai/dsh-tool-subagent-control",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/subagent/tool-subagent",
+      "name": "@deepseek-ai/dsh-tool-subagent",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/workflow/workflow-ptc",
+      "name": "@deepseek-ai/dsh-workflow-ptc",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/workflow/tool-workflow",
+      "name": "@deepseek-ai/dsh-tool-workflow",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/interaction/tool-ask-user",
+      "name": "@deepseek-ai/dsh-tool-ask-user",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/todo/tool-todo",
+      "name": "@deepseek-ai/dsh-tool-todo",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/web/tool-web",
+      "name": "@deepseek-ai/dsh-tool-web",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/core/agent-tool-presentation",
+      "name": "@deepseek-ai/dsh-agent-tool-presentation",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/core/tools",
+      "name": "@deepseek-ai/dsh-tools",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/ptc-runtime/ptc-runtime-node",
+      "name": "@deepseek-ai/dsh-ptc-runtime-node",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/spill/spill-local",
+      "name": "@deepseek-ai/dsh-spill-local",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/spill/spill-policy",
+      "name": "@deepseek-ai/dsh-spill-policy",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/lsp/lsp",
+      "name": "@deepseek-ai/dsh-lsp",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/lsp/lsp-stdio",
+      "name": "@deepseek-ai/dsh-lsp-stdio",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/lsp/tool-lsp",
+      "name": "@deepseek-ai/dsh-tool-lsp",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/experimental/agent-team-profile",
+      "name": "@deepseek-ai/dsh-experimental-agent-team-profile",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/experimental/agent-team",
+      "name": "@deepseek-ai/dsh-experimental-agent-team",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/experimental/tool-agent-team",
+      "name": "@deepseek-ai/dsh-experimental-tool-agent-team",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/experimental/client-ui-agent-team",
+      "name": "@deepseek-ai/dsh-experimental-client-ui-agent-team",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/sandbox/sandbox-local",
+      "name": "@deepseek-ai/dsh-sandbox-local",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/sandbox/sandbox-policy",
+      "name": "@deepseek-ai/dsh-sandbox-policy",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/sandbox/bash-sandbox",
+      "error": "ENOENT: no such file or directory, open '/home/s00653124/workspace/deepseek-harness/packages/sandbox/bash-sandbox/package.json'"
+    },
+    {
+      "dir": "packages/fs/fs-sandbox",
+      "name": "@deepseek-ai/dsh-fs-sandbox",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/interaction/permission-presets",
+      "name": "@deepseek-ai/dsh-permission-presets",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/interaction/user-approval",
+      "name": "@deepseek-ai/dsh-user-approval",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/bundle/base",
+      "name": "@deepseek-ai/dsh-base",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/bundle/web-app",
+      "name": "@deepseek-ai/dsh-web-app",
+      "version": "0.2.1-rc.3"
+    },
+    {
+      "dir": "packages/bundle/headless",
+      "name": "@deepseek-ai/dsh-headless",
+      "version": "0.2.1-rc.3"
+    }
+  ],
+  "profile": {
+    "dir": "/home/s00653124/.dsh/profiles/web",
+    "manifest": {
+      "name": "dsh-profile-web",
+      "private": true,
+      "dependencies": {
+        "@local/dsh-ai-compiler-preset": "link:/home/s00653124/workspace/dsh-compiler-mode/config/bundle-ai-compiler"
+      },
+      "dsh": {
+        "profile": {
+          "bundles": [
+            "@deepseek-ai/dsh-base",
+            "@deepseek-ai/dsh-web-app",
+            "@local/dsh-ai-compiler-preset"
+          ]
+        }
+      }
+    }
+  },
+  "deliveryBundle": {
+    "dir": "/home/s00653124/workspace/dsh-compiler-mode/config/bundle-ai-compiler",
+    "manifest": {
+      "name": "@local/dsh-ai-compiler-preset",
+      "version": "1.0.0",
+      "private": true,
+      "type": "module",
+      "description": "AI Compiler Engineering agent preset for DSH: PTC base + native spill/compaction + LSP + Agent Teams.",
+      "dsh": {
+        "bundle": {
+          "patch": "./cordis.patch.yml"
+        }
+      }
+    }
+  }
+}

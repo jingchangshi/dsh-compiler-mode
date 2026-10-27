@@ -1,0 +1,481 @@
+{
+  "sessionId": "session-8f365f76-53ad-491d-a2be-1dab1b6ee1a3",
+  "header": {
+    "version": 4,
+    "id": "session-8f365f76-53ad-491d-a2be-1dab1b6ee1a3",
+    "createdAt": 1793081517562,
+    "cwd": "/home/s00653124/workspace/dsh-compiler-mode/evidence/e2e/case-c/workdir",
+    "isSeeded": false,
+    "delegationDepth": 0,
+    "agentPreset": "ai-compiler"
+  },
+  "inheritedEventCount": 0,
+  "eventCount": 294,
+  "counts": {
+    "permission/preset": 1,
+    "sandbox/mode": 1,
+    "approval/policy": 1,
+    "agent/inbox/spliced": 13,
+    "turn/start": 3,
+    "step/start": 27,
+    "system/message": 1,
+    "user/message": 9,
+    "request/header": 1,
+    "request/context": 1,
+    "session/title": 2,
+    "session/title-llm-request": 1,
+    "assistant/message": 27,
+    "tool/call": 24,
+    "tool/ptc-dispatch-start": 47,
+    "job/registered": 12,
+    "job/settled": 12,
+    "tool/ptc-dispatch": 47,
+    "tool/result": 24,
+    "step/end": 27,
+    "team/member": 2,
+    "subagent/catalog": 1,
+    "team/task": 6,
+    "workspace/changes": 1,
+    "turn/end": 3
+  },
+  "toolCalls": [
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const r = await tools.bash({ description: \\\"Count lines in big source files\\\", command: \\\"wc -l big-src-a.cpp big-src-b.cpp big-src-c.cpp\\\" });\\nconsole.log(JSON.stringify(r, null, 2));\",\"description\":\"Count lines in three big source files\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const r = await tools.bash({ description: \\\"Print long stdout to force spill\\\", command: \\\"seq 1 20000\\\" });\\nconst text = r.stdout.text;\\nconst lines = text.split(\\\"\\\\n\\\").filter(l => l.length > 0);\\nconsole.log(\\\"truncated flag:\\\", r.stdout.truncated);\\nconsole.log(\\\"spillPath:\\\", r.stdout.spillPath ?? \\\"(none)\\\");\\nconsole.log(\\\"text length:\\\", text.length);\\nconsole.log(\\\"line count:\\\", lines.length);\\nconsole.log(\\\"last 3:\\\", JSON.stringify(lines.slice(-3)));\\nconsole.log(\\\"HEAD:\\\", JSON.stringify(lines.slice(0, 3)));\\nconsole.log(\\\"--- raw stdout text ---\\\");\\nconsole.log(text.slice(0, 600));\",\"description\":\"Print 20000 lines, return only tail and count\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const p = \\\"/tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\\\";\\nconst w = await tools.bash({ description: \\\"Count lines in spilled artifact\\\", command: `wc -l ${p} && ls -l ${p}` });\\nconsole.log(\\\"wc/ls exit:\\\", w.exitCode);\\nconsole.log(w.stdout.text);\\n\\nconst rd = await tools.read({ file_path: p });\\nconsole.log(\\\"read totalLines:\\\", rd.totalLines);\\nconsole.log(\\\"read first line:\\\", JSON.stringify(rd.lines[0]?.text));\\nconsole.log(\\\"read last line:\\\", JSON.stringify(rd.lines[rd.lines.length - 1]?.text));\\nconsole.log(\\\"read last line number:\\\", rd.lines[rd.lines.length - 1]?.number);\",\"description\":\"Verify spilled artifact line count via bash and read\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const p = \\\"/tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\\\";\\nconst rd = await tools.read({ file_path: p, offset: 1, limit: 20000 });\\nconsole.log(\\\"returned lines:\\\", rd.lines.length, \\\"totalLines:\\\", rd.totalLines);\\nconsole.log(\\\"first:\\\", rd.lines[0]?.number, JSON.stringify(rd.lines[0]?.text));\\nconsole.log(\\\"last:\\\", rd.lines[rd.lines.length-1]?.number, JSON.stringify(rd.lines[rd.lines.length-1]?.text));\",\"description\":\"Try reading entire spilled artifact in one call\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const g = await tools.grep({ pattern: \\\"symbol_b_\\\", path: \\\".\\\" });\\nconst paths = [...new Set(g.matches.map(m => m.path))];\\nconsole.log(\\\"match count:\\\", g.matches.length);\\nconsole.log(\\\"distinct paths:\\\", paths.length);\\nconsole.log(\\\"sample paths:\\\", JSON.stringify(paths.slice(0, 3), null, 2));\\nconsole.log(\\\"sample match lines:\\\", JSON.stringify(g.matches.slice(0, 2).map(m => ({ p: m.path, n: m.lineNumber, l: m.line })), null, 2));\",\"description\":\"Grep symbol_b_ and keep only count plus samples\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"let g = null, err = null;\\nfor (let attempt = 1; attempt <= 3; attempt++) {\\n  try { g = await tools.grep({ pattern: \\\"symbol_b_\\\", path: \\\".\\\" }); err = null; break; }\\n  catch (e) { err = String(e).slice(0, 200); console.log(\\\"attempt\\\", attempt, \\\"failed:\\\", err); }\\n}\\nif (!g) { console.log(\\\"GAVE UP\\\"); }\\nelse {\\n  const paths = [...new Set(g.matches.map(m => m.path))];\\n  console.log(\\\"match count:\\\", g.matches.length);\\n  console.log(\\\"distinct paths:\\\", paths.length);\\n  console.log(\\\"sample paths:\\\", JSON.stringify(paths.slice(0, 3)));\\n  console.log(\\\"first match:\\\", JSON.stringify(g.matches[0]));\\n}\",\"description\":\"Retry grep for symbol_b_ up to three times\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const r = await tools.bash({ description: \\\"Inspect big-src-b.cpp permissions and read it\\\", command: \\\"ls -l . && echo '--- stat b ---' && stat big-src-b.cpp && echo '--- head b ---' && head -c 200 big-src-b.cpp | od -c | head -5; echo '--- file b ---'; file big-src-b.cpp\\\" });\\nconsole.log(\\\"exit:\\\", r.exitCode);\\nconsole.log(\\\"STDOUT:\\\\n\\\" + r.stdout.text);\\nconsole.log(\\\"STDERR:\\\\n\\\" + r.stderr.text);\",\"description\":\"Diagnose unreadable big-src-b.cpp\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const r = await tools.bash({ description: \\\"Count symbol_b_ matches with GNU grep\\\", command: \\\"grep -c 'symbol_b_' big-src-a.cpp big-src-b.cpp big-src-c.cpp; echo '--- total ---'; grep -o 'symbol_b_' big-src-a.cpp big-src-b.cpp big-src-c.cpp | wc -l\\\" });\\nconsole.log(\\\"exit:\\\", r.exitCode);\\nconsole.log(r.stdout.text);\\nconsole.log(\\\"stderr:\\\", r.stderr.text);\",\"description\":\"Count symbol_b_ occurrences using GNU grep\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const tries = [\\n  () => tools.grep({ pattern: \\\"symbol_b_\\\", path: \\\".\\\", include: \\\"big-src-b.cpp\\\" }),\\n  () => tools.grep({ pattern: \\\"symbol_b_\\\", path: \\\"big-src-b.cpp\\\" }),\\n  () => tools.grep({ pattern: \\\"symbol_b_\\\", path: \\\"./big-src-b.cpp\\\" }),\\n];\\nfor (const [i, fn] of tries.entries()) {\\n  try {\\n    const g = await fn();\\n    console.log(\\\"variant\\\", i, \\\"OK count:\\\", g.matches.length);\\n    console.log(\\\"distinct paths:\\\", JSON.stringify([...new Set(g.matches.map(m => m.path))].slice(0,3)));\\n    console.log(\\\"first:\\\", JSON.stringify(g.matches[0]));\\n    break;\\n  } catch (e) { console.log(\\\"variant\\\", i, \\\"failed:\\\", String(e).slice(0, 160)); }\\n}\",\"description\":\"Try scoped grep variants to get sample paths\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const cat = await tools.read({ file_path: \\\"failing-test.sh\\\" });\\nconsole.log(\\\"--- failing-test.sh ---\\\");\\nconsole.log(cat.lines.map(l => `${l.number}: ${l.text}`).join(\\\"\\\\n\\\"));\\n\\nconst r = await tools.bash({ description: \\\"Run failing-test.sh\\\", command: \\\"./failing-test.sh\\\" });\\nconsole.log(\\\"\\\\nexit code:\\\", r.exitCode, \\\"| signal:\\\", r.signal);\\nconsole.log(\\\"stdout:\\\", JSON.stringify(r.stdout.text));\\nconsole.log(\\\"stderr:\\\", JSON.stringify(r.stderr.text));\\nconsole.log(\\\"stderr lines:\\\", JSON.stringify(r.stderr.text.split(\\\"\\\\n\\\").filter(Boolean)));\",\"description\":\"Read and run the failing test script\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const s = await tools.spawn_teammate({\\n  name: \\\"slowpoke\\\",\\n  context: \\\"fresh\\\",\\n  description: \\\"Runs several long run_code programs so the Lead can test interrupt semantics.\\\",\\n  prompt: `You are \\\"slowpoke\\\", a teammate on an evidence-gathering exercise. Working directory: ${process.cwd?.() ?? \\\"/home/s00653124/workspace/dsh-compiler-mode/evidence/e2e/case-c/workdir\\\"}.\\n\\nYou are in PTC mode: run_code is your only direct tool; call bash/read/grep from inside a run_code program via await tools.bash({...}).\\n\\nDo exactly this, one run_code call per step (do not skip any):\\n1. run_code: await tools.bash({ description: \\\"count\\\", command: \\\"wc -l big-src-a.cpp big-src-b.cpp big-src-c.cpp\\\" }) and print the result.\\n2. run_code: await tools.bash({ description: \\\"long\\\", command: \\\"seq 1 20000 | while read n; do echo $n; done\\\" }) and print only the line count.\\n3. run_code: await tools.bash({ description: \\\"slow\\\", command: \\\"for i in $(seq 1 40); do echo tick $i; sleep 2; done\\\" }) — this takes about 80 seconds; print only the last 2 lines.\\n4. run_code: await tools.bash({ description: \\\"slow2\\\", command: \\\"for i in $(seq 1 40); do echo tick $i; sleep 2; done\\\" }) — another ~80 seconds; print only the last 2 lines.\\n5. run_code: await tools.read({ file_path: \\\"failing-test.sh\\\" }) and print its lines.\\n6. Finally send_message to \\\"lead\\\" with a one-paragraph summary: the wc counts, the long-output line count, and confirmation that all steps ran.\\n\\nDo not modify or delete any file. Keep going even if interrupted once; after any interruption, resume from where you left off.`,\\n});\\nconsole.log(JSON.stringify(s, null, 2));\",\"description\":\"Spawn slowpoke teammate with long-running steps\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const before = await tools.list_agents();\\nconst b = before.find(a => a.target === \\\"slowpoke\\\");\\nconsole.log(\\\"BEFORE status:\\\", b?.status, \\\"| full:\\\", JSON.stringify(b));\\n\\nconst intr = await tools.interrupt_agent({ target: \\\"slowpoke\\\" });\\nconsole.log(\\\"INTERRUPT previousStatus:\\\", JSON.stringify(intr));\\n\\nconst after = await tools.list_agents();\\nconst a2 = after.find(x => x.target === \\\"slowpoke\\\");\\nconsole.log(\\\"AFTER status:\\\", a2?.status, \\\"| full:\\\", JSON.stringify(a2));\\n\\nconst w = await tools.wait_agent({ timeout_ms: 30000 });\\nconsole.log(\\\"WAIT1:\\\", JSON.stringify(w));\",\"description\":\"List, interrupt, list again, then wait for slowpoke\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const before = await tools.list_agents({});\\nconst b = before.find(a => a.target === \\\"slowpoke\\\");\\nconsole.log(\\\"BEFORE status:\\\", b?.status, \\\"| full:\\\", JSON.stringify(b));\\n\\nconst intr = await tools.interrupt_agent({ target: \\\"slowpoke\\\" });\\nconsole.log(\\\"INTERRUPT previousStatus:\\\", JSON.stringify(intr));\\n\\nconst after = await tools.list_agents({});\\nconst a2 = after.find(x => x.target === \\\"slowpoke\\\");\\nconsole.log(\\\"AFTER status:\\\", a2?.status, \\\"| full:\\\", JSON.stringify(a2));\\n\\nconst w = await tools.wait_agent({ timeout_ms: 30000 });\\nconsole.log(\\\"WAIT1:\\\", JSON.stringify(w));\",\"description\":\"List, interrupt, list again, then wait for slowpoke\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const msg = await tools.send_message({\\n  target: \\\"slowpoke\\\",\\n  message: \\\"Follow-up from lead: you were interrupted after step 1 (the wc counts). Please resume from step 2. Run the remaining steps 2-5 as instructed, then send me your summary via send_message to 'lead'. If the ~80s sleep loops are too slow, shorten them to about 5 ticks each — the point is that you keep working. Do not modify or delete any files.\\\",\\n});\\nconsole.log(\\\"send_message:\\\", JSON.stringify(msg));\\n\\nconst w2 = await tools.wait_agent({ timeout_ms: 30000 });\\nconsole.log(\\\"WAIT2:\\\", JSON.stringify(w2));\\n\\nconst agents = await tools.list_agents({});\\nconsole.log(\\\"statuses:\\\", JSON.stringify(agents.map(a => ({ t: a.target, s: a.status }))));\",\"description\":\"Send follow-up to slowpoke and wait again\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const t1 = await tools.team_task_create({\\n  subject: \\\"collect-evidence\\\",\\n  description: \\\"Gather Case C evidence: wc -l counts for big-src-a/b/c.cpp (6000/6000/6000 = 18000 total), the long-stdout total line count from `seq 1 20000` (20000, spilled to /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log), the symbol_b_ grep count (6000 matches, all in big-src-b.cpp), and ./failing-test.sh exit code 3 with stderr 'FAIL check-2: expected 42, got 41'.\\\",\\n  write_scopes: [],\\n});\\nconsole.log(\\\"T1 created:\\\", JSON.stringify(t1, null, 2));\\n\\nconst t2 = await tools.team_task_create({\\n  subject: \\\"verify-evidence\\\",\\n  description: \\\"Verify the evidence collected by collect-evidence: re-check the wc counts, confirm the spill artifact has 20000 lines, confirm exit code 3 from ./failing-test.sh, and confirm no evidence files were deleted.\\\",\\n  blocked_by: [t1.id],\\n  write_scopes: [],\\n});\\nconsole.log(\\\"T2 created:\\\", JSON.stringify(t2, null, 2));\",\"description\":\"Create collect-evidence and dependent verify-evidence tasks\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"// Claim + complete task-1\\nconst c1 = await tools.team_task_update({ task_id: \\\"task-1\\\", expected_revision: 1, action: \\\"claim\\\" });\\nconsole.log(\\\"T1 claimed:\\\", JSON.stringify({ status: c1.status, rev: c1.revision, owner: c1.ownerName }));\\n\\nconst d1 = await tools.team_task_update({ task_id: \\\"task-1\\\", expected_revision: c1.revision, action: \\\"complete\\\" });\\nconsole.log(\\\"T1 completed:\\\", JSON.stringify({ status: d1.status, rev: d1.revision, owner: d1.ownerName }));\\n\\n// Now task-2 should be ready\\nconst t2 = await tools.team_task_get({ task_id: \\\"task-2\\\" });\\nconsole.log(\\\"T2 after unblock:\\\", JSON.stringify({ status: t2.status, rev: t2.revision, ready: t2.ready, blockedBy: t2.blockedBy }));\\n\\nconst c2 = await tools.team_task_update({ task_id: \\\"task-2\\\", expected_revision: t2.revision, action: \\\"claim\\\" });\\nconsole.log(\\\"T2 claimed:\\\", JSON.stringify({ status: c2.status, rev: c2.revision, owner: c2.ownerName, ready: c2.ready }));\\n\\nconst d2 = await tools.team_task_update({ task_id: \\\"task-2\\\", expected_revision: c2.revision, action: \\\"complete\\\" });\\nconsole.log(\\\"T2 completed:\\\", JSON.stringify({ status: d2.status, rev: d2.revision, owner: d2.ownerName }));\",\"description\":\"Claim and complete both tasks in dependency order\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const w3 = await tools.wait_agent({ timeout_ms: 45000 });\\nconsole.log(\\\"WAIT3:\\\", JSON.stringify(w3));\\nconst agents = await tools.list_agents({});\\nconsole.log(\\\"statuses:\\\", JSON.stringify(agents.map(a => ({ t: a.target, s: a.status }))));\\n\\nconst v = await tools.bash({ description: \\\"Verify evidence intact\\\", command: \\\"ls -l big-src-*.cpp failing-test.sh && wc -l big-src-*.cpp && wc -l /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\\\" });\\nconsole.log(\\\"verify exit:\\\", v.exitCode);\\nconsole.log(v.stdout.text);\",\"description\":\"Wait for slowpoke and verify evidence files intact\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const tasks = await tools.team_task_list({});\\nconsole.log(\\\"TASKS:\\\", JSON.stringify(tasks.tasks.map(t => ({ id: t.id, s: t.subject, owner: t.ownerName ?? null, status: t.status, rev: t.revision, blockedBy: t.blockedBy })), null, 2));\\n\\nconst agents = await tools.list_agents({});\\nconsole.log(\\\"AGENTS:\\\", JSON.stringify(agents.map(a => ({ t: a.target, s: a.status })), null, 2));\\n\\nconst chk = await tools.bash({ description: \\\"Final evidence check\\\", command: \\\"grep -c symbol_b_ big-src-b.cpp; ./failing-test.sh >/dev/null 2>&1; echo \\\\\\\"failing-test exit=$?\\\\\\\"; ls *.cpp failing-test.sh | wc -l\\\" });\\nconsole.log(\\\"chk exit:\\\", chk.exitCode);\\nconsole.log(chk.stdout.text);\",\"description\":\"Collect final task board and agent state\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"// Source 1: shared task board (durable across restart)\\nconst tasks = await tools.team_task_list({});\\nfor (const t of tasks.tasks) {\\n  console.log(`=== ${t.id} | ${t.subject} | owner=${t.ownerName} | status=${t.status} | rev=${t.revision} | blockedBy=${JSON.stringify(t.blockedBy)}`);\\n  console.log(t.description);\\n  console.log();\\n}\",\"description\":\"Recover facts from the shared task board\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"// Source 2: live re-measurement from working dir + spill artifact\\nconst p = \\\"/tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\\\";\\nconst r = await tools.bash({\\n  description: \\\"Re-verify all five durable facts from live sources\\\",\\n  command:\\n    \\\"echo '--- (1,2,3) wc -l ---'; wc -l big-src-a.cpp big-src-b.cpp big-src-c.cpp; \\\" +\\n    \\\"echo '--- (4) spill artifact ---'; wc -l \\\" + p + \\\" 2>&1 | tee /dev/null; \\\" +\\n    \\\"echo '--- (5) failing-test exit ---'; ./failing-test.sh >/dev/null 2>/tmp/ft.err; echo \\\\\\\"exit=$?\\\\\\\"; \\\" +\\n    \\\"echo 'stderr:'; cat /tmp/ft.err; \\\" +\\n    \\\"echo '--- evidence files present ---'; ls -1 big-src-*.cpp failing-test.sh\\\",\\n});\\nconsole.log(\\\"exit:\\\", r.exitCode);\\nconsole.log(r.stdout.text);\\nconsole.log(\\\"STDERR:\\\", r.stderr.text);\",\"description\":\"Re-measure all five facts from live sources\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const agents = await tools.list_agents({});\\nconsole.log(\\\"AGENTS:\\\", JSON.stringify(agents.map(a => ({ t: a.target, role: a.role, s: a.status, ctx: a.context })), null, 2));\\n\\n// Check the spill artifact is still readable / stable\\nconst rd = await tools.read({ file_path: \\\"/tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\\\", limit: 3 });\\nconsole.log(\\\"artifact totalLines:\\\", rd.totalLines, \\\"| first lines:\\\", JSON.stringify(rd.lines.map(l => l.text)));\\n\\n// Sanity: no evidence was tampered with\\nconst stat = await tools.bash({ description: \\\"Check evidence file mtimes\\\", command: \\\"stat -c '%n %s %y' big-src-*.cpp failing-test.sh\\\" });\\nconsole.log(stat.stdout.text);\",\"description\":\"Check agent roster and evidence integrity after restart\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"// Source 1: shared task board (durable on disk, survives restarts)\\nconst tasks = await tools.team_task_list({});\\nconsole.log(\\\"task count:\\\", tasks.tasks.length);\\nfor (const t of tasks.tasks) {\\n  console.log(`=== ${t.id} | ${t.subject} | owner=${t.ownerName ?? \\\"none\\\"} | status=${t.status} | rev=${t.revision} | blockedBy=${JSON.stringify(t.blockedBy)}`);\\n  console.log(\\\"desc:\\\", t.description);\\n  console.log();\\n}\",\"description\":\"Recover durable facts from shared task board\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const p = \\\"/tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\\\";\\nconst r = await tools.bash({\\n  description: \\\"Re-verify five durable facts from live sources\\\",\\n  command:\\n    \\\"echo '--- (1,2,3) wc -l on source files ---'; wc -l big-src-a.cpp big-src-b.cpp big-src-c.cpp; \\\" +\\n    \\\"echo '--- (4) spill artifact ---'; ls -l \\\" + p + \\\"; wc -l \\\" + p + \\\"; \\\" +\\n    \\\"echo '--- (5) failing-test ---'; ./failing-test.sh >/tmp/ft.out 2>/tmp/ft.err; echo \\\\\\\"exit=$?\\\\\\\"; \\\" +\\n    \\\"echo 'stderr:'; cat /tmp/ft.err; \\\" +\\n    \\\"echo '--- evidence files ---'; ls -1 big-src-*.cpp failing-test.sh\\\",\\n});\\nconsole.log(\\\"bash exit:\\\", r.exitCode);\\nconsole.log(r.stdout.text);\\nif (r.stderr.text.trim()) console.log(\\\"STDERR:\\\", r.stderr.text);\",\"description\":\"Re-measure all five facts from live sources\"}"
+    },
+    {
+      "name": "run_code",
+      "arguments": "{\"code\":\"const p = \\\"/tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\\\";\\n// Confirm artifact semantics: does it really span 1..20000?\\nconst head = await tools.read({ file_path: p, offset: 1, limit: 2 });\\nconst tail = await tools.read({ file_path: p, offset: 19999, limit: 2 });\\nconsole.log(\\\"totalLines:\\\", head.totalLines);\\nconsole.log(\\\"first lines:\\\", JSON.stringify(head.lines.map(l => `${l.number}:${l.text}`)));\\nconsole.log(\\\"last lines:\\\", JSON.stringify(tail.lines.map(l => `${l.number}:${l.text}`)));\\n\\nconst agents = await tools.list_agents({});\\nconsole.log(\\\"\\\\nAGENTS:\\\", JSON.stringify(agents.map(a => ({ t: a.target, role: a.role, s: a.status, ctx: a.context ?? null })), null, 2));\\n\\nconst stat = await tools.bash({ description: \\\"Evidence integrity check\\\", command: \\\"stat -c '%n size=%s mtime=%y' big-src-*.cpp failing-test.sh\\\" });\\nconsole.log(stat.stdout.text);\",\"description\":\"Verify artifact boundaries, roster, and file integrity\"}"
+    }
+  ],
+  "toolResults": [
+    {
+      "isError": false,
+      "error": null,
+      "text": "{\n  \"kind\": \"foreground\",\n  \"cwd\": \"/home/s00653124/workspace/dsh-compiler-mode/evidence/e2e/case-c/workdir\",\n  \"exitCode\": 0,\n  \"signal\": null,\n  \"timedOut\": false,\n  \"aborted\": false,\n  \"timeoutMs\": 60000,\n  \"stdout\": {\n    \"text\": \"  6000 big-src-a.cpp\\n  6000 big-src-b.cpp\\n  6000 big-src-c.cpp\\n 18000 total\\n\",\n    \"truncated\": false\n  },\n  \"stderr\": {\n    \"text\": \"\",\n    \"truncated\": false\n  },\n  \"sandbox\": {\n    \"mode\": \"danger-full-access\",\n    \"denied\": false\n  }\n}"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "truncated flag: true\nspillPath: /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\ntext length: 64000\nline count: 10800\nlast 3: [\"19998\",\"19999\",\"20000\"]\nHEAD: [\"201\",\"9202\",\"9203\"]\n--- raw stdout text ---\n201\n9202\n9203\n9204\n9205\n9206\n9207\n9208\n9209\n9210\n9211\n9212\n9213\n9214\n9215\n9216\n9217\n9218\n9219\n9220\n9221\n9222\n9223\n9224\n9225\n9226\n9227\n9228\n9229\n9230\n9231\n9232\n9233\n9234\n9235\n9236\n9237\n9238\n9239\n9240\n9241\n9242\n9243\n9244\n9245\n9246\n9247\n9248\n9249\n9250\n9251\n9252\n9253\n9254\n9255\n9256\n9257\n9258\n9259\n9260\n9261\n9262\n9263\n9264\n9265\n9266\n9267\n9268\n9269\n9270\n9271\n9272\n9273\n9274\n9275\n9276\n9277\n9278\n9279\n9280\n9281\n9282\n9283\n9284\n9285\n9286\n9287\n9288\n9289\n9290\n9291\n9292\n9293\n9294\n9295\n9296\n9297\n9298\n9299\n9300\n9301\n9302\n9303\n9304\n9305\n9306\n9307\n9308\n9309\n9310\n9311\n9312\n9313\n9314\n9315\n9316\n9317\n9318\n9319\n9320\n9"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "wc/ls exit: 0\n20000 /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\n-rw------- 1 s00653124 s00653124 108894 Oct 27 14:12 /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\n\nread totalLines: 20000\nread first line: \"1\"\nread last line: \"2000\"\nread last line number: 2000"
+    },
+    {
+      "isError": true,
+      "error": {
+        "name": "CodeRunFailedError",
+        "code": "CODE_RUN_FAILED"
+      },
+      "text": "Error: code run failed (exception): ToolCallError: limit must be less than or equal to 2000\n    at bindingFailure (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:257:23)\n    at Object.reject (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:341:24)\n    at file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:294:13\n    at JsonChannel.failed [as receive] (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/process.ts:46:39)\n    at Socket.onData (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/channel.ts:78:14)\n    at Socket.emit (node:events:514:28)\n    at addChunk (node:internal/streams/readable:567:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:518:3)\n    at Readable.push (node:internal/streams/readable:398:5)\n    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)\nFile sandbox: danger-full-access."
+    },
+    {
+      "isError": true,
+      "error": {
+        "name": "CodeRunFailedError",
+        "code": "CODE_RUN_FAILED"
+      },
+      "text": "Error: code run failed (exception): ToolCallError: grep search failed (exit 2): rg: ./big-src-b.cpp: Resource temporarily unavailable (os error 11)\n    at bindingFailure (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:257:23)\n    at Object.reject (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:341:24)\n    at file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:294:13\n    at JsonChannel.failed [as receive] (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/process.ts:46:39)\n    at Socket.onData (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/channel.ts:78:14)\n    at Socket.emit (node:events:514:28)\n    at addChunk (node:internal/streams/readable:567:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:518:3)\n    at Readable.push (node:internal/streams/readable:398:5)\n    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)\nFile sandbox: danger-full-access."
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "attempt 1 failed: ToolCallError: grep search failed (exit 2): rg: ./big-src-b.cpp: Resource temporarily unavailable (os error 11)\nattempt 2 failed: ToolCallError: grep search failed (exit 2): rg: ./big-src-b.cpp: Resource temporarily unavailable (os error 11)\nattempt 3 failed: ToolCallError: grep search failed (exit 2): rg: ./big-src-b.cpp: Resource temporarily unavailable (os error 11)\nGAVE UP"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "exit: 0\nSTDOUT:\ntotal 808\n-rw-rw-r-- 1 s00653124 s00653124 273786 Oct 27 14:11 big-src-a.cpp\n-rw-rw-r-- 1 s00653124 s00653124 273786 Oct 27 14:11 big-src-b.cpp\n-rw-rw-r-- 1 s00653124 s00653124 273786 Oct 27 14:11 big-src-c.cpp\n-rwxrwxr-x 1 s00653124 s00653124    204 Oct 27 14:11 failing-test.sh\n--- stat b ---\n  File: big-src-b.cpp\n  Size: 273786    \tBlocks: 536        IO Block: 4096   regular file\nDevice: 252,0\tInode: 409780819   Links: 1\nAccess: (0664/-rw-rw-r--)  Uid: ( 1071/s00653124)   Gid: ( 1071/s00653124)\nAccess: 2026-10-27 14:11:32.713008826 +0800\nModify: 2026-10-27 14:11:32.684008825 +0800\nChange: 2026-10-27 14:11:32.684008825 +0800\n Birth: 2026-10-27 14:11:32.658008824 +0800\n--- head b ---\n0000000   i   n   t       s   y   m   b   o   l   _   b   _   1   (   i\n0000020   n   t       x   )       {       r   e   t   u   r   n       x\n0000040       -       1   ;       }  \\n   i   n   t       s   y   m   b\n0000060   o   l   _   b   _   2   (   i   n   t       x   )       {    \n0000100   r   e   t   u   r   n       x       -       2   ;       }  \\n\n--- file b ---\nbig-src-b.cpp: ASCII text\n\nSTDERR:\n"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "exit: 0\nbig-src-a.cpp:0\nbig-src-b.cpp:6000\nbig-src-c.cpp:0\n--- total ---\n6000\n\nstderr: "
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "variant 0 failed: ToolCallError: grep search failed (exit 2): rg: ./big-src-b.cpp: Resource temporarily unavailable (os error 11)\nvariant 1 OK count: 6000\ndistinct paths: [\"big-src-b.cpp\"]\nfirst: {\"path\":\"big-src-b.cpp\",\"lineNumber\":1,\"line\":\"int symbol_b_1(int x) { return x - 1; }\"}"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "--- failing-test.sh ---\n1: #!/usr/bin/env bash\n2: # A test that fails on purpose: Case C needs a real non-zero exit code.\n3: echo \"RUN 3 checks\"\n4: echo \"ok   check-1\"\n5: echo \"FAIL check-2: expected 42, got 41\" >&2\n6: echo \"ok   check-3\"\n7: exit 3\n\nexit code: 3 | signal: null\nstdout: \"RUN 3 checks\\nok   check-1\\nok   check-3\\n\"\nstderr: \"FAIL check-2: expected 42, got 41\\n\"\nstderr lines: [\"FAIL check-2: expected 42, got 41\"]"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "{\n  \"member\": {\n    \"target\": \"slowpoke\",\n    \"role\": \"teammate\",\n    \"status\": \"running\",\n    \"description\": \"Runs several long run_code programs so the Lead can test interrupt semantics.\",\n    \"provider\": \"spawn\",\n    \"context\": \"fresh\",\n    \"model\": \"auto/deepseek-v4.1-flash\",\n    \"diagnostics\": []\n  }\n}"
+    },
+    {
+      "isError": true,
+      "error": {
+        "name": "CodeRunFailedError",
+        "code": "CODE_RUN_FAILED"
+      },
+      "text": "Error: code run failed (exception): ToolCallError: binding arguments must be lossless JSON\n    at bindingFailure (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:257:23)\n    at Object.value [as list_agents] (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:334:35)\n    at eval (eval at runProgram (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:405:16), <anonymous>:4:28)\n    at runProgram (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/bootstrap.ts:411:25)\n    at runNodeMain (file:///home/s00653124/workspace/deepseek-harness/packages/ptc-runtime/ptc-runtime-node/src/process.ts:71:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async file:///home/s00653124/workspace/dsh-compiler-mode/evidence/e2e/case-c/workdir/[eval1]:1:288\nFile sandbox: danger-full-access."
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "BEFORE status: running | full: {\"target\":\"slowpoke\",\"role\":\"teammate\",\"status\":\"running\",\"description\":\"Runs several long run_code programs so the Lead can test interrupt semantics.\",\"provider\":\"spawn\",\"context\":\"fresh\",\"model\":\"auto/deepseek-v4.1-flash\",\"diagnostics\":[]}\nINTERRUPT previousStatus: {\"previousStatus\":\"running\"}\nAFTER status: inactive | full: {\"target\":\"slowpoke\",\"role\":\"teammate\",\"status\":\"inactive\",\"description\":\"Runs several long run_code programs so the Lead can test interrupt semantics.\",\"provider\":\"spawn\",\"context\":\"fresh\",\"model\":\"auto/deepseek-v4.1-flash\",\"diagnostics\":[]}\nWAIT1: {\"timedOut\":false,\"noProgress\":{\"reason\":\"no-active-peer\",\"message\":\"No other Team member is running or provisioning. wait_agent cannot make progress or wake inactive teammates. Re-list with list_agents and team_task_list, then use send_message to wake each required inactive teammate before waiting again.\"}}"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "send_message: {\"sent\":true}\nWAIT2: {\"timedOut\":true}\nstatuses: [{\"t\":\"lead\",\"s\":\"running\"},{\"t\":\"slowpoke\",\"s\":\"running\"}]"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "T1 created: {\n  \"id\": \"task-1\",\n  \"revision\": 1,\n  \"subject\": \"collect-evidence\",\n  \"description\": \"Gather Case C evidence: wc -l counts for big-src-a/b/c.cpp (6000/6000/6000 = 18000 total), the long-stdout total line count from `seq 1 20000` (20000, spilled to /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log), the symbol_b_ grep count (6000 matches, all in big-src-b.cpp), and ./failing-test.sh exit code 3 with stderr 'FAIL check-2: expected 42, got 41'.\",\n  \"status\": \"pending\",\n  \"blockedBy\": [],\n  \"writeScopes\": [],\n  \"ready\": true,\n  \"writeScopeWarnings\": []\n}\nT2 created: {\n  \"id\": \"task-2\",\n  \"revision\": 1,\n  \"subject\": \"verify-evidence\",\n  \"description\": \"Verify the evidence collected by collect-evidence: re-check the wc counts, confirm the spill artifact has 20000 lines, confirm exit code 3 from ./failing-test.sh, and confirm no evidence files were deleted.\",\n  \"status\": \"pending\",\n  \"blockedBy\": [\n    \"task-1\"\n  ],\n  \"writeScopes\": [],\n  \"ready\": false,\n  \"writeScopeWarnings\": []\n}"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "T1 claimed: {\"status\":\"in_progress\",\"rev\":2,\"owner\":\"lead\"}\nT1 completed: {\"status\":\"completed\",\"rev\":3,\"owner\":\"lead\"}\nT2 after unblock: {\"status\":\"pending\",\"rev\":1,\"ready\":true,\"blockedBy\":[\"task-1\"]}\nT2 claimed: {\"status\":\"in_progress\",\"rev\":2,\"owner\":\"lead\",\"ready\":false}\nT2 completed: {\"status\":\"completed\",\"rev\":3,\"owner\":\"lead\"}"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "WAIT3: {\"timedOut\":false}\nstatuses: [{\"t\":\"lead\",\"s\":\"running\"},{\"t\":\"slowpoke\",\"s\":\"inactive\"}]\nverify exit: 0\n-rw-rw-r-- 1 s00653124 s00653124 273786 Oct 27 14:11 big-src-a.cpp\n-rw-rw-r-- 1 s00653124 s00653124 273786 Oct 27 14:11 big-src-b.cpp\n-rw-rw-r-- 1 s00653124 s00653124 273786 Oct 27 14:11 big-src-c.cpp\n-rwxrwxr-x 1 s00653124 s00653124    204 Oct 27 14:11 failing-test.sh\n  6000 big-src-a.cpp\n  6000 big-src-b.cpp\n  6000 big-src-c.cpp\n 18000 total\n20000 /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\n"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "TASKS: [\n  {\n    \"id\": \"task-1\",\n    \"s\": \"collect-evidence\",\n    \"owner\": \"lead\",\n    \"status\": \"completed\",\n    \"rev\": 3,\n    \"blockedBy\": []\n  },\n  {\n    \"id\": \"task-2\",\n    \"s\": \"verify-evidence\",\n    \"owner\": \"lead\",\n    \"status\": \"completed\",\n    \"rev\": 3,\n    \"blockedBy\": [\n      \"task-1\"\n    ]\n  }\n]\nAGENTS: [\n  {\n    \"t\": \"lead\",\n    \"s\": \"running\"\n  },\n  {\n    \"t\": \"slowpoke\",\n    \"s\": \"inactive\"\n  }\n]\nchk exit: 0\n6000\nfailing-test exit=3\n4\n"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "=== task-1 | collect-evidence | owner=lead | status=completed | rev=3 | blockedBy=[]\nGather Case C evidence: wc -l counts for big-src-a/b/c.cpp (6000/6000/6000 = 18000 total), the long-stdout total line count from `seq 1 20000` (20000, spilled to /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log), the symbol_b_ grep count (6000 matches, all in big-src-b.cpp), and ./failing-test.sh exit code 3 with stderr 'FAIL check-2: expected 42, got 41'.\n\n=== task-2 | verify-evidence | owner=lead | status=completed | rev=3 | blockedBy=[\"task-1\"]\nVerify the evidence collected by collect-evidence: re-check the wc counts, confirm the spill artifact has 20000 lines, confirm exit code 3 from ./failing-test.sh, and confirm no evidence files were deleted.\n"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "exit: 0\n--- (1,2,3) wc -l ---\n  6000 big-src-a.cpp\n  6000 big-src-b.cpp\n  6000 big-src-c.cpp\n 18000 total\n--- (4) spill artifact ---\n20000 /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\n--- (5) failing-test exit ---\nexit=3\nstderr:\nFAIL check-2: expected 42, got 41\n--- evidence files present ---\nbig-src-a.cpp\nbig-src-b.cpp\nbig-src-c.cpp\nfailing-test.sh\n\nSTDERR: "
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "AGENTS: [\n  {\n    \"t\": \"lead\",\n    \"role\": \"lead\",\n    \"s\": \"running\"\n  },\n  {\n    \"t\": \"slowpoke\",\n    \"role\": \"teammate\",\n    \"s\": \"inactive\",\n    \"ctx\": \"fresh\"\n  }\n]\nartifact totalLines: 20000 | first lines: [\"1\",\"2\",\"3\"]\nbig-src-a.cpp 273786 2026-10-27 14:11:32.656008824 +0800\nbig-src-b.cpp 273786 2026-10-27 14:11:32.684008825 +0800\nbig-src-c.cpp 273786 2026-10-27 14:11:32.712008826 +0800\nfailing-test.sh 204 2026-10-27 14:11:32.714008826 +0800\n"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "task count: 2\n=== task-1 | collect-evidence | owner=lead | status=completed | rev=3 | blockedBy=[]\ndesc: Gather Case C evidence: wc -l counts for big-src-a/b/c.cpp (6000/6000/6000 = 18000 total), the long-stdout total line count from `seq 1 20000` (20000, spilled to /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log), the symbol_b_ grep count (6000 matches, all in big-src-b.cpp), and ./failing-test.sh exit code 3 with stderr 'FAIL check-2: expected 42, got 41'.\n\n=== task-2 | verify-evidence | owner=lead | status=completed | rev=3 | blockedBy=[\"task-1\"]\ndesc: Verify the evidence collected by collect-evidence: re-check the wc counts, confirm the spill artifact has 20000 lines, confirm exit code 3 from ./failing-test.sh, and confirm no evidence files were deleted.\n"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "bash exit: 0\n--- (1,2,3) wc -l on source files ---\n  6000 big-src-a.cpp\n  6000 big-src-b.cpp\n  6000 big-src-c.cpp\n 18000 total\n--- (4) spill artifact ---\n-rw------- 1 s00653124 s00653124 108894 Oct 27 14:12 /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\n20000 /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log\n--- (5) failing-test ---\nexit=3\nstderr:\nFAIL check-2: expected 42, got 41\n--- evidence files ---\nbig-src-a.cpp\nbig-src-b.cpp\nbig-src-c.cpp\nfailing-test.sh\n"
+    },
+    {
+      "isError": false,
+      "error": null,
+      "text": "totalLines: 20000\nfirst lines: [\"1:1\",\"2:2\"]\nlast lines: [\"19999:19999\",\"20000:20000\"]\n\nAGENTS: [\n  {\n    \"t\": \"lead\",\n    \"role\": \"lead\",\n    \"s\": \"running\",\n    \"ctx\": null\n  },\n  {\n    \"t\": \"slowpoke\",\n    \"role\": \"teammate\",\n    \"s\": \"inactive\",\n    \"ctx\": \"fresh\"\n  }\n]\nbig-src-a.cpp size=273786 mtime=2026-10-27 14:11:32.656008824 +0800\nbig-src-b.cpp size=273786 mtime=2026-10-27 14:11:32.684008825 +0800\nbig-src-c.cpp size=273786 mtime=2026-10-27 14:11:32.712008826 +0800\nfailing-test.sh size=204 mtime=2026-10-27 14:11:32.714008826 +0800\n"
+    }
+  ],
+  "ptcDispatches": [
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "read",
+      "isError": false
+    },
+    {
+      "name": "read",
+      "isError": true
+    },
+    {
+      "name": "grep",
+      "isError": true
+    },
+    {
+      "name": "grep",
+      "isError": true
+    },
+    {
+      "name": "grep",
+      "isError": true
+    },
+    {
+      "name": "grep",
+      "isError": true
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "grep",
+      "isError": true
+    },
+    {
+      "name": "grep",
+      "isError": false
+    },
+    {
+      "name": "read",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "spawn_teammate",
+      "isError": false
+    },
+    {
+      "name": "list_agents",
+      "isError": false
+    },
+    {
+      "name": "interrupt_agent",
+      "isError": false
+    },
+    {
+      "name": "list_agents",
+      "isError": false
+    },
+    {
+      "name": "wait_agent",
+      "isError": false
+    },
+    {
+      "name": "send_message",
+      "isError": false
+    },
+    {
+      "name": "wait_agent",
+      "isError": false
+    },
+    {
+      "name": "list_agents",
+      "isError": false
+    },
+    {
+      "name": "team_task_create",
+      "isError": false
+    },
+    {
+      "name": "team_task_create",
+      "isError": false
+    },
+    {
+      "name": "team_task_update",
+      "isError": false
+    },
+    {
+      "name": "team_task_update",
+      "isError": false
+    },
+    {
+      "name": "team_task_get",
+      "isError": false
+    },
+    {
+      "name": "team_task_update",
+      "isError": false
+    },
+    {
+      "name": "team_task_update",
+      "isError": false
+    },
+    {
+      "name": "wait_agent",
+      "isError": false
+    },
+    {
+      "name": "list_agents",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "team_task_list",
+      "isError": false
+    },
+    {
+      "name": "list_agents",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "team_task_list",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "list_agents",
+      "isError": false
+    },
+    {
+      "name": "read",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "team_task_list",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    },
+    {
+      "name": "read",
+      "isError": false
+    },
+    {
+      "name": "read",
+      "isError": false
+    },
+    {
+      "name": "list_agents",
+      "isError": false
+    },
+    {
+      "name": "bash",
+      "isError": false
+    }
+  ],
+  "errors": [],
+  "projections": {
+    "tokenUsage": {
+      "uncachedInputTokens": 9937,
+      "outputTokens": 10583,
+      "cacheReadTokens": 542080,
+      "cacheWriteTokens": 0
+    },
+    "contextPressure": {
+      "pressureTokens": 29119,
+      "projectedTokens": 30144,
+      "contextWindow": 1048576
+    },
+    "contextBreakdown": {
+      "systemTokens": 11754,
+      "toolsTokens": 628,
+      "messageTokens": 15011
+    }
+  },
+  "firstSeq": 0,
+  "lastSeq": 293
+}

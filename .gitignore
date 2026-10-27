@@ -1,0 +1,4 @@
+# Runtime scratch and large transient artifacts of the acceptance runs.
+evidence/e2e/*/workdir/build/
+*.log.tmp
+node_modules/

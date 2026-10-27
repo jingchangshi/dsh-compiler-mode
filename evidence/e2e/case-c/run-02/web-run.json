@@ -1,0 +1,366 @@
+{
+  "base": "http://127.0.0.1:3092",
+  "preset": "ai-compiler",
+  "cwd": "/home/s00653124/workspace/dsh-compiler-mode/evidence/e2e/case-c/workdir",
+  "task": "RESUME after restart.\n1. Recover the five Phase-2 durable facts from your own records (task board, spill artifact path), and state where you found each.\n2. Restate them under a \"## Restart\" heading.\n3. State whether your earlier report survived the restart.",
+  "steps": [
+    {
+      "step": "create",
+      "at": 0,
+      "value": {
+        "sessionId": "session-8f365f76-53ad-491d-a2be-1dab1b6ee1a3",
+        "agentPreset": "ai-compiler"
+      }
+    },
+    {
+      "step": "prompt",
+      "at": 53,
+      "value": {
+        "accepted": true
+      }
+    },
+    {
+      "step": "idle",
+      "at": 24223,
+      "projections": {
+        "kind": "sequenced",
+        "asOfSeq": 293,
+        "values": {
+          "title": "AI compiler Case C stress test",
+          "goal": null,
+          "tokenUsage": {
+            "uncachedInputTokens": 9937,
+            "outputTokens": 10583,
+            "cacheReadTokens": 542080,
+            "cacheWriteTokens": 0
+          },
+          "contextPressure": {
+            "pressureTokens": 29119,
+            "projectedTokens": 30144,
+            "contextWindow": 1048576
+          },
+          "contextBreakdown": {
+            "systemTokens": 11754,
+            "toolsTokens": 628,
+            "messageTokens": 15011
+          },
+          "agentPreset": "ai-compiler",
+          "inbox": {
+            "next-turn": [],
+            "next-step": []
+          },
+          "turnOutline": [
+            {
+              "turn": 1,
+              "seq": 4,
+              "prompt": "You are an `ai-compiler` agent running Case C: a…",
+              "response": "All phases complete and verified. Here is the report. ## Spill The long-output command was `seq 1 20000`. The tool retu…"
+            },
+            {
+              "turn": 2,
+              "seq": 219,
+              "prompt": "RESUME after restart. 1. First, without using any…",
+              "response": "Everything recovered cleanly. Here is the resumed report. ## Restart recovery I recovered all five facts without taking…"
+            },
+            {
+              "turn": 3,
+              "seq": 256,
+              "prompt": "RESUME after restart. 1. Recover the five Phase-2…",
+              "response": "All facts recovered and cross-verified across three independent sources. Here is the report. ## Recovery sources I reco…"
+            }
+          ],
+          "userQuestions": {
+            "active": [],
+            "settled": []
+          },
+          "workingDirectory": "/home/s00653124/workspace/dsh-compiler-mode/evidence/e2e/case-c/workdir",
+          "permissions": {
+            "currentValue": "danger-full-access"
+          },
+          "sessionStats": {
+            "turns": 3,
+            "steps": 27,
+            "llmMs": 122334,
+            "toolMs": 58989,
+            "ttftMs": 71265,
+            "ttftSteps": 27,
+            "decodeMs": 51069,
+            "decodeTokens": 10583
+          },
+          "subagentCatalog": [
+            {
+              "mode": "continuable",
+              "label": "Runs several long run_code programs so the Lead can test interrupt semantics.",
+              "id": "f72acc67-de05-415c-843b-22618ab5dd37",
+              "createdAt": 1793081573167
+            }
+          ],
+          "subagentTiming": {
+            "settledMs": 0
+          },
+          "subagent": null,
+          "agentTeam": {
+            "members": [
+              {
+                "id": "session-8f365f76-53ad-491d-a2be-1dab1b6ee1a3",
+                "name": "lead",
+                "role": "lead",
+                "phase": "active"
+              },
+              {
+                "id": "f72acc67-de05-415c-843b-22618ab5dd37",
+                "name": "slowpoke",
+                "role": "teammate",
+                "phase": "active"
+              }
+            ],
+            "tasks": [
+              {
+                "id": "task-1",
+                "revision": 3,
+                "subject": "collect-evidence",
+                "description": "Gather Case C evidence: wc -l counts for big-src-a/b/c.cpp (6000/6000/6000 = 18000 total), the long-stdout total line count from `seq 1 20000` (20000, spilled to /tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log), the symbol_b_ grep count (6000 matches, all in big-src-b.cpp), and ./failing-test.sh exit code 3 with stderr 'FAIL check-2: expected 42, got 41'.",
+                "status": "completed",
+                "blockedBy": [],
+                "writeScopes": [],
+                "ownerName": "lead",
+                "ready": false,
+                "writeScopeWarnings": []
+              },
+              {
+                "id": "task-2",
+                "revision": 3,
+                "subject": "verify-evidence",
+                "description": "Verify the evidence collected by collect-evidence: re-check the wc counts, confirm the spill artifact has 20000 lines, confirm exit code 3 from ./failing-test.sh, and confirm no evidence files were deleted.",
+                "status": "completed",
+                "blockedBy": [
+                  "task-1"
+                ],
+                "writeScopes": [],
+                "ownerName": "lead",
+                "ready": false,
+                "writeScopeWarnings": []
+              }
+            ]
+          },
+          "todos": null,
+          "plan": {
+            "active": false,
+            "pending": false
+          },
+          "modelSelection": {
+            "lastUsed": {
+              "provider": "magpie",
+              "model": "auto/deepseek-v4.1-flash"
+            },
+            "next": {
+              "provider": "magpie",
+              "model": "auto/deepseek-v4.1-flash"
+            }
+          },
+          "sessionListMetadata": {
+            "blank": false,
+            "lastPromptAt": 1793081808931
+          },
+          "imageLimits": {
+            "maxImageBytes": 20971520,
+            "maxImagesPerMessage": 20,
+            "maxMessageImageBytes": 209715200,
+            "maxImagePixels": 64000000,
+            "maxImageDimension": 8192,
+            "mediaTypes": [
+              "image/png",
+              "image/jpeg",
+              "image/webp",
+              "image/gif"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "rpc": [],
+  "sessionId": "session-8f365f76-53ad-491d-a2be-1dab1b6ee1a3",
+  "agentPreset": "ai-compiler",
+  "lastEvent": {
+    "type": "turn/end",
+    "seq": 293
+  },
+  "transcript": [
+    {
+      "seq": 260,
+      "text": "I've been resumed again. Let me re-recover the five facts from durable sources — the shared task board and the spill artifact — rather than assuming anything from prior turns."
+    },
+    {
+      "seq": 267,
+      "text": "The board still holds all five facts. Now let me confirm the spill artifact and re-measure every fact independently from live sources."
+    },
+    {
+      "seq": 276,
+      "text": "All five re-confirmed independently. Let me verify the artifact's content boundaries and check the teammate roster and evidence integrity after this second restart."
+    },
+    {
+      "seq": 291,
+      "text": "All facts recovered and cross-verified across three independent sources. Here is the report.\n\n## Recovery sources\n\nI recovered each of the five facts without taking it from the resume message. Every fact was found in at least two independent records, and I re-measured each one live:\n\n| # | Fact | Primary source | Independent cross-check |\n|---|---|---|---|\n| 1 | `big-src-a.cpp` = **6000 lines** | `task-1` (`collect-evidence`) description on the shared board | `wc -l` live → `6000` |\n| 2 | `big-src-b.cpp` = **6000 lines** | `task-1` description | `wc -l` live → `6000` |\n| 3 | `big-src-c.cpp` = **6000 lines** (18000 total) | `task-1` description | `wc -l` live → `6000`, `18000 total` |\n| 4 | Long output (`seq 1 20000`) = **20000 lines** | **Spill artifact**: `/tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log` | `wc -l` → `20000`; `tools.read` → `totalLines: 20000` spanning `1:1` … `20000:20000` |\n| 5 | `./failing-test.sh` = **exit code 3** | `task-1` description | re-ran it live → `exit=3` |\n\nSpecifically:\n\n- **Facts 1–3, 5** — persisted in the `collect-evidence` task's description on the shared task board (`task-1`, revision 3, status `completed`, owner `lead`, no blockers). That description reads verbatim: *\"…wc -l counts for big-src-a/b/c.cpp (6000/6000/6000 = 18000 total), the long-stdout total line count from `seq 1 20000` (20000, spilled to /tmp/dsh-subprocess-…-stdout.log) … and ./failing-test.sh exit code 3 with stderr 'FAIL check-2: expected 42, got 41'.\"* Writing the facts into the board during Phase 4 is what made them survive both restarts.\n- **Fact 4** — read directly from the spill artifact on disk, which is the authoritative source because the captured stdout was truncated (10,800 of 20,000 lines, with the *head* dropped — captured text began at `201`/`9202`). The artifact is unchanged: 108,894 bytes, still spanning lines 1 through 20000 exactly.\n- **Supporting fact** — the stderr line `FAIL check-2: expected 42, got 41`, recovered from `task-1` and reproduced by re-running the script.\n\n**Integrity holds.** All four evidence files are present, and their sizes and mtimes are byte-identical to the original run at `2026-10-27 14:11:32 +0800` (273786 / 273786 / 273786 / 204 bytes) — nothing was rewritten or deleted. The rota also survived: `slowpoke` is still registered with its original `fresh` context, currently `inactive`.\n\n## Restart\n\nThe five Phase-2 durable facts, re-stated exactly as originally recorded:\n\n1. `big-src-a.cpp` — **6000 lines**\n2. `big-src-b.cpp` — **6000 lines**\n3. `big-src-c.cpp` — **6000 lines** (18000 total across the three)\n4. Long output (`seq 1 20000`) — **20000 lines**\n5. `./failing-test.sh` — **exit code 3**\n   - stderr, verbatim: `FAIL check-2: expected 42, got 41`\n\nTask board after restart, unchanged:\n\n| id | subject | owner | status | revision | blocked_by |\n|---|---|---|---|---|---|\n| `task-1` | collect-evidence | `lead` | `completed` | 3 | — |\n| `task-2` | verify-evidence | `lead` | `completed` | 3 | `[\"task-1\"]` |\n\n## Did the earlier report survive?\n\n**Yes.** My first-turn report is still present in this conversation in full — including the `## Spill` section with the quoted omission notice and the artifact path, `## Interruption` with the `previousStatus: \"running\"` → `inactive` transition and the verbatim `wait_agent` no-active-peer payload, `## Failing test` with exit code 3 and the stderr line, `## Task board`, `## Durable facts`, and `## PTC notes` (15 `run_code` calls, 34 nested tool calls). No compaction or summary block replaced it, and every fact in it agrees with what I just independently re-derived.\n\nTwo honest caveats carried forward from the original run, unchanged: (a) the `tools.grep` failure on the workspace root (`rg: ./big-src-b.cpp: Resource temporarily unavailable (os error 11)`) was worked around by passing the file path directly, which returned the 6000 matches; (b) my Phase 1 retry loop re-issued an identical failing call, which the runtime flagged — I switched approach rather than repeating it again."
+    }
+  ],
+  "finalAnswer": "All facts recovered and cross-verified across three independent sources. Here is the report.\n\n## Recovery sources\n\nI recovered each of the five facts without taking it from the resume message. Every fact was found in at least two independent records, and I re-measured each one live:\n\n| # | Fact | Primary source | Independent cross-check |\n|---|---|---|---|\n| 1 | `big-src-a.cpp` = **6000 lines** | `task-1` (`collect-evidence`) description on the shared board | `wc -l` live → `6000` |\n| 2 | `big-src-b.cpp` = **6000 lines** | `task-1` description | `wc -l` live → `6000` |\n| 3 | `big-src-c.cpp` = **6000 lines** (18000 total) | `task-1` description | `wc -l` live → `6000`, `18000 total` |\n| 4 | Long output (`seq 1 20000`) = **20000 lines** | **Spill artifact**: `/tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-1-8847c159734e-stdout.log` | `wc -l` → `20000`; `tools.read` → `totalLines: 20000` spanning `1:1` … `20000:20000` |\n| 5 | `./failing-test.sh` = **exit code 3** | `task-1` description | re-ran it live → `exit=3` |\n\nSpecifically:\n\n- **Facts 1–3, 5** — persisted in the `collect-evidence` task's description on the shared task board (`task-1`, revision 3, status `completed`, owner `lead`, no blockers). That description reads verbatim: *\"…wc -l counts for big-src-a/b/c.cpp (6000/6000/6000 = 18000 total), the long-stdout total line count from `seq 1 20000` (20000, spilled to /tmp/dsh-subprocess-…-stdout.log) … and ./failing-test.sh exit code 3 with stderr 'FAIL check-2: expected 42, got 41'.\"* Writing the facts into the board during Phase 4 is what made them survive both restarts.\n- **Fact 4** — read directly from the spill artifact on disk, which is the authoritative source because the captured stdout was truncated (10,800 of 20,000 lines, with the *head* dropped — captured text began at `201`/`9202`). The artifact is unchanged: 108,894 bytes, still spanning lines 1 through 20000 exactly.\n- **Supporting fact** — the stderr line `FAIL check-2: expected 42, got 41`, recovered from `task-1` and reproduced by re-running the script.\n\n**Integrity holds.** All four evidence files are present, and their sizes and mtimes are byte-identical to the original run at `2026-10-27 14:11:32 +0800` (273786 / 273786 / 273786 / 204 bytes) — nothing was rewritten or deleted. The rota also survived: `slowpoke` is still registered with its original `fresh` context, currently `inactive`.\n\n## Restart\n\nThe five Phase-2 durable facts, re-stated exactly as originally recorded:\n\n1. `big-src-a.cpp` — **6000 lines**\n2. `big-src-b.cpp` — **6000 lines**\n3. `big-src-c.cpp` — **6000 lines** (18000 total across the three)\n4. Long output (`seq 1 20000`) — **20000 lines**\n5. `./failing-test.sh` — **exit code 3**\n   - stderr, verbatim: `FAIL check-2: expected 42, got 41`\n\nTask board after restart, unchanged:\n\n| id | subject | owner | status | revision | blocked_by |\n|---|---|---|---|---|---|\n| `task-1` | collect-evidence | `lead` | `completed` | 3 | — |\n| `task-2` | verify-evidence | `lead` | `completed` | 3 | `[\"task-1\"]` |\n\n## Did the earlier report survive?\n\n**Yes.** My first-turn report is still present in this conversation in full — including the `## Spill` section with the quoted omission notice and the artifact path, `## Interruption` with the `previousStatus: \"running\"` → `inactive` transition and the verbatim `wait_agent` no-active-peer payload, `## Failing test` with exit code 3 and the stderr line, `## Task board`, `## Durable facts`, and `## PTC notes` (15 `run_code` calls, 34 nested tool calls). No compaction or summary block replaced it, and every fact in it agrees with what I just independently re-derived.\n\nTwo honest caveats carried forward from the original run, unchanged: (a) the `tools.grep` failure on the workspace root (`rg: ./big-src-b.cpp: Resource temporarily unavailable (os error 11)`) was worked around by passing the file path directly, which returned the 6000 matches; (b) my Phase 1 retry loop re-issued an identical failing call, which the runtime flagged — I switched approach rather than repeating it again.",
+  "sessionStats": {
+    "turns": 3,
+    "steps": 27,
+    "llmMs": 122334,
+    "toolMs": 58989,
+    "ttftMs": 71265,
+    "ttftSteps": 27,
+    "decodeMs": 51069,
+    "decodeTokens": 10583
+  },
+  "tokenUsage": {
+    "uncachedInputTokens": 9937,
+    "outputTokens": 10583,
+    "cacheReadTokens": 542080,
+    "cacheWriteTokens": 0
+  },
+  "contextBreakdown": {
+    "systemTokens": 11754,
+    "toolsTokens": 628,
+    "messageTokens": 15011
+  },
+  "turnOutline": [
+    {
+      "turn": 1,
+      "seq": 4,
+      "prompt": "You are an `ai-compiler` agent running Case C: a…",
+      "response": "All phases complete and verified. Here is the report. ## Spill The long-output command was `seq 1 20000`. The tool retu…"
+    },
+    {
+      "turn": 2,
+      "seq": 219,
+      "prompt": "RESUME after restart. 1. First, without using any…",
+      "response": "Everything recovered cleanly. Here is the resumed report. ## Restart recovery I recovered all five facts without taking…"
+    },
+    {
+      "turn": 3,
+      "seq": 256,
+      "prompt": "RESUME after restart. 1. Recover the five Phase-2…",
+      "response": "All facts recovered and cross-verified across three independent sources. Here is the report. ## Recovery sources I reco…"
+    }
+  ],
+  "elapsedMs": 24236,
+  "status": "PASS",
+  "sessionEvidence": {
+    "eventCount": 294,
+    "counts": {
+      "permission/preset": 1,
+      "sandbox/mode": 1,
+      "approval/policy": 1,
+      "agent/inbox/spliced": 13,
+      "turn/start": 3,
+      "step/start": 27,
+      "system/message": 1,
+      "user/message": 9,
+      "request/header": 1,
+      "request/context": 1,
+      "session/title": 2,
+      "session/title-llm-request": 1,
+      "assistant/message": 27,
+      "tool/call": 24,
+      "tool/ptc-dispatch-start": 47,
+      "job/registered": 12,
+      "job/settled": 12,
+      "tool/ptc-dispatch": 47,
+      "tool/result": 24,
+      "step/end": 27,
+      "team/member": 2,
+      "subagent/catalog": 1,
+      "team/task": 6,
+      "workspace/changes": 1,
+      "turn/end": 3
+    },
+    "toolCalls": [
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code",
+      "run_code"
+    ],
+    "ptcDispatches": [
+      "bash",
+      "bash",
+      "bash",
+      "read",
+      "read",
+      "grep",
+      "grep",
+      "grep",
+      "grep",
+      "bash",
+      "bash",
+      "grep",
+      "grep",
+      "read",
+      "bash",
+      "spawn_teammate",
+      "list_agents",
+      "interrupt_agent",
+      "list_agents",
+      "wait_agent",
+      "send_message",
+      "wait_agent",
+      "list_agents",
+      "team_task_create",
+      "team_task_create",
+      "team_task_update",
+      "team_task_update",
+      "team_task_get",
+      "team_task_update",
+      "team_task_update",
+      "wait_agent",
+      "list_agents",
+      "bash",
+      "team_task_list",
+      "list_agents",
+      "bash",
+      "team_task_list",
+      "bash",
+      "list_agents",
+      "read",
+      "bash",
+      "team_task_list",
+      "bash",
+      "read",
+      "read",
+      "list_agents",
+      "bash"
+    ],
+    "errors": [],
+    "header": {
+      "version": 4,
+      "id": "session-8f365f76-53ad-491d-a2be-1dab1b6ee1a3",
+      "createdAt": 1793081517562,
+      "cwd": "/home/s00653124/workspace/dsh-compiler-mode/evidence/e2e/case-c/workdir",
+      "isSeeded": false,
+      "delegationDepth": 0,
+      "agentPreset": "ai-compiler"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "title": "Spill / read / bash capture limits measured on this host",
+  "at": "2026-10-27",
+  "probes": [
+    {
+      "id": "bash-capture-truncation",
+      "what": "bash tool stdout for `awk BEGIN{for(i=1;i<=20000;i++)print i}`",
+      "modelVisible": {
+        "truncatedFlag": true,
+        "lines": 10800,
+        "chars": 64000,
+        "spillPath": "/tmp/dsh-subprocess-6UgEiH/dsh-subprocess-472079-4-996352ee0657-stdout.log"
+      },
+      "artifact": {
+        "bytes": 108894,
+        "lines": 20000,
+        "firstLine": "1",
+        "lastLine": "20000"
+      },
+      "conclusion": "The bash layer truncates its own capture and spills the FULL text to a subprocess log. The head/tail the model keeps is 64,000 chars. This is NOT dsh-spill-policy; it happens before content ever reaches the tool result."
+    },
+    {
+      "id": "spill-policy-not-triggered",
+      "what": "run_code returning a 64,108-byte file via tools.write",
+      "modelVisible": {
+        "result": {
+          "writtenBytes": 64108,
+          "firstLine": "201",
+          "lines": 2000
+        },
+        "chars": 66
+      },
+      "spillArtifact": null,
+      "conclusion": "The write result is small, so spill-policy (12500 estimated tokens) had nothing to retain. Replacing a large write result is not observable via spill; the policy is content-driven, not size-of-source driven."
+    },
+    {
+      "id": "read-tool-2k-line-window",
+      "switch": "run_code program calls tools.read on the 64,108-byte file",
+      "readReturnedBytes": 11199,
+      "readLines": 2000,
+      "readKeys": [
+        "path",
+        "offset",
+        "lines",
+        "totalLines"
+      ],
+      "conclusion": "read returns a 2,000-line window and reports totalLines; the program received only 11,199 of 64,108 bytes. `limit` > 2000 is rejected ('limit must be less than or equal to 2000'). This is the real gap for a PTC program that must consume a whole artifact: iterate with offset, or use bash."
+    }
+  ],
+  "verdict": "Spill storage itself is complete and permission-correct (dirs 0700, files 0600, per-session layout, full bytes on disk). The gaps are (a) the bash capture layer's own 64k truncation and (b) read's 2,000-line paging. Neither loses data \u2014 the full text is always on disk at the reported path \u2014 but a program must page or shell out to consume it.",
+  "evidence": [
+    "evidence/context/spill-probes.json",
+    "evidence/e2e/case-c/run-01/session-evidence.json"
+  ]
+}
