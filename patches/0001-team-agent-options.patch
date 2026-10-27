@@ -1,0 +1,151 @@
+diff --git a/packages/experimental/agent-team/src/roster.ts b/packages/experimental/agent-team/src/roster.ts
+index 7b1047a0a2..1c41a2ce40 100644
+--- a/packages/experimental/agent-team/src/roster.ts
++++ b/packages/experimental/agent-team/src/roster.ts
+@@ -136,7 +136,12 @@ export class TeamRoster {
+     }]
+     for (const member of state.members) {
+       const live = this.ctx.agents.get(member.id)
+-      const model = live?.options.model ?? root.options.model
++      // The route belongs to the MEMBER. Falling back to the Lead's model here
++      // would report the Lead's route for a teammate on its own route (for
++      // example after the member went inactive or was cold-resumed elsewhere);
++      // an unknown model is better than a wrong one, and the spawn edge
++      // reports the member's own route while it is live.
++      const model = live?.options.model
+       result.push({
+         id: member.id,
+         name: member.name,
+@@ -269,6 +274,10 @@ export class TeamRoster {
+         request: {
+           prompt: request.prompt,
+           parent: root,
++          // A per-member route reaches the subagent runtime as its ordinary
++          // start-time override, so visibility, permission and persistence
++          // behave exactly as for any other delegation.
++          ...request.agentOptions === undefined ? {} : { agentOptions: request.agentOptions },
+         },
+         signal,
+       })
+diff --git a/packages/experimental/agent-team/src/types.ts b/packages/experimental/agent-team/src/types.ts
+index 465f6bbf12..50b3ab1a7d 100644
+--- a/packages/experimental/agent-team/src/types.ts
++++ b/packages/experimental/agent-team/src/types.ts
+@@ -1,5 +1,6 @@
+ /** Public Agent Teams identities, durable records, and service request values. */
+ 
++import type { AgentOptions } from '@deepseek-ai/dsh-agent'
+ import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
+ import type { Branded } from '@deepseek-ai/dsh-brand'
+ import type { ContentBlock } from '@deepseek-ai/dsh-llm/types'
+@@ -168,6 +169,14 @@ export interface SpawnTeammateRequest {
+   readonly prompt: ContentBlock[]
+   readonly context: 'fresh' | 'fork'
+   readonly provider: string
++  /**
++   * Optional child route (provider, model, reasoning effort, output budget).
++   * Omitted inherits the Team Lead's live route, which is the historical
++   * behaviour; the subagent runtime merges these over the parent options and
++   * records them on the child's descriptor, so a cold resume restores the same
++   * route without the Lead restating it.
++   */
++  readonly agentOptions?: AgentOptions
+   readonly signal: AbortSignal
+ }
+ 
+diff --git a/packages/experimental/tool-agent-team/src/index.ts b/packages/experimental/tool-agent-team/src/index.ts
+index bc827c5f8c..61e42a1951 100644
+--- a/packages/experimental/tool-agent-team/src/index.ts
++++ b/packages/experimental/tool-agent-team/src/index.ts
+@@ -201,17 +201,40 @@ To message another teammate, use send_message({ target: "<teammate name>", messa
+           enum: ['fresh', 'fork'],
+           description: 'fresh starts without Lead history; fork inherits completed Lead turns. Defaults to fresh.',
+         },
++        agent_options: {
++          type: 'object',
++          additionalProperties: false,
++          description: 'Model route for this teammate. Omit every field to inherit the Lead route.',
++          properties: {
++            provider: { type: 'string', description: 'Provider route name, e.g. "magpie" or "corp".' },
++            model: { type: 'string', description: 'Model id owned by that provider route.' },
++            maxTokens: { type: 'integer', description: 'Output-token budget for each of the teammate\'s requests.' },
++          },
++        },
+       },
+       output: jsonOutput(SPAWN_VALUE_SCHEMA),
+       async execute(args, exec) {
+         const agent = callingAgent(exec.agent, 'spawn_teammate')
+         const context = args.context ?? 'fresh'
++        // A partial route is still an override: the subagent runtime merges it
++        // over the parent options, so an omitted field keeps inheriting. An
++        // EMPTY object declares nothing and must not become a truthy override.
++        const route = args.agent_options
++        const requested = route === undefined
++          ? []
++          : [
++            ...route.provider === undefined ? [] : [['provider', route.provider] as const],
++            ...route.model === undefined ? [] : [['model', route.model] as const],
++            ...route.maxTokens === undefined ? [] : [['maxTokens', route.maxTokens] as const],
++          ]
++        const agentOptions = requested.length === 0 ? undefined : Object.fromEntries(requested)
+         const result = await ctx.agentTeams.spawnTeammate(agent, {
+           name: args.name,
+           description: args.description,
+           prompt: [{ type: 'text', text: args.prompt }],
+           context,
+           provider: context === 'fork' ? config.forkProvider : config.freshProvider,
++          ...agentOptions === undefined ? {} : { agentOptions },
+           signal: exec.signal,
+         })
+         return { member: modelMember(result.member) }
+diff --git a/packages/experimental/tool-agent-team/tests/tool-team.spec.ts b/packages/experimental/tool-agent-team/tests/tool-team.spec.ts
+index 3715748b7b..5eb7fa37a4 100644
+--- a/packages/experimental/tool-agent-team/tests/tool-team.spec.ts
++++ b/packages/experimental/tool-agent-team/tests/tool-team.spec.ts
+@@ -779,3 +779,46 @@ describe('dsh-tool-team', () => {
+     expect(ctx.agentTeams.listMembers(lead)[1]).toMatchObject({ provider: 'team-fresh' })
+   })
+ })
++
++describe('dsh-tool-team per-member route', () => {
++  it('forwards agent_options unchanged to the Team service', async () => {
++    const { ctx, lead } = await setup([])
++    const member = {
++      id: SessionId('private-route-session'), name: 'architect', role: 'teammate' as const,
++      status: 'running' as const, description: 'design', diagnostics: [],
++    }
++    const spawn = vi.spyOn(ctx.agentTeams, 'spawnTeammate').mockResolvedValue({ member })
++    const result = await execute(ctx, lead, 'spawn_teammate', {
++      name: 'architect', description: 'design', prompt: 'design it',
++      agent_options: { provider: 'magpie', model: 'codex/gpt-6.1-sol', maxTokens: 128000 },
++    })
++    expect(result.isError, text(result)).toBe(false)
++    expect(spawn).toHaveBeenCalledWith(lead, expect.objectContaining({
++      agentOptions: { provider: 'magpie', model: 'codex/gpt-6.1-sol', maxTokens: 128000 },
++    }))
++  })
++
++  it('leaves the route untouched when agent_options is omitted', async () => {
++    const { ctx, lead } = await setup([])
++    const member = {
++      id: SessionId('private-inherit-session'), name: 'worker', role: 'teammate' as const,
++      status: 'running' as const, description: 'work', diagnostics: [],
++    }
++    const spawn = vi.spyOn(ctx.agentTeams, 'spawnTeammate').mockResolvedValue({ member })
++    await execute(ctx, lead, 'spawn_teammate', { name: 'worker', description: 'work', prompt: 'work' })
++    expect(spawn).toHaveBeenCalledWith(lead, expect.not.objectContaining({ agentOptions: expect.anything() }))
++  })
++
++  it('drops an empty agent_options object instead of sending a blank override', async () => {
++    const { ctx, lead } = await setup([])
++    const member = {
++      id: SessionId('private-empty-session'), name: 'worker', role: 'teammate' as const,
++      status: 'running' as const, description: 'work', diagnostics: [],
++    }
++    const spawn = vi.spyOn(ctx.agentTeams, 'spawnTeammate').mockResolvedValue({ member })
++    await execute(ctx, lead, 'spawn_teammate', {
++      name: 'worker', description: 'work', prompt: 'work', agent_options: {},
++    })
++    expect(spawn).toHaveBeenCalledWith(lead, expect.not.objectContaining({ agentOptions: expect.anything() }))
++  })
++})
