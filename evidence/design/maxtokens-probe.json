@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-27T09:06:17.850Z",
+  "rows": [
+    {
+      "provider": "magpie",
+      "model": "auto/deepseek-v4.1-flash",
+      "maxTokens": 4096,
+      "why": "well under cap",
+      "reachedRequest": true,
+      "requestedMaxTokens": 4096,
+      "actualMaxTokens": 4096,
+      "stopReason": "completed",
+      "error": null
+    },
+    {
+      "provider": "magpie",
+      "model": "auto/deepseek-v4.1-flash",
+      "maxTokens": 393216,
+      "why": "exactly at cap",
+      "reachedRequest": true,
+      "requestedMaxTokens": 393216,
+      "actualMaxTokens": 393216,
+      "stopReason": "completed",
+      "error": null
+    },
+    {
+      "provider": "magpie",
+      "model": "auto/deepseek-v4.1-flash",
+      "maxTokens": 999999,
+      "why": "above model cap",
+      "reachedRequest": true,
+      "requestedMaxTokens": 999999,
+      "actualMaxTokens": 999999,
+      "stopReason": null,
+      "error": null
+    },
+    {
+      "provider": "corp",
+      "model": "GLM-5.3-Flash",
+      "maxTokens": 8192,
+      "why": "corp route, no declared maxTokens",
+      "reachedRequest": false,
+      "requestedMaxTokens": 8192,
+      "stopReason": "start-failed",
+      "error": "no subagent provider registered for \"spawn\""
+    }
+  ]
+}
