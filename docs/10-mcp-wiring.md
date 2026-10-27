@@ -40,9 +40,13 @@ preset see it. A host row would have registered globally.
 
 ## Measured result (2026-10-27, DSH rc.3, profile `ai-compiler-scratch`)
 
+Every row below was produced on six separate boots; the "bridges at boot"
+column is identical on all of them, which is the finding: the bridges appear
+when the PRESETS register, not when a session picks a mode.
+
 | Property | Measured |
 |---|---|
-| Bridge children spawned at boot, before any Agent | **2** — one per compiler preset |
+| Bridge children spawned at boot, before any Agent | **2 on every boot** — one per compiler preset, including on a `standard`-mode boot |
 | Bridge children added by creating an Agent | **0** |
 | Sharing | one child per preset generation, shared by every Agent of that preset |
 | Boot-to-ready (preset mounts registered) | **1.29 – 1.36 s** |
@@ -70,7 +74,13 @@ show the same count):
 1. **Cost is per DSH process, not per Agent.** Both compiler presets mount at
    registration (preset mounts are eager), so a DSH process always pays exactly
    two bridge children — about 135 MiB — even when the human is using Standard
-   mode. Scaling to more concurrent compiler Agents adds nothing.
+   mode. Scaling to more concurrent compiler Agents adds nothing. Concretely:
+   **a Standard-mode session also carries both compiler-mode bridges, and the
+   only way to stop paying for them is to uninstall the bundle** (`scripts/uninstall.sh`
+   deselects the preset layer, after which no compiler preset mounts and no
+   bridge spawns). Because presets mount eagerly at registration rather than on
+   first use, this cost is paid by every DSH process for as long as the bundle
+   is installed, not only by sessions that select a compiler mode.
 2. **No Agent-count-scaling problem.** Because Agents share the preset's child,
    an eight-member Team under `ai-compiler` still holds two python processes,
    not eight. The ADR-001 stdio choice stands for this deployment.
@@ -85,6 +95,31 @@ show the same count):
    when one row fails. The cost of that choice is silence, so
    `scripts/verify.sh` asserts the registered tool names and
    `agent-gates doctor` reports the server side.
+
+## Server restart: what is and is not guaranteed
+
+`reconnect.enabled: true` is set on the row, and the client's supervisor does
+react to a lost child — it logs `connection lost; reconnecting in 500ms (attempt
+1/10)` and withdraws the tool registrations (the tool names stop resolving
+immediately, which is the safety-relevant half: the model cannot call a tool
+that is gone). **Full recovery was measured as NOT working inside a scripted
+profile boot**: after killing the bridge children, the supervisor emitted the
+first reconnect warning, issued exactly one further spawn, and that replacement
+died without ever publishing tools, leaving the count at zero for the following
+tens of seconds.
+
+That measurement is recorded here rather than asserted as a test, for two
+reasons. First, a scripted boot is not a supported hosting environment for the
+supervisor — the long-lived Host is, and the client's own test suite
+(`packages/mcp/mcp-client/tests/reconnect.spec.ts`) covers crash-driven
+reconnection against a fixture server. Second, the honest operational statement
+is the safe one: **treat a dead bridge as requiring a Host restart or a plugin
+reload, not as self-healing.** `scripts/verify.sh` step 2b is what turns that
+into a visible fact — it asserts the registered tool names, so after an
+incident the operator sees a failure instead of an empty tool list.
+`failOnStartupError: false` is unaffected by this: it governs activation, not
+recovery, and it remains the right choice so that a missing server cannot take
+the whole compiler mode offline.
 
 ## Isolated RPC cost (the gate server itself)
 

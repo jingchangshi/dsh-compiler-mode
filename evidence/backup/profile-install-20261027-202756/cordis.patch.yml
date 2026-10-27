@@ -1,0 +1,106 @@
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+- id: ui-settings-general
+  name: "@deepseek-ai/dsh-client-ui-settings-general"
+  config:
+    welcomeNoticeVersion: 2026-09-28.1
+- id: permission
+  name: "@deepseek-ai/dsh-permission-presets"
+  config:
+    presets:
+      read-only:
+        sandbox: read-only
+        approval: ask
+      workspace-write:
+        sandbox: workspace-write
+        approval: ask
+      danger-full-access:
+        sandbox: danger-full-access
+        approval: never
+    defaultPreset: danger-full-access
+- id: llm-pi-ai
+  name: "@deepseek-ai/dsh-llm-pi-ai"
+  config:
+    providers:
+      magpie:
+        apiKeyEnv: MAGPIE_API_KEY
+        api: openai-completions
+        baseURL: https://api.1031989.xyz
+        models:
+          - id: auto/deepseek-v4.1-flash
+            name: DeepSeek V4.1 Flash
+            contextWindow: 1048576
+            maxTokens: 393216
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
+          - id: auto/claude-haiku-5-5
+            name: Claude Haiku 5.5
+            contextWindow: 1000000
+            maxTokens: 128000
+          - id: auto/glm-5.3-flash
+            name: GLM-5.3-Flash
+            contextWindow: 1000000
+            maxTokens: 131072
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
+          - id: auto/mimo-v2.6-flash
+            name: mimo-v2-6-flash
+            contextWindow: 1048576
+            maxTokens: 131072
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
+          - id: auto/qwen3.8-flash
+            name: Qwen3.8 Flash
+            contextWindow: 1000000
+            maxTokens: 131072
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
+          - id: codex/gpt-6.1-sol
+            name: GPT-6.1-Sol
+            contextWindow: 500000
+            maxTokens: 128000
+            reasoningEfforts:
+              low: low
+              medium: medium
+              high: high
+          - id: workbuddy/step-5-preview
+            name: Step-5-Preview
+            contextWindow: 1000000
+            maxTokens: 64000
+          - id: claude/claude-sonnet-5-5
+            name: Claude Sonnet 5.5
+            contextWindow: 1000000
+            maxTokens: 128000
+          - id: claude/claude-opus-5-5
+            name: Claude Opus 5.5
+            contextWindow: 1000000
+            maxTokens: 128000
+          - id: claude/claude-fable-5-1
+            name: Claude Fable 5.1
+            contextWindow: 1000000
+            maxTokens: 128000
+      corp:
+        apiKeyEnv: CORP_API_KEY
+        api: openai-responses
+        baseURL: http://113.46.219.251/v1
+        models:
+          - id: DeepSeek-V4.1-Flash-1017
+            name: DeepSeek-V4.1-Flash-1017
+          - id: GLM-5.3-Flash
+            name: GLM-5.3-Flash
+          - id: Qwen3.8-Flash
+            name: Qwen3.8-Flash
+- id: agent-default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: magpie
+    model: auto/deepseek-v4.1-flash

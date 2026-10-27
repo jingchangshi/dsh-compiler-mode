@@ -66,9 +66,15 @@ done
 #     Both variables are written together: a server reading a different config
 #     than the operator's `agent-gates` CLI would answer about the wrong
 #     instance, which is worse than not starting.
-agentgates_repo="${AGENT_GATES_REPO:-$repo/../AgentGates}"
+# Both paths are canonicalised before being written: the value is consumed by a
+# long-lived systemd unit whose working directory is unrelated to this repo, so
+# a relative or un-normalised path ("$repo/../AgentGates/...") would resolve
+# somewhere else, or nowhere.
+agentgates_repo="$(cd "${AGENT_GATES_REPO:-$repo/../AgentGates}" 2>/dev/null && pwd)" \
+  || agentgates_repo="${AGENT_GATES_REPO:-$repo/../AgentGates}"
 ag_python="${AGENT_GATES_MCP_PYTHON:-$agentgates_repo/.venv/bin/python}"
 ag_config="${AGENT_GATES_CONFIG:-$HOME/.config/agent-gates/config.toml}"
+ag_config="$(cd "$(dirname "$ag_config")" 2>/dev/null && pwd)/$(basename "$ag_config")"
 dsh_env="${DSH_HOME:-$HOME/.dsh}/.env"
 if [ ! -x "$ag_python" ]; then
   say "gates    : WARNING no interpreter at $ag_python — the bridge will not start"

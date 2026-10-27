@@ -1,0 +1,137 @@
+{
+  "profile": "ai-compiler-scratch",
+  "server": "/home/s00653124/workspace/AgentGates/.venv/bin/python",
+  "stub": false,
+  "at": "2026-10-27T12:30:28.733Z",
+  "expectedTools": [
+    "mcp__agentgates__cancel",
+    "mcp__agentgates__doctor",
+    "mcp__agentgates__list_gates",
+    "mcp__agentgates__list_workspaces",
+    "mcp__agentgates__report",
+    "mcp__agentgates__status",
+    "mcp__agentgates__submit",
+    "mcp__agentgates__verify",
+    "mcp__agentgates__verify_requirements",
+    "mcp__agentgates__wait"
+  ],
+  "measurement": {
+    "server": "/home/s00653124/workspace/AgentGates/.venv/bin/python",
+    "stub": false,
+    "profile": "ai-compiler-scratch",
+    "note": "presets mount eagerly: EVERY boot spawns 2 MCP server children (one per compiler preset, shared by every Agent of that preset), whichever preset the session later uses",
+    "perPreset": [
+      {
+        "preset": "ai-compiler",
+        "bootMs": 1619.3,
+        "agentCreateMs": 10.6,
+        "bridgesAtBoot": 2,
+        "bridgesWithAgent": 2,
+        "bridgeRssMiB": [
+          67.5,
+          67.7
+        ],
+        "childCmdlines": [
+          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+        ]
+      },
+      {
+        "preset": "standard",
+        "bootMs": 1332.9,
+        "agentCreateMs": 14.7,
+        "bridgesAtBoot": 2,
+        "bridgesWithAgent": 2,
+        "bridgeRssMiB": [
+          67.7,
+          67.5
+        ],
+        "childCmdlines": [
+          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+        ]
+      }
+    ]
+  },
+  "results": [
+    {
+      "group": "roster",
+      "name": "ai-compiler is declared and mounts without diagnostics",
+      "ok": true,
+      "detail": "healthy"
+    },
+    {
+      "group": "visibility",
+      "name": "ai-compiler Agent resolves all ten AgentGates tools",
+      "ok": true,
+      "detail": "10/10: mcp__agentgates__cancel,mcp__agentgates__doctor,mcp__agentgates__list_gates,mcp__agentgates__list_workspaces,mcp__agentgates__report,mcp__agentgates__status,mcp__agentgates__submit,mcp__agentgates__verify,mcp__agentgates__verify_requirements,mcp__agentgates__wait"
+    },
+    {
+      "group": "visibility",
+      "name": "ai-compiler PTC SDK binds all ten AgentGates tools",
+      "ok": true,
+      "detail": "10/10: mcp__agentgates__cancel,mcp__agentgates__doctor,mcp__agentgates__list_gates,mcp__agentgates__list_workspaces,mcp__agentgates__report,mcp__agentgates__status,mcp__agentgates__submit,mcp__agentgates__verify,mcp__agentgates__verify_requirements,mcp__agentgates__wait"
+    },
+    {
+      "group": "visibility",
+      "name": "ai-compiler Agent is bound to its own preset revision",
+      "ok": true,
+      "detail": "ai-compiler"
+    },
+    {
+      "group": "visibility",
+      "name": "ai-compiler Teammate inherits all ten AgentGates tools",
+      "ok": true,
+      "detail": "10/10 as ai-compiler"
+    },
+    {
+      "group": "roster",
+      "name": "standard is declared and mounts without diagnostics",
+      "ok": true,
+      "detail": "healthy"
+    },
+    {
+      "group": "isolation",
+      "name": "standard Agent resolves no AgentGates tool",
+      "ok": true,
+      "detail": "(none)"
+    },
+    {
+      "group": "isolation",
+      "name": "standard PTC SDK binds no AgentGates tool",
+      "ok": true,
+      "detail": "(none)"
+    },
+    {
+      "group": "isolation",
+      "name": "standard Teammate inherits no AgentGates tool",
+      "ok": true,
+      "detail": "0 resolved"
+    },
+    {
+      "group": "process",
+      "name": "EVERY boot spawns 2 bridges, before any Agent (both compiler presets mount eagerly)",
+      "ok": true,
+      "detail": "ai-compiler=2, standard=2 (expected 2 on every boot, including non-compiler ones)"
+    },
+    {
+      "group": "process",
+      "name": "creating an Agent adds no bridge child (one per preset, shared)",
+      "ok": true,
+      "detail": "ai-compiler: 2->2, standard: 2->2"
+    },
+    {
+      "group": "process",
+      "name": "every bridge is a real python MCP server process",
+      "ok": true,
+      "detail": "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server | /home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+    },
+    {
+      "group": "resources",
+      "name": "every bridge holds a measurable RSS",
+      "ok": true,
+      "detail": "ai-compiler=67.5+67.7 MiB, standard=67.7+67.5 MiB"
+    }
+  ],
+  "verdict": "PASS"
+}

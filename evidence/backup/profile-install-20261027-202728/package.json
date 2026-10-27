@@ -1,0 +1,19 @@
+{
+  "name": "dsh-profile-web",
+  "private": true,
+  "dependencies": {
+    "@deepseek-ai/dsh-lsp": "link:/home/s00653124/workspace/dsh-compiler-mode/../deepseek-harness/packages/lsp/lsp",
+    "@deepseek-ai/dsh-lsp-stdio": "link:/home/s00653124/workspace/deepseek-harness/packages/lsp/lsp-stdio",
+    "@deepseek-ai/dsh-tool-lsp": "link:/home/s00653124/workspace/deepseek-harness/packages/lsp/tool-lsp",
+    "@local/dsh-ai-compiler-preset": "link:/home/s00653124/workspace/dsh-compiler-mode/config/bundle-ai-compiler"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@local/dsh-ai-compiler-preset"
+      ]
+    }
+  }
+}

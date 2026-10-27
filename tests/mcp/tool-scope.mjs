@@ -54,6 +54,14 @@
  *   node tests/mcp/tool-scope.mjs [--profile ai-compiler-scratch]
  *                                 [--server <python-mcp-program>] [--stub]
  *                                 [--json <outfile>]
+ *
+ *   --presets a,b    probe only these presets (default: all six)
+ *   --only <preset>  internal: one preset, one boot, prints a RESULT line
+ *   --restart        with --only: kill the bridge and report what recovers.
+ *                    DIAGNOSTIC, not an assertion -- see docs/10-mcp-wiring.md,
+ *                    "Server restart". It reports the measured outcome instead
+ *                    of failing the suite on behaviour DSH does not promise.
+ *
  * Exit: 0 every check passed, 1 a check failed, 2 usage/boot error.
  */
 import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs'
@@ -384,9 +392,10 @@ for (const probe of probes) {
 // ones, because every boot registers every preset -- that is exactly the point:
 //
 //   * the profile ALWAYS spawns one bridge per compiler preset the moment the
-//     presets mount, before any Agent exists. With two compiler presets that is
-//     two python processes per DSH process, whichever mode the human later
-//     picks;
+//     presets mount, before any Agent exists, whichever preset the session later
+//     uses. With two compiler presets that is two python processes -- and about
+//     135 MiB -- on every boot, including a Standard-mode boot. Uninstalling the
+//     bundle is the only way to stop paying it;
 //   * joining an Agent adds NONE, because the child belongs to the preset's
 //     Generation, which every Agent of that preset shares.
 //
@@ -398,10 +407,10 @@ const probedCompilerPresets = COMPILER_PRESETS.filter(id => PROBE_PRESETS.includ
 // compiler preset's bridge: the count is a property of the profile, not of what
 // this invocation chose to probe.
 const expectedBridges = COMPILER_PRESETS.length
-check('process', 'a boot spawns one bridge child per compiler preset, before any Agent',
+check('process', 'EVERY boot spawns ' + expectedBridges + ' bridges, before any Agent (both compiler presets mount eagerly)',
   ready.length === probes.length && ready.every(probe => probe.bridgesAtBoot === expectedBridges),
   ready.map(probe => probe.preset + '=' + probe.bridgesAtBoot).join(', ')
-    + ' (expected ' + expectedBridges + ' on every boot)')
+    + ' (expected ' + expectedBridges + ' on every boot, including non-compiler ones)')
 check('process', 'creating an Agent adds no bridge child (one per preset, shared)',
   ready.every(probe => probe.bridgesWithAgent === probe.bridgesAtBoot),
   ready.map(probe => probe.preset + ': ' + probe.bridgesAtBoot + '->' + probe.bridgesWithAgent).join(', ')
@@ -419,7 +428,14 @@ const measurement = {
   server,
   stub: useStub,
   profile,
-  note: 'one MCP server child per compiler preset, shared by every Agent of that preset',
+  // Stated precisely, because the earlier wording implied the bridge appeared
+  // only for the mode in use: BOTH compiler presets mount at preset
+  // registration, so every boot -- including a Standard-mode boot -- carries
+  // one bridge per compiler preset, and each is shared by all Agents of its
+  // preset.
+  note: 'presets mount eagerly: EVERY boot spawns ' + expectedBridges
+    + ' MCP server children (one per compiler preset, shared by every Agent of that preset),'
+    + ' whichever preset the session later uses',
   perPreset: probes.map(probe => ({
     preset: probe.preset,
     bootMs: probe.bootMs ?? null,
@@ -442,11 +458,17 @@ const report = {
   results,
   verdict: results.every(result => result.ok) ? 'PASS' : 'FAIL',
 }
+// An explicit --json target, plus the repo's own evidence copy: the numbers in
+// docs/10-mcp-wiring.md must be reproducible from a committed artifact, not from
+// whatever the last terminal scrollback happened to show.
 const jsonOut = values('--json')[0] ?? null
 if (jsonOut !== null) {
   mkdirSync(dirname(resolve(jsonOut)), { recursive: true })
   writeFileSync(resolve(jsonOut), JSON.stringify(report, null, 2) + String.fromCharCode(10))
 }
+mkdirSync(join(repo, 'evidence/tests'), { recursive: true })
+writeFileSync(join(repo, 'evidence/tests/mcp-tool-scope.json'),
+  JSON.stringify(report, null, 2) + String.fromCharCode(10))
 const failed = results.filter(result => !result.ok)
 console.log((results.length - failed.length) + '/' + results.length + ' checks passed')
 process.exit(failed.length === 0 ? 0 : 1)

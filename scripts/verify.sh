@@ -45,7 +45,7 @@ else
   bad "preset-ai-compiler row missing from --dump-config"
 fi
 
-step "2b. the MCP bridge registers the agentgates tools"
+step "2b. the MCP bridge registers the agentgates tools (scratch profile)"
 # One compiler preset and one control preset is enough to prove scoping, and it
 # keeps this step to about three seconds. The full six-preset sweep, with the
 # process/RSS measurements, is tests/mcp/tool-scope.mjs run directly.
@@ -53,6 +53,12 @@ if [ ! -f "${AGENT_GATES_CONFIG:-$HOME/.config/agent-gates/config.toml}" ]; then
   printf 'INFO  no AgentGates config at %s — the bridge will report tools but no workspaces\n' \
     "${AGENT_GATES_CONFIG:-$HOME/.config/agent-gates/config.toml}"
 fi
+# This boots the SCRATCH profile, not the live Web profile: a live-profile boot
+# would start the webserver and the whole web plane, which is a different (and
+# much slower) thing to assert. So this step proves the DELIVERED bundle mounts
+# the bridge and scopes it correctly; step 1 is what proves the LIVE profile has
+# that bundle selected. After a Host restart the two agree; before one, the live
+# GUI can still be missing the tools even while this passes.
 if node "$repo/tests/mcp/tool-scope.mjs" --presets ai-compiler,standard \
      >/tmp/ai-compiler-mcp.log 2>&1; then
   ok "agentgates tools registered in ai-compiler and absent from standard ($(grep -c '^PASS' /tmp/ai-compiler-mcp.log) checks)"
