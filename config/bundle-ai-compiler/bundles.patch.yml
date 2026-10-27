@@ -79,3 +79,26 @@
 
     - id: ui-agent-team
       name: '@deepseek-ai/dsh-experimental-client-ui-agent-team'
+
+    # ── AgentGates completion gate (P5b) ──────────────────────────────────────
+    # A HOST row, not a preset row: the policy must be registered on the Agent
+    # Teams service so EVERY preset that can complete a task consults it. A
+    # preset-scoped row would let a Standard-mode session complete a task the
+    # compiler mode had declared must be gated.
+    #
+    # The plugin decides nothing itself. It forwards a task's declared
+    # requirement to AgentGates (verify-requirements over the published CLI)
+    # and reports that verdict. Duplicating the Python verification here would
+    # create a second authority that could disagree with the receipt.
+    #
+    # It is inert for tasks that declare no agentgates requirement: the Team
+    # domain never consults a policy for a task without requirements, so this
+    # row cannot force a build onto ordinary tasks.
+    - id: agentgates-completion-policy
+      name: './plugins/agentgates-policy/index.ts'
+      config:
+        python: !!js process.env.AGENT_GATES_MCP_PYTHON ?? '/home/s00653124/workspace/AgentGates/.venv/bin/python'
+        packageRoot: !!js process.env.AGENT_GATES_ROOT ?? '/home/s00653124/workspace/AgentGates'
+        configFile: !!js process.env.AGENT_GATES_CONFIG ?? (process.env.HOME + '/.config/agent-gates/config.toml')
+        timeoutMs: 120000
+
