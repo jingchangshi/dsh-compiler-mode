@@ -33,6 +33,21 @@ step() { printf '\n== %s ==\n' "$*"; }
 ok()   { printf 'PASS  %s\n' "$*"; }
 bad()  { printf 'FAIL  %s\n' "$*"; failures=$((failures + 1)); }
 
+step "0. external prerequisites"
+
+# The same dependencies install.sh refuses to install without. Checked again
+# here because verify.sh is what an operator runs BEFORE trusting the mode, and
+# a dependency that disappeared since the install (a removed PATH entry, an
+# unmounted toolchain) must be reported by name rather than inferred from a
+# downstream warning nobody reads.
+for tool in clangd docker python3; do
+  if command -v "$tool" >/dev/null 2>&1; then
+    ok "prerequisite $tool -> $(command -v "$tool")"
+  else
+    bad "prerequisite $tool is MISSING - install it (see scripts/install.sh for what needs it)"
+  fi
+done
+
 step "1. profile records the mode"
 if node -e "const p=require('$profile_dir/package.json');process.exit((p.dsh?.profile?.bundles||[]).includes('@local/dsh-ai-compiler-preset')?0:1)"; then
   ok "bundle layer selected"
