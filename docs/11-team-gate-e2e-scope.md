@@ -78,6 +78,23 @@ three `AGENT_GATES_*` lines. Exporting placeholder keys does not help: the
 provider then fails with a live `401` from the gateway, and the profile still
 tears down.
 
+### Two harness bugs found and fixed on the way
+
+1. **team-gate.mjs obeyed an ambient DSH_PROFILE.** The variable is exported in
+   this environment as web, so the script was booting the LIVE Web profile, whose
+   webserver row collides with the running UI on port 3080; five plugins were
+   left waiting and the composition was half torn down while the Agent was
+   created. The script now takes its profile from --profile only, exactly like
+   the sibling acceptance script, so an unrelated export cannot redirect it.
+2. **An empty args array to runProfile tears down composition.** Measured:
+   ['probe'], ['team-gate'] and ['a','b'] all allow agents.create(); [] does not.
+   The profile includes dsh-headless, whose headless-startup row is a one-shot
+   runner that errors on empty argv and unwinds the fiber that owns the agents
+   factory. The script always passes a non-empty argv for this reason.
+
+Neither is a defect in the delivered mode; both are properties of scripting a
+profile boot, and both are now documented in the script itself.
+
 The completion gate does not need a model to work. What it needs is a profile
 that stays alive without one, and every attempt to build such a profile on this
 machine ran into a credential check from a bundle the Team service depends on
