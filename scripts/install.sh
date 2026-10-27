@@ -82,14 +82,20 @@ if [ ! -x "$ag_python" ]; then
 elif [ "$dry" = 1 ]; then
   say "gates    : would record AGENT_GATES_MCP_PYTHON=$ag_python"
   say "gates    : would record AGENT_GATES_CONFIG=$ag_config"
+  say "gates    : would record AGENT_GATES_ROOT=$agentgates_repo"
 else
   # Rewrite only these two names; every other line in the user env layer is the
   # operator's own and is preserved verbatim.
-  node - "$dsh_env" "$ag_python" "$ag_config" <<'NODE'
+  node - "$dsh_env" "$ag_python" "$ag_config" "$agentgates_repo" <<'NODE'
 const { readFileSync, writeFileSync, existsSync, mkdirSync } = require('node:fs')
 const { dirname } = require('node:path')
-const [path, python, config] = process.argv.slice(2)
-const wanted = { AGENT_GATES_MCP_PYTHON: python, AGENT_GATES_CONFIG: config }
+const [path, python, config, root] = process.argv.slice(2)
+// Three names, one file: the MCP bridge row reads the first two, and the
+// completion-policy row reads AGENT_GATES_ROOT to locate the package it
+// invokes. Recording all three keeps both rows on the SAME installation --
+// two rows reading different checkouts would let the bridge and the policy
+// disagree about what a receipt means.
+const wanted = { AGENT_GATES_MCP_PYTHON: python, AGENT_GATES_CONFIG: config, AGENT_GATES_ROOT: root }
 const kept = existsSync(path)
   ? readFileSync(path, 'utf8').split('\n').filter(line => (line.split('=')[0] in wanted) === false)
   : []
@@ -101,6 +107,7 @@ console.log('gates    : recorded in ' + path)
 NODE
   say "gates    : AGENT_GATES_MCP_PYTHON=$ag_python"
   say "gates    : AGENT_GATES_CONFIG=$ag_config"
+  say "gates    : AGENT_GATES_ROOT=$agentgates_repo"
   if [ -f "$ag_config" ]; then
     say "gates    : config present"
   else

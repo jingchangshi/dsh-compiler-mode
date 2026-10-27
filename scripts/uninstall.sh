@@ -6,8 +6,9 @@
 # afterwards so the removed rows disappear from its composition.
 #
 # The AGENT_GATES_* lines that install.sh adds to $DSH_HOME/.env are ALSO
-# removed: they are this repository's own machine parameters, and leaving them
-# behind would point the next installation at a stale interpreter. Any other
+# removed: they are this repository's own machine parameters (the MCP bridge's
+# interpreter and config, and the completion policy's package root), and leaving
+# them behind would point the next installation at a stale checkout. Any other
 # line in that file belongs to the operator and is preserved.
 #
 # Usage: scripts/uninstall.sh [--dry-run] [--keep-deps]
@@ -63,7 +64,7 @@ if [ "$keep" = 0 ] && [ -d "$profile_dir/node_modules/@deepseek-ai/dsh-mcp-clien
   fi
 fi
 
-# Drop the two AGENT_GATES_* names install.sh wrote; keep every other line.
+# Drop every AGENT_GATES_* name install.sh wrote; keep every other line.
 dsh_env="${DSH_HOME:-$HOME/.dsh}/.env"
 if [ -f "$dsh_env" ]; then
   if [ "$dry" = 1 ]; then
@@ -73,7 +74,7 @@ if [ -f "$dsh_env" ]; then
 const { readFileSync, writeFileSync } = require('node:fs')
 const path = process.argv[2]
 const kept = readFileSync(path, 'utf8').split('\n')
-  .filter(line => /^AGENT_GATES_(MCP_PYTHON|CONFIG)=/.test(line) === false)
+  .filter(line => /^AGENT_GATES_/.test(line) === false)
 while (kept.length > 0 && kept[kept.length - 1].trim() === '') kept.pop()
 writeFileSync(path, kept.length === 0 ? '' : kept.join('\n') + '\n')
 console.log('gates    : dropped AGENT_GATES_* from ' + path)

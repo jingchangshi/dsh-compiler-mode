@@ -6,9 +6,9 @@
 # restored; the DSH checkout, the model configuration and every compiler
 # repository are never touched.
 #
-# The two AGENT_GATES_* names install.sh writes into $DSH_HOME/.env are dropped
-# as well, because they describe an installation that is being rolled back.
-# Every other line of that file is the operator's and survives.
+# The AGENT_GATES_* names install.sh writes into $DSH_HOME/.env are dropped as
+# well, because they describe an installation that is being rolled back. Every
+# other line of that file is the operator's and survives.
 #
 # Usage: scripts/rollback.sh [--backup <dir>] [--dry-run]
 # Exit: 0 restored, 1 failed, 2 usage error.
