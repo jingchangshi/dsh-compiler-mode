@@ -47,12 +47,12 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
 import { createRequire } from 'node:module'
+import { layout } from '../../scripts/lib/paths.mjs'
 
 
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = resolve(here, '../..')
-const layout = JSON.parse(readFileSync(join(repo, 'evidence/env/layout.json'), 'utf8'))
 const base = process.env.DSH_WEB_URL ?? layout.webUrl ?? 'http://127.0.0.1:3092'
 // `yaml` resolves from the checkout's own dependency tree; js-yaml is not
 // linked at its root, and the credentials document is plain YAML 1.x.

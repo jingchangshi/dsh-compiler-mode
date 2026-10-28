@@ -1,4 +1,4 @@
-#!/home/s00653124/workspace/AgentGates/.venv/bin/python
+#!/usr/bin/env python3
 """Deterministic MCP stdio server used by tests/mcp/tool-scope.mjs.
 
 This is NOT the AgentGates server. It stands in for it so the DSH-side wiring

@@ -2,19 +2,19 @@
 /** Record a machine-readable version/dependency lock for the delivery. */
 import { spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
-const here = dirname(fileURLToPath(import.meta.url))
-const repo = resolve(here, '../..')
-const checkout = process.env.DSH_CHECKOUT ?? '/home/s00653124/workspace/deepseek-harness'
+import { clangdLLVM22Bin, dshProfileDir, harnessCheckout, repoRoot } from './paths.mjs'
+
+const repo = repoRoot
+const checkout = harnessCheckout
 const sh = (command) => spawnSync('bash', ['-lc', command], { encoding: 'utf8' }).stdout.trim()
 const manifest = (relative) => {
   const parsed = JSON.parse(readFileSync(join(checkout, relative, 'package.json'), 'utf8'))
   return { dir: relative, name: parsed.name, version: parsed.version }
 }
 
-const profileManifestPath = process.env.DSH_PROFILE_DIR ?? '/home/s00653124/.dsh/profiles/web'
+const profileManifestPath = dshProfileDir
 const lock = {
   generatedAt: new Date().toISOString(),
   runtime: {
@@ -33,8 +33,11 @@ const lock = {
   toolchain: {
     clangdPath: sh('command -v clangd'),
     clangdVersion: sh('clangd --version | head -1'),
-    clangdLLVM22: '/home/s00653124/Softwares/clangd/bin/clangd',
-    clangdLLVM22Version: sh('/home/s00653124/Softwares/clangd/bin/clangd --version | head -1'),
+    // No default: this machine ships clangd 15.0.6 and no LLVM 22 build, and
+    // recording another machine's binary here would be a claim about a file
+    // this machine does not have. An absent value is recorded as absent.
+    clangdLLVM22: clangdLLVM22Bin === '' ? null : clangdLLVM22Bin,
+    clangdLLVM22Version: clangdLLVM22Bin === '' ? null : sh(`${clangdLLVM22Bin} --version | head -1`),
     clang: sh('clang --version | head -1'),
     cmake: sh('cmake --version | head -1'),
     ninja: sh('ninja --version'),

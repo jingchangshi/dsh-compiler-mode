@@ -18,9 +18,11 @@ import { execFileSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
+import { agentGatesPython, agentGatesRoot, harnessCheckout } from '../../scripts/lib/paths.mjs'
+
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = join(here, "../..")
-const checkout = process.env.DSH_CHECKOUT ?? '/home/s00653124/workspace/deepseek-harness'
+const checkout = harnessCheckout
 // The profile comes from --profile only. Reading an ambient DSH_PROFILE would
 // let an unrelated export silently redirect an acceptance script at a profile
 // nobody chose, and its failure would be reported against the wrong one.
@@ -29,8 +31,8 @@ function readProfileArg() {
   return index === -1 ? 'ai-compiler-scratch' : process.argv[index + 1]
 }
 const profile = readProfileArg()
-const AGENT_GATES = process.env.AGENT_GATES_ROOT ?? '/home/s00653124/workspace/AgentGates'
-const PYTHON = process.env.AGENT_GATES_PYTHON ?? join(AGENT_GATES, '.venv/bin/python')
+const AGENT_GATES = agentGatesRoot
+const PYTHON = process.env.AGENT_GATES_PYTHON ?? agentGatesPython
 
 let failures = 0
 let checks = 0

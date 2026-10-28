@@ -9,7 +9,11 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { createRequire } from 'node:module'
 
-const checkout = process.env.DSH_CHECKOUT ?? '/home/s00653124/workspace/deepseek-harness'
+import { harnessCheckout } from './paths.mjs'
+
+// `js-yaml` is resolved from the harness checkout, which is the installation
+// that owns the YAML dialect being read here (its `!!js` tag).
+const checkout = harnessCheckout
 const require = createRequire(join(checkout, 'package.json'))
 const YAML = require('js-yaml')
 

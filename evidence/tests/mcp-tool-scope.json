@@ -1,8 +1,8 @@
 {
   "profile": "ai-compiler-scratch",
-  "server": "/home/s00653124/workspace/AgentGates/.venv/bin/python",
+  "server": "/home/shijingchang/workspace/AgentGates/.venv/bin/python",
   "stub": false,
-  "at": "2026-10-27T16:10:59.017Z",
+  "at": "2026-10-28T16:26:35.564Z",
   "expectedTools": [
     "mcp__agentgates__cancel",
     "mcp__agentgates__doctor",
@@ -16,15 +16,15 @@
     "mcp__agentgates__wait"
   ],
   "measurement": {
-    "server": "/home/s00653124/workspace/AgentGates/.venv/bin/python",
+    "server": "/home/shijingchang/workspace/AgentGates/.venv/bin/python",
     "stub": false,
     "profile": "ai-compiler-scratch",
     "note": "presets mount eagerly: EVERY boot spawns 2 MCP server children (one per compiler preset, shared by every Agent of that preset), whichever preset the session later uses",
     "perPreset": [
       {
         "preset": "ai-compiler",
-        "bootMs": 1615.6,
-        "agentCreateMs": 17.7,
+        "bootMs": 3533.5,
+        "agentCreateMs": 19.8,
         "bridgesAtBoot": 2,
         "bridgesWithAgent": 2,
         "bridgeRssMiB": [
@@ -32,14 +32,44 @@
           67.6
         ],
         "childCmdlines": [
-          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
-          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+        ]
+      },
+      {
+        "preset": "ai-compiler-magpie",
+        "bootMs": 3330.1,
+        "agentCreateMs": 23.1,
+        "bridgesAtBoot": 2,
+        "bridgesWithAgent": 2,
+        "bridgeRssMiB": [
+          67.5,
+          67.5
+        ],
+        "childCmdlines": [
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
         ]
       },
       {
         "preset": "standard",
-        "bootMs": 1403.6,
-        "agentCreateMs": 14.3,
+        "bootMs": 3329.5,
+        "agentCreateMs": 23.2,
+        "bridgesAtBoot": 2,
+        "bridgesWithAgent": 2,
+        "bridgeRssMiB": [
+          67.6,
+          67.5
+        ],
+        "childCmdlines": [
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+        ]
+      },
+      {
+        "preset": "ptc",
+        "bootMs": 3372.1,
+        "agentCreateMs": 20.6,
         "bridgesAtBoot": 2,
         "bridgesWithAgent": 2,
         "bridgeRssMiB": [
@@ -47,8 +77,38 @@
           67.6
         ],
         "childCmdlines": [
-          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
-          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+        ]
+      },
+      {
+        "preset": "minimal",
+        "bootMs": 3348.7,
+        "agentCreateMs": 21.9,
+        "bridgesAtBoot": 2,
+        "bridgesWithAgent": 2,
+        "bridgeRssMiB": [
+          67.6,
+          67.5
+        ],
+        "childCmdlines": [
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+        ]
+      },
+      {
+        "preset": "cordis",
+        "bootMs": 3288.6,
+        "agentCreateMs": 22.5,
+        "bridgesAtBoot": 2,
+        "bridgesWithAgent": 2,
+        "bridgeRssMiB": [
+          67.5,
+          67.4
+        ],
+        "childCmdlines": [
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
         ]
       }
     ]
@@ -86,6 +146,36 @@
     },
     {
       "group": "roster",
+      "name": "ai-compiler-magpie is declared and mounts without diagnostics",
+      "ok": true,
+      "detail": "healthy"
+    },
+    {
+      "group": "visibility",
+      "name": "ai-compiler-magpie Agent resolves all ten AgentGates tools",
+      "ok": true,
+      "detail": "10/10: mcp__agentgates__cancel,mcp__agentgates__doctor,mcp__agentgates__list_gates,mcp__agentgates__list_workspaces,mcp__agentgates__report,mcp__agentgates__status,mcp__agentgates__submit,mcp__agentgates__verify,mcp__agentgates__verify_requirements,mcp__agentgates__wait"
+    },
+    {
+      "group": "visibility",
+      "name": "ai-compiler-magpie PTC SDK binds all ten AgentGates tools",
+      "ok": true,
+      "detail": "10/10: mcp__agentgates__cancel,mcp__agentgates__doctor,mcp__agentgates__list_gates,mcp__agentgates__list_workspaces,mcp__agentgates__report,mcp__agentgates__status,mcp__agentgates__submit,mcp__agentgates__verify,mcp__agentgates__verify_requirements,mcp__agentgates__wait"
+    },
+    {
+      "group": "visibility",
+      "name": "ai-compiler-magpie Agent is bound to its own preset revision",
+      "ok": true,
+      "detail": "ai-compiler-magpie"
+    },
+    {
+      "group": "visibility",
+      "name": "ai-compiler-magpie Teammate inherits all ten AgentGates tools",
+      "ok": true,
+      "detail": "10/10 as ai-compiler-magpie"
+    },
+    {
+      "group": "roster",
       "name": "standard is declared and mounts without diagnostics",
       "ok": true,
       "detail": "healthy"
@@ -109,28 +199,100 @@
       "detail": "0 resolved"
     },
     {
+      "group": "roster",
+      "name": "ptc is declared and mounts without diagnostics",
+      "ok": true,
+      "detail": "healthy"
+    },
+    {
+      "group": "isolation",
+      "name": "ptc Agent resolves no AgentGates tool",
+      "ok": true,
+      "detail": "(none)"
+    },
+    {
+      "group": "isolation",
+      "name": "ptc PTC SDK binds no AgentGates tool",
+      "ok": true,
+      "detail": "(none)"
+    },
+    {
+      "group": "isolation",
+      "name": "ptc Teammate inherits no AgentGates tool",
+      "ok": true,
+      "detail": "0 resolved"
+    },
+    {
+      "group": "roster",
+      "name": "minimal is declared and mounts without diagnostics",
+      "ok": true,
+      "detail": "healthy"
+    },
+    {
+      "group": "isolation",
+      "name": "minimal Agent resolves no AgentGates tool",
+      "ok": true,
+      "detail": "(none)"
+    },
+    {
+      "group": "isolation",
+      "name": "minimal PTC SDK binds no AgentGates tool",
+      "ok": true,
+      "detail": "(none)"
+    },
+    {
+      "group": "isolation",
+      "name": "minimal Teammate inherits no AgentGates tool",
+      "ok": true,
+      "detail": "0 resolved"
+    },
+    {
+      "group": "roster",
+      "name": "cordis is declared and mounts without diagnostics",
+      "ok": true,
+      "detail": "healthy"
+    },
+    {
+      "group": "isolation",
+      "name": "cordis Agent resolves no AgentGates tool",
+      "ok": true,
+      "detail": "(none)"
+    },
+    {
+      "group": "isolation",
+      "name": "cordis PTC SDK binds no AgentGates tool",
+      "ok": true,
+      "detail": "(none)"
+    },
+    {
+      "group": "isolation",
+      "name": "cordis Teammate inherits no AgentGates tool",
+      "ok": true,
+      "detail": "0 resolved"
+    },
+    {
       "group": "process",
       "name": "EVERY boot spawns 2 bridges, before any Agent (both compiler presets mount eagerly)",
       "ok": true,
-      "detail": "ai-compiler=2, standard=2 (expected 2 on every boot, including non-compiler ones)"
+      "detail": "ai-compiler=2, ai-compiler-magpie=2, standard=2, ptc=2, minimal=2, cordis=2 (expected 2 on every boot, including non-compiler ones)"
     },
     {
       "group": "process",
       "name": "creating an Agent adds no bridge child (one per preset, shared)",
       "ok": true,
-      "detail": "ai-compiler: 2->2, standard: 2->2"
+      "detail": "ai-compiler: 2->2, ai-compiler-magpie: 2->2, standard: 2->2, ptc: 2->2, minimal: 2->2, cordis: 2->2"
     },
     {
       "group": "process",
       "name": "every bridge is a real python MCP server process",
       "ok": true,
-      "detail": "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server | /home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+      "detail": "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server | /home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
     },
     {
       "group": "resources",
       "name": "every bridge holds a measurable RSS",
       "ok": true,
-      "detail": "ai-compiler=67.5+67.6 MiB, standard=67.5+67.6 MiB"
+      "detail": "ai-compiler=67.5+67.6 MiB, ai-compiler-magpie=67.5+67.5 MiB, standard=67.6+67.5 MiB, ptc=67.5+67.6 MiB, minimal=67.6+67.5 MiB, cordis=67.5+67.4 MiB"
     }
   ],
   "verdict": "PASS"

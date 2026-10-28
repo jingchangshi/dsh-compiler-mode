@@ -227,7 +227,7 @@
             config:
               transport: stdio
               serverName: agentgates
-              command: !!js process.env.AGENT_GATES_MCP_PYTHON ?? '/home/s00653124/workspace/AgentGates/.venv/bin/python'
+              command: !!js process.env.AGENT_GATES_MCP_PYTHON
               args:
                 - '-s'
                 - '-m'
@@ -475,7 +475,7 @@
             config:
               transport: stdio
               serverName: agentgates
-              command: !!js process.env.AGENT_GATES_MCP_PYTHON ?? '/home/s00653124/workspace/AgentGates/.venv/bin/python'
+              command: !!js process.env.AGENT_GATES_MCP_PYTHON
               args:
                 - '-s'
                 - '-m'

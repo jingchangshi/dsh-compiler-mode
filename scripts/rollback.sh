@@ -25,9 +25,12 @@ while [ $# -gt 0 ]; do
   esac
 done
 if [ -z "$backup" ]; then
-  # Newest install backup wins; the original capture is the last resort.
-  backup="$(ls -d "$repo"/evidence/backup/profile-install-* 2>/dev/null | sort | tail -1)"
-  [ -n "$backup" ] || backup="$repo/evidence/backup/profile-web-orig"
+  # ONE canonical capture. The dated `profile-install-*` directories predate
+  # that rule: they were taken on a per-run basis on another machine, they hold
+  # a profile from before the operator's model configuration, and restoring the
+  # newest of them would silently discard that configuration. `--backup` still
+  # selects one explicitly.
+  backup="$repo/evidence/backup/profile-web-orig"
 fi
 say() { printf '%s\n' "$*"; }
 [ -d "$backup" ] || { printf 'rollback: backup not found: %s\n' "$backup" >&2; exit 1; }

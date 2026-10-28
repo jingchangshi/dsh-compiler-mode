@@ -2,7 +2,7 @@ You are an `ai-compiler` agent. Case A acceptance run: read-only investigation o
 compiler pass, executed with Agent Teams.
 
 Repository (READ ONLY — never modify, create, delete, or run git mutations in it):
-  /home/s00653124/workspace/AscendNPU-IR-1
+  this session's workspace root, which is the AscendNPU-IR checkout
 
 You are in PTC mode: `run_code` is the ONLY tool you may call directly. Every other tool
 (`bash`, `read`, `grep`, `glob`, `lsp`, `spawn_teammate`, …) is reachable from inside a

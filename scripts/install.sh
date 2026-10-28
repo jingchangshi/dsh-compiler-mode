@@ -68,14 +68,41 @@ if [ "$missing" -ne 0 ]; then
 fi
 
 say ""
+say "== optional overlays =="
+
+# The LLVM 22 clangd overlay is an OPTIONAL alternative front end for lsp-stdio.
+# Every path it configures comes from CLANGD_LLVM22_BIN, so the gate is the
+# binary itself: a machine without an LLVM 22 build (this one ships 15.0.6 on
+# PATH) keeps the PATH clangd and simply skips the overlay. Recording the
+# decision here is what makes the skip visible instead of silent.
+clangd22="${CLANGD_LLVM22_BIN:-}"
+if [ -n "$clangd22" ] && [ -x "$clangd22" ]; then
+  say "overlay  : clangd LLVM 22 -> $clangd22"
+  say "overlay  : apply with --patch $repo/config/overlays/clangd-llvm22.patch.yml"
+else
+  say "overlay  : clangd LLVM 22 SKIPPED — CLANGD_LLVM22_BIN is ${clangd22:-unset} and not executable"
+  say "overlay  : the PATH clangd ($(command -v clangd)) serves code navigation"
+fi
+
+say ""
 say "== ai-compiler install =="
 say "bundle   : $bundle"
 say "profile  : $profile_dir"
 say "dsh      : $dsh_cli"
 
 # 1. Back up the profile the first time only (never overwrite a good backup).
-backup="$repo/evidence/backup/profile-install-$(date +%Y%m%d-%H%M%S)"
-if [ "$dry" = 0 ]; then
+#
+# A backup taken on every run is worse than useless here: the second run would
+# capture the already-installed profile, and rollback.sh takes the NEWEST
+# backup, so "roll back" would restore the install instead of the profile it
+# replaced. The capture also lands in the repository, so repeated installs left
+# a new dated directory behind each time. One capture, never overwritten.
+backup="$repo/evidence/backup/profile-web-orig"
+if [ "$dry" = 1 ]; then
+  say "backup   : would keep $backup"
+elif [ -f "$backup/cordis.patch.yml" ]; then
+  say "backup   : $backup (kept; rollback restores it)"
+else
   mkdir -p "$backup"
   cp -a "$profile_dir/package.json" "$profile_dir/cordis.patch.yml" "$backup/" 2>/dev/null || true
   say "backup   : $backup"

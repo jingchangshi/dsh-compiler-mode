@@ -201,7 +201,10 @@
                 config:
                   servers:
                     clangd:
-                      command: /home/s00653124/Softwares/clangd/bin/clangd
+                      # Derived at install time from CLANGD_LLVM22_BIN; the
+                      # overlay is applied only when that binary exists (see
+                      # scripts/install.sh). No machine path is baked in here.
+                      command: !!js process.env.CLANGD_LLVM22_BIN ?? ''
                       args:
                         - '--background-index=0'
                         - '--pch-storage=memory'

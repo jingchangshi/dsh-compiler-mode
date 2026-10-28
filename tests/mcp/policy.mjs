@@ -23,13 +23,14 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 
 import { createPolicy, REJECTION_CODES, REQUIREMENT_KIND } from '../../config/bundle-ai-compiler/plugins/agentgates-policy/index.ts'
+import { agentGatesPython, agentGatesRoot } from '../../scripts/lib/paths.mjs'
 
 const run = promisify(execFile)
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = join(here, "../..")
 
-const AGENT_GATES = process.env.AGENT_GATES_ROOT ?? '/home/s00653124/workspace/AgentGates'
-const PYTHON = process.env.AGENT_GATES_PYTHON ?? join(AGENT_GATES, '.venv/bin/python')
+const AGENT_GATES = agentGatesRoot
+const PYTHON = process.env.AGENT_GATES_PYTHON ?? agentGatesPython
 const QUICK = process.argv.includes("--quick")
 const SUBMIT_TIMEOUT_MS = Number(process.env.SUBMIT_TIMEOUT_MS ?? 900_000)
 

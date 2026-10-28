@@ -88,6 +88,18 @@
             name: Claude Fable 5.1
             contextWindow: 1000000
             maxTokens: 128000
+          - id: group/architect
+            name: architect
+            contextWindow: 1000000
+            maxTokens: 128000
+          - id: group/validator
+            name: validator
+            contextWindow: 1048576
+            maxTokens: 131072
+          - id: group/challenger
+            name: challenger
+            contextWindow: 1000000
+            maxTokens: 128000
       corp:
         apiKeyEnv: CORP_API_KEY
         api: openai-responses
@@ -103,4 +115,4 @@
   name: "@deepseek-ai/dsh-agent-default-model"
   config:
     provider: magpie
-    model: auto/deepseek-v4.1-flash
+    model: workbuddy/step-5-preview

@@ -62,12 +62,27 @@ export interface Config {
   readonly timeoutMs?: number
 }
 
-const DEFAULTS = {
-  python: '/home/s00653124/workspace/AgentGates/.venv/bin/python',
-  configFile: '',
-  packageRoot: '/home/s00653124/workspace/AgentGates',
-  timeoutMs: 60_000,
-} as const
+const DEFAULT_TIMEOUT_MS = 60_000
+
+/**
+ * Resolve a machine parameter from the environment, or fail loudly.
+ *
+ * There is deliberately no path fallback: a default that names another
+ * machine's checkout turns "not configured" into "verified against the wrong
+ * installation", which is the one failure a gate must never report as a pass.
+ * `scripts/install.sh` records both values in `$DSH_HOME/.env`, which the
+ * launcher loads for every profile, so the names below are always set on a
+ * machine the installer has run on.
+ */
+function requireMachineValue(variable: string, what: string): string {
+  const value = process.env[variable]
+  if (value === undefined || value.trim().length === 0) {
+    throw new Error(
+      `${what} is not configured: set ${variable}. `
+      + 'scripts/install.sh records it in $DSH_HOME/.env; re-run it, or export the variable.')
+  }
+  return value.trim()
+}
 
 /** One verified requirement, as reported in the log. */
 interface VerificationOutcome {
@@ -190,7 +205,14 @@ function parseVerification(body: string, runId: string): VerificationOutcome | {
  * Exported so the behaviour can be tested without a Cordis runtime.
  */
 export function createPolicy(config: Config = {}) {
-  const settings = { ...DEFAULTS, ...config }
+  // Only a value the caller did not supply is looked up in the environment, so
+  // a test that passes both paths never depends on how the machine was set up.
+  const settings = {
+    python: config.python ?? requireMachineValue('AGENT_GATES_MCP_PYTHON', 'the AgentGates interpreter'),
+    configFile: config.configFile ?? (process.env.AGENT_GATES_CONFIG ?? ''),
+    packageRoot: config.packageRoot ?? requireMachineValue('AGENT_GATES_ROOT', 'the AgentGates package root'),
+    timeoutMs: config.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+  }
   return {
     name: 'agentgates',
     async evaluate(attempt: TeamTaskCompletionAttemptLike): Promise<TeamTaskCompletionDecisionLike> {

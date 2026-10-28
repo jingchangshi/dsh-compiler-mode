@@ -101,8 +101,8 @@
     - id: agentgates-completion-policy
       name: '@local/dsh-ai-compiler-preset/plugins/agentgates-policy'
       config:
-        python: !!js process.env.AGENT_GATES_MCP_PYTHON ?? '/home/s00653124/workspace/AgentGates/.venv/bin/python'
-        packageRoot: !!js process.env.AGENT_GATES_ROOT ?? '/home/s00653124/workspace/AgentGates'
+        python: !!js process.env.AGENT_GATES_MCP_PYTHON
+        packageRoot: !!js process.env.AGENT_GATES_ROOT
         configFile: !!js process.env.AGENT_GATES_CONFIG ?? (process.env.HOME + '/.config/agent-gates/config.toml')
         timeoutMs: 120000
 

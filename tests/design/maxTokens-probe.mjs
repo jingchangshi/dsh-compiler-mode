@@ -3,8 +3,8 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { layout } from '../../scripts/lib/paths.mjs'
 const here = dirname(fileURLToPath(import.meta.url)); const repo = resolve(here, '../..')
-const layout = JSON.parse(readFileSync(join(repo, 'evidence/env/layout.json'), 'utf8'))
 const { runProfile } = await import(`file://${layout.dshCheckout}/apps/cli/lib/profile-boot.js`)
 const entries = Object.fromEntries(Object.entries(process.env).map(([n,v])=>[n,{value:v??''}]))
 const { ctx, shutdown } = await runProfile({ environment:{entries,get:n=>entries[n],has:n=>entries[n]!==undefined},

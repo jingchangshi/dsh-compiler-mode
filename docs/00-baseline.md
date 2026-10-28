@@ -1,5 +1,8 @@
 # 00 — Baseline（P0）
 
+> **本基线采集自旧服务器 `/home/s00653124`，其中的绝对路径不适用于其他机器；功能代码在运行时
+> 从仓库位置推导路径（`scripts/lib/paths.mjs`），不再引用本文件中的任何路径。**
+
 冻结时间：2026-10-27（Asia/Shanghai）
 DSH 固定基线：`dsh-v0.2.1-rc.3`
 
@@ -94,6 +97,14 @@ provider 及模型目录）、`agent-default-model`（`magpie` / `auto/deepseek-
 `evidence/backup/profile-web-orig/` 保存了安装前的 profile 四件套
 （`package.json`、`cordis.patch.yml`、`cordis.yml`、`pnpm-workspace.yaml`）；
 `scripts/rollback.sh` 依据该目录恢复。
+
+其中 `cordis.patch.yml` 是**用户层**：模型目录与默认模型由操作者自己维护，
+安装不得改动它。该文件在 2026-10-28 22:29 被操作者追加了
+`group/architect|validator|challenger` 三个模型并把默认模型改为
+`workbuddy/step-5-preview`，因此基线已刷新为刷新时刻的实况；
+`scripts/verify.sh` 第 6 步据此比对"安装未触碰用户配置"。
+`package.json` 仍保留安装前的干净版本——它属于安装的作用域，
+不能拿安装后的版本充当回滚点。
 
 ## 4. 现有 Profile / 插件装配（真实，来自 dump-config）
 

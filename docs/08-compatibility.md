@@ -35,9 +35,10 @@ Baseline: `dsh-v0.2.1-rc.3`, commit `1f81c047fc`.
 AscendNPU-IR is built with clang 15.0.6 but cannot be *parsed* by clangd 15 for C++20 headers,
 while clangd 22.1.0 parses it. The provider supports one command per server id, so:
 
-- default row: `command: clangd` (PATH-resolved, currently 15.0.6);
-- `config/overlays/clangd-llvm22.patch.yml` pins `/home/s00653124/Softwares/clangd/bin/clangd`
-  for trees needing the newer dialect.
+- default row: `command: clangd` (PATH-resolved — 15.0.6 on a machine that ships only LLVM 15);
+- `config/overlays/clangd-llvm22.patch.yml` reads `CLANGD_LLVM22_BIN` for trees needing the newer
+  dialect. It carries no default: on a machine without an LLVM 22 build the row would point at a
+  binary that does not exist, so `scripts/install.sh` skips the overlay and records the skip.
 
 `tests/clangd/cdb-parse-audit.mjs` records exactly how clangd reads
 `build/compile_commands.json` (4 913 entries, 0 errors), including the flags its driver **drops**

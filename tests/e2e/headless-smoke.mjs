@@ -15,10 +15,10 @@ import { spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { layout } from '../../scripts/lib/paths.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const repo = resolve(here, '../..')
-const layout = JSON.parse(readFileSync(join(repo, 'evidence/env/layout.json'), 'utf8'))
 const argv = process.argv.slice(2)
 const value = (flag, fallback) => {
   const index = argv.indexOf(flag)

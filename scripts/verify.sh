@@ -23,6 +23,17 @@
 # Usage: scripts/verify.sh [--quick]
 # Exit: 0 all pass, 1 a check failed.
 set -uo pipefail
+# Share the launcher's environment with every test below.
+#
+# The delivered rows resolve their machine parameters from the DSH process
+# environment (AGENT_GATES_MCP_PYTHON, AGENT_GATES_ROOT, AGENT_GATES_CONFIG),
+# and the launcher reads $DSH_HOME/.env as the USER env layer. Without this,
+# the tests boot the presets with those variables unset and the bridge either
+# does not start or starts the wrong interpreter -- a result that says nothing
+# about the installation the user actually runs.
+set -a
+[ -f "$HOME/.dsh/.env" ] && . "$HOME/.dsh/.env"
+set +a
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 checkout="${DSH_CHECKOUT:-$repo/../deepseek-harness}"
 profile_dir="${DSH_PROFILE_DIR:-$HOME/.dsh/profiles/web}"
@@ -58,6 +69,18 @@ if node "$checkout/apps/cli/lib/bin.js" --profile web --dump-config 2>/dev/null 
   ok "preset-ai-compiler row composes"
 else
   bad "preset-ai-compiler row missing from --dump-config"
+fi
+
+step "1b. acceptance profile"
+# The suites below boot a throwaway profile rather than the live Web one, and
+# nothing else creates it. Without this step a fresh machine fails at the first
+# suite with `profile "ai-compiler-scratch" does not exist`, which reads like a
+# defect in the bundle. The script is idempotent and only writes under
+# $DSH_HOME/profiles/<scratch>; it never touches the live profile.
+if bash "$repo/scripts/scratch-profile.sh" >/tmp/ai-compiler-scratch.log 2>&1; then
+  ok "acceptance profile: $(tail -n 1 /tmp/ai-compiler-scratch.log)"
+else
+  bad "acceptance profile could not be prepared (see /tmp/ai-compiler-scratch.log)"
 fi
 
 step "2b. the MCP bridge registers the agentgates tools (scratch profile)"
