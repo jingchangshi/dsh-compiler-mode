@@ -29,9 +29,9 @@ Backward compatible: omitting `agent_options` behaves exactly as before. 109/109
 ## Apply / revert
 
 ```bash
-cd /home/s00653124/workspace/deepseek-harness
+cd ~/workspace/deepseek-harness
 git checkout -b ai-compiler/team-agent-options   # if not already on it
-git apply /home/s00653124/workspace/dsh-compiler-mode/patches/0001-team-agent-options.patch
+git apply ~/workspace/dsh-compiler-mode/patches/0001-team-agent-options.patch
 node node_modules/typescript/bin/tsc -b tsconfig.host.json
 npx tsdown --config-loader native --env.DSH_BUILD_FACE host   # REQUIRED: the Host loads lib/
 ```

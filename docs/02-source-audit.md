@@ -1,6 +1,8 @@
 # 02 — Source Audit（P1：Q01–Q18）
 
-基线：`/home/s00653124/workspace/deepseek-harness` @ `1f81c047fc`（`0.2.1-rc.3`，下称 RC.3）。
+基线：`deepseek-harness` @ `1f81c047fc`（`0.2.1-rc.3`，下称 RC.3）；
+本机跑的是 `dev` 分支的 `296181d1c2`（RC.3 之后 2 个 agent-team 提交），差异见 `00-baseline.md` §0。
+路径以 `$DSH_CHECKOUT` 或仓库旁的 `deepseek-harness` 为准（`scripts/lib/paths.mjs`）。
 本文件只记录**实际读过源码 + 实际跑过实验**得到的结论。每条包含：相关源文件/函数、
 当前机制、测试方法、测试结果、架构决策、是否需要改代码。
 

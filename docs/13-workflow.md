@@ -25,7 +25,9 @@ AgentGates 只在这两个 compiler preset 内可见。
 
 ## 1. AscendNPU-IR 开发循环
 
-**改什么**：`/home/s00653124/workspace/AscendNPU-IR-1`（workspace `ascendnpu-ir`）。
+**改什么**：`workspaces.ascendnpu-ir.source_root` 指向的那棵源码树
+（见 `~/.config/agent-gates/config.toml`；本机是 `~/workspace/AscendNPU-IR`）。
+路径只写在机器配置里，Gate 的工具输入没有「源码目录」这个字段。
 
 ### 两个 Gate
 
@@ -79,7 +81,8 @@ if (out.structured_content.status.run_id) {
 
 ## 2. TileLang HIVM 后端开发循环
 
-**改什么**：`/home/s00653124/workspace/tilelang`（workspace `tilelang`）。
+**改什么**：`workspaces.tilelang.source_root` 指向的那棵源码树
+（见 `~/.config/agent-gates/config.toml`；本机是 `~/workspace/tilelang`）。
 
 ### 三个 Gate
 

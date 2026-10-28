@@ -34,8 +34,10 @@ scripts/verify.sh             # 5 checks, exit 0 = installed correctly
 
 ## Manual equivalent (Web GUI)
 
-1. **Settings → Plugins → Install** (or Creator mode) with the absolute path
-   `/home/s00653124/workspace/dsh-compiler-mode/config/bundle-ai-compiler`.
+1. **Settings → Plugins → Install** (or Creator mode) with the absolute path of this
+   repository's `config/bundle-ai-compiler` directory. The dialog needs an absolute path,
+   so print one where the repository lives:
+   `cd config/bundle-ai-compiler && pwd -P`.
 2. That runs `install_bundle`: it adds the `link:` dependency and **appends** the bundle to
    `dsh.profile.bundles`.
 3. The same dialog cannot add the LSP packages (they declare no `dsh.bundle`). Add them with
@@ -62,7 +64,7 @@ scripts/uninstall.sh          # deselects the bundle layer and removes the linke
 ## Rollback to the pre-install state
 
 ```bash
-scripts/rollback.sh                       # newest evidence/backup/profile-install-* (or the original capture)
+scripts/rollback.sh                       # the canonical capture: evidence/backup/profile-web-orig/
 scripts/rollback.sh --backup <dir>        # a specific snapshot
 scripts/rollback.sh --dry-run
 ```
@@ -77,6 +79,5 @@ the model configuration and every compiler repository are outside its scope and 
 |---|---|
 | Bundle source | `config/bundle-ai-compiler/` |
 | clangd LLVM 22 overlay | `config/overlays/clangd-llvm22.patch.yml` |
-| Profile backup at install time | `evidence/backup/profile-install-<timestamp>/` |
-| Original pre-install capture | `evidence/backup/profile-web-orig/` |
+| Pre-install capture (the one rollback restores) | `evidence/backup/profile-web-orig/` |
 | Test + benchmark output | `evidence/tests/`, `evidence/e2e/`, `evidence/benchmarks/` |

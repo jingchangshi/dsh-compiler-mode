@@ -1,7 +1,8 @@
 # 00 — Baseline（P0）
 
-> **本基线采集自旧服务器 `/home/s00653124`，其中的绝对路径不适用于其他机器；功能代码在运行时
-> 从仓库位置推导路径（`scripts/lib/paths.mjs`），不再引用本文件中的任何路径。**
+> **本基线采集自另一台服务器（下称「旧机器」）的家目录，本文件中的 `~` 指那台机器的家目录，
+> 不是当前机器的 `/home/shijingchang`；功能代码在运行时从仓库位置推导路径
+> （`scripts/lib/paths.mjs`），不引用本文件中的任何路径。**
 
 冻结时间：2026-10-27（Asia/Shanghai）
 DSH 固定基线：`dsh-v0.2.1-rc.3`
@@ -9,11 +10,22 @@ DSH 固定基线：`dsh-v0.2.1-rc.3`
 本文件记录 P0 阶段实测的环境、版本、Git 状态与配置快照。机器可读版本清单见
 `evidence/env/versions.json`，配置快照见 `evidence/config-snapshots/`。
 
+## 0. 本机（2026-10-29）与旧机器的差异
+
+| 项目 | 旧机器（本文件其余章节） | 本机 |
+|---|---|---|
+| DSH checkout | 分支 `dsh-v0.2.1-rc.3`，HEAD `1f81c047fc` | 分支 `dev`，HEAD `296181d1c2`（`1f81c047fc` 之后 2 个 agent-team 提交，未触及 web-app / cmdline） |
+| clangd | 15.0.6 与 22.1.0 并存 | 仅 15.0.6；LLVM 22 覆盖层按缺口跳过 |
+| NPU | 有卡 | **无卡**，`npu-smi` 不可用；`tilelang-hivm-npu` gate 报 `BLOCKED_ENV` |
+| 验收结论 | — | `scripts/verify.sh` 0 FAIL（2026-10-29） |
+
+这些都是本机事实，不是缺陷：验收以本表为准，旧机器的绝对路径只作历史记录。
+
 ## 1. DSH 源码与 Git 状态
 
 | 项目 | 值 | 取证方式 |
 |---|---|---|
-| 源码目录 | `/home/s00653124/workspace/deepseek-harness` | `pwd` |
+| 源码目录 | `~/workspace/deepseek-harness` | `pwd` |
 | 当前分支 | `dsh-v0.2.1-rc.3` | `git branch` |
 | `git rev-parse HEAD` | `1f81c047fc48fa190a683e469daa699857e9afe8` | 与任务要求的 `1f81c04` **一致** |
 | `git status` | `nothing to commit, working tree clean`（开工时） | `git status` |
@@ -38,7 +50,7 @@ DSH 固定基线：`dsh-v0.2.1-rc.3`
 
 **未在 DSH 仓库内创建 worktree 的理由**：本任务不修改 DSH 源码（原则 9「避免修改 DSH Core」）。
 基线仓库保持只读使用（`node apps/cli/lib/bin.js …` 仅读取）。交付物是**独立 Git 仓库**
-（`/home/s00653124/workspace/dsh-compiler-mode`），从第一个提交开始受版本管理，
+（`~/workspace/dsh-compiler-mode`），从第一个提交开始受版本管理，
 因此「避免影响 dev 分支 / 不覆盖他人改动」的要求由仓库隔离而非 worktree 满足。
 凡对 DSH 的读取均在 `evidence/` 下留档。
 
@@ -46,16 +58,16 @@ DSH 固定基线：`dsh-v0.2.1-rc.3`
 
 | 组件 | 版本 | 路径 / 说明 |
 |---|---|---|
-| Node.js | `v24.20.0` | `/home/s00653124/Softwares/node/bin/node` |
+| Node.js | `v24.20.0` | `~/Softwares/node/bin/node` |
 | pnpm | `11.28.5` | 由 DSH checkout 的 `packageManager` 固定 |
 | DSH CLI | `0.2.1-rc.3` | `node apps/cli/lib/bin.js --version`（`dsh` 不在 PATH 上，直接调用 `apps/cli/lib/bin.js`） |
-| clangd（PATH 默认） | 15.0.6（LLVM 15.0.6） | `/home/s00653124/Softwares/clang+llvm-15.0.6/bin/clangd`；与生成 AscendNPU-IR `compile_commands.json` 的编译器同源 |
-| clangd（备用） | 22.1.0 | `/home/s00653124/Softwares/clangd/bin/clangd` |
+| clangd（PATH 默认） | 15.0.6（LLVM 15.0.6） | `~/Softwares/clang+llvm-15.0.6/bin/clangd`；与生成 AscendNPU-IR `compile_commands.json` 的编译器同源 |
+| clangd（备用） | 22.1.0 | `~/Softwares/clangd/bin/clangd` |
 | clang / clang++ | 15.0.6 | 同上目录 |
-| cmake | `/home/s00653124/Softwares/cmake/bin/cmake` | |
-| ninja | `/home/s00653124/.local/bin/ninja` | |
-| ripgrep | `/home/s00653124/.local/bin/rg` | |
-| bwrap | bubblewrap 0.4.0 | `/home/s00653124/.local/bin/bwrap`；**该内核上不可用**，见 §5 |
+| cmake | `~/Softwares/cmake/bin/cmake` | |
+| ninja | `~/.local/bin/ninja` | |
+| ripgrep | `~/.local/bin/rg` | |
+| bwrap | bubblewrap 0.4.0 | `~/.local/bin/bwrap`；**该内核上不可用**，见 §5 |
 | 内核 | Landlock 已启用（`/sys/kernel/security/lsm` 含 `landlock`）；`apparmor_restrict_unprivileged_userns=1` | |
 
 版本清单（机器可读）：`evidence/env/versions.json`。
@@ -64,9 +76,9 @@ DSH 固定基线：`dsh-v0.2.1-rc.3`
 
 | 项目 | 值 |
 |---|---|
-| `DSH_HOME` | `/home/s00653124/.dsh` |
+| `DSH_HOME` | `~/.dsh` |
 | `DSH_PROFILE`（会话） | `web` |
-| `DSH_PROFILE_DIR` | `/home/s00653124/.dsh/profiles/web` |
+| `DSH_PROFILE_DIR` | `~/.dsh/profiles/web` |
 | 现有 profile | `web`、`headless` |
 | 凭据存储 | `$DSH_HOME/.credentials.yaml`（0600），含 `refs: MAGPIE_API_KEY`、`CORP_API_KEY`；**启动环境变量中没有这两个值** |
 
@@ -171,10 +183,10 @@ Web profile 的**宿主平面**已启用、且与本任务相关的行（完整�
 
 | 仓库 | 路径 | 规模 |
 |---|---|---|
-| AscendNPU-IR | `/home/s00653124/workspace/AscendNPU-IR-1` | `build/compile_commands.json` 4913 条，编译器 `/home/s00653124/Softwares/clang+llvm-15.0.6/bin/clang++` |
-| TileLang | `/home/s00653124/workspace/tilelang` | 只读 |
-| PiEngineeringHarness | `/home/s00653124/workspace/PiEngineeringHarness` | 只读 |
-| AgentGates | `/home/s00653124/workspace/AgentGates` | 只读 |
+| AscendNPU-IR | `~/workspace/AscendNPU-IR-1` | `build/compile_commands.json` 4913 条，编译器 `~/Softwares/clang+llvm-15.0.6/bin/clang++` |
+| TileLang | `~/workspace/tilelang` | 只读 |
+| PiEngineeringHarness | `~/workspace/PiEngineeringHarness` | 只读 |
+| AgentGates | `~/workspace/AgentGates` | 只读 |
 
 本任务对以上四个仓库**不写、不提交、不清理**。
 

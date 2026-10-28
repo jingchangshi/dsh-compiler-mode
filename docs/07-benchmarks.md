@@ -23,8 +23,9 @@ measurable increments of this delivery are **Teams**, **LSP**, and the **pruner 
 
 ## §A/B — same task, same model, same workspace
 
-`tests/bench/ab-benchmark.mjs`, task `tests/bench/task-source-investigation.md`, workspace
-`/home/s00653124/workspace/AscendNPU-IR-1`, model `magpie/auto/deepseek-v4.1-flash`, 2 repeats each.
+`tests/bench/ab-benchmark.mjs`, task `tests/bench/task-source-investigation.md`, the workspace
+registered as `ascendnpu-ir` (numbers below were measured on the authoring machine's tree),
+model `magpie/auto/deepseek-v4.1-flash`, 2 repeats each.
 
 | preset | run | status | steps | tool/call | ptc sub-calls | input tok | output tok | cache-read tok | elapsed |
 |---|---|---|---|---|---|---|---|---|---|

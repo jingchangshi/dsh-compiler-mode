@@ -134,7 +134,7 @@ returns an execution id and the model polls with a bounded `wait`.
 
 ## Reproducing the numbers
 
-    cd /home/s00653124/workspace/dsh-compiler-mode
+    cd ~/workspace/dsh-compiler-mode
     node tests/mcp/tool-scope.mjs                       # real gate server
     node tests/mcp/tool-scope.mjs --stub                # deterministic stand-in
     node tests/mcp/tool-scope.mjs --json /tmp/scope.json

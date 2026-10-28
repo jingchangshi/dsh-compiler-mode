@@ -123,6 +123,9 @@ DSH_PROFILE=ai-compiler-scratch PATH="$HOME/.local/bin:$PATH" \
 The script already covers every remaining case; it reports SKIP with a reason
 rather than passing when a case cannot run, so a green run is meaningful.
 
-`clangd` is required by the bundle `lsp-stdio` row and was absent on this
-machine. It was installed to `~/.local/bin/clangd` (LLVM 22.1.1) so the profile
-can activate its `tool-lsp` row.
+`clangd` is required by the bundle `lsp-stdio` row and resolves through `PATH`.
+On a machine with no clangd, install LLVM (any 15+ build parses the tree far
+enough for navigation) and put it on `PATH`; `scripts/install.sh` refuses to
+install without one rather than producing a profile whose `tool-lsp` row never
+activates. The LLVM 22 dialect overlay is separate and optional — see
+`docs/08-compatibility.md`.
