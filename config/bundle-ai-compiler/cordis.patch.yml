@@ -35,12 +35,12 @@
                 Team roles. Pick the smallest tier that fits the task, then pass the listed
                 `agent_options` to `spawn_teammate`. Omit `agent_options` for a role you do
                 not route: omission inherits your own route and is always safe.
-                  architect   provider "magpie", model "codex/gpt-6.1-sol"
+                  architect   provider "magpie", model "group/architect"
                   explorer    provider "corp",   model "Qwen3.8-Flash"
                   implementer provider "corp",   model "DeepSeek-V4.1-Flash-1017"
                   reviewer    provider "corp",   model "GLM-5.3-Flash"
-                  challenger  provider "magpie", model "codex/gpt-6.1-sol"
-                  validator   provider "magpie", model "auto/mimo-v2.6-flash"
+                  challenger  provider "magpie", model "group/challenger"
+                  validator   provider "magpie", model "group/validator"
                 Do not pass `maxTokens` or `reasoningEffort`: no configured model declares a
                 reasoning capability, and an inherited output budget is the safe default.
 
@@ -282,12 +282,12 @@
                 Team roles. Pick the smallest tier that fits the task, then pass the listed
                 `agent_options` to `spawn_teammate`. Omit `agent_options` for a role you do
                 not route: omission inherits your own route and is always safe.
-                  architect   provider "magpie", model "codex/gpt-6.1-sol"
+                  architect   provider "magpie", model "group/architect"
                   explorer    provider "magpie", model "auto/mimo-v2.6-flash"
                   implementer provider "magpie", model "auto/deepseek-v4.1-flash"
                   reviewer    provider "magpie", model "auto/glm-5.3-flash"
-                  challenger  provider "magpie", model "codex/gpt-6.1-sol"
-                  validator   provider "magpie", model "auto/qwen3.8-flash"
+                  challenger  provider "magpie", model "group/challenger"
+                  validator   provider "magpie", model "group/validator"
                 Every route in this mode uses one provider, so a deployment that cannot reach
                 the second provider still gets the whole fleet. Do not pass `maxTokens`: the
                 configured models declare their own output budgets.
