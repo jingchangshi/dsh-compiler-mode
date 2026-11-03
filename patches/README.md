@@ -108,3 +108,38 @@ Revert: `git apply -R .../patches/0002-team-member-reclaim.patch` then rebuild a
 
 **Rebuild and restart are both mandatory** — `apps/cli` loads `lib/`, and a running Host keeps its
 start-up composition.
+
+---
+
+# Patch 0003 — automatic member reclaim (dead-slot + idle grace)
+
+Applies on top of patch 0002, to `deepseek-harness` @ `296181d1c2` with 0002 applied.
+
+## Why it exists
+
+0002 added an explicit `retire_teammate`, but a long-horizon session should not have to remember to
+call it, and it should not have to write prompt guidance either. 0003 makes the runtime manage the
+roster: a failed creation never holds a slot (the next spawn reclaims it), and when the member limit
+is reached the least-recently-active member that owns no open task and has been idle past the grace
+period is retired automatically to make room. No prompt discipline and no manual retire required.
+
+## What it changes (5 files, +157/−12)
+
+| File | Change |
+|---|---|
+| `agent-team/src/types.ts` | `Config`: `autoRetireFailed` (default true), `memberIdleGraceMs` (default 300000, `0` disables idle reclaim) |
+| `agent-team/src/index.ts` | schema + validation, hand the options to `TeamRoster`, track agent status for idle measurement |
+| `agent-team/src/roster.ts` | non-retired slot count; `reclaimCandidate`/`reclaimForCapacity` before each spawn; idle tracking; clearer `TEAM_MEMBER_LIMIT` message naming why nothing was reclaimable |
+| `tool-agent-team/src/index.ts` | policy text: reuse an idle teammate before spawning; DSH auto-reclaims dead/idle members |
+| `agent-team/tests/team.spec.ts` | dead-slot reclaimed at next spawn; idle member reclaimed; a member owning an open task is NOT reclaimed |
+
+## Tradeoff
+
+Automatic reclaim only targets `failed` members, or `active` members that are idle past the grace,
+not running, and own no open task. A reclaimed member is no longer addressable, so the durable
+pattern is a fixed roster reused with `send_message`; retire explicitly only to correct a mistake.
+
+## Verification
+
+In the same copy of the checkout: 144/144 tests across agent-team + tool-agent-team, `tsc -b` clean,
+and `git apply --check` clean on top of 0002. `scripts/install.sh` applies 0002 then 0003 in order.
