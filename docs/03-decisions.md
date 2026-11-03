@@ -192,3 +192,30 @@ proves apply → idempotent re-apply → revert → conflict on a throwaway git 
 it. `rollback.sh` stays profile-only: the patch is source, not profile state, and is reversed on its
 own. A checkout that has moved past the pinned base reports `conflict` and fails the install rather
 than applying a fuzzy diff.
+
+---
+
+## ADR-012 — The runtime reclaims member slots automatically; explicit retire is for correction only
+
+**Context** — 0002 gave the Lead an explicit `retire_teammate`, but relying on the model (or the user)
+to call it is not "automatic": a long-horizon session still hits "`Team member limit 8 reached`" and
+stops. The requirement is that DSH manage the roster, and that the user never has to write lifecycle
+guidance into a prompt.
+
+**Decision** — Two automatic behaviours, plus prompt guidance that the harness *injects* (not the
+user): a failed creation never holds a slot, and when the limit is reached the least-recently-active
+member that owns no open task and has been idle beyond `memberIdleGraceMs` (default 5 min) is
+retired to make room. The `team:policy` system prompt now tells the model to reuse an idle teammate
+before spawning. Explicit `retire_teammate` remains for correcting a mistake.
+
+**Evidence** — `roster.ts` `reclaimForCapacity()` runs before every admitted spawn; `reclaimCandidate()`
+skips running members and members owning `pending`/`in_progress` tasks, prefers `failed`, then
+longest-idle. `team.spec.ts` proves: a failed creation is reclaimed by the next spawn without a
+manual call; an idle member is reclaimed at the limit; a member owning an open task is NOT reclaimed
+and the limit still reports. `tests/integration/harness-patches.mjs` proves the 0002→0003 patch
+chain applies and reverts in order.
+
+**Consequence** — Users create teammates and stop thinking about the limit; DSH makes room. The one
+cost is that a reclaimed member is no longer addressable, so the durable pattern is a fixed roster
+reused with `send_message`; the grace period keeps a between-rounds role from being reclaimed too
+eagerly. `autoRetireFailed=false` and `memberIdleGraceMs=0` restore fully manual behaviour.

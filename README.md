@@ -27,8 +27,11 @@ scripts/verify.sh         # all checks, exit 0 = installed
 
 Then: new chat → preset chip → **AI Compiler Engineering**.
 
-The team-reclaim patch is a source change, so `install.sh` applies it to the DSH checkout
-(idempotent, reversible; skip with `--no-harness-patch`) and rebuilds the Host `lib/`.
+The team features are source patches, so `install.sh` applies them to the DSH checkout (idempotent,
+reversible; skip with `--no-harness-patch`) and rebuilds the Host `lib/`. Once installed, DSH reclaims
+member slots automatically — a failed creation never holds a slot, and at the limit it retires the
+least-recently-active task-free member past the idle grace — so long sessions need no prompt
+discipline and no manual retire.
 
 Uninstall / rollback:
 

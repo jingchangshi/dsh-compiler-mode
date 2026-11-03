@@ -10,15 +10,17 @@
    C/C++ file under the session's working directory (clangd picks up the nearest
    `compile_commands.json`).
 
-### Teammates are posts, not per-task hires
+### Teammate slots are managed for you
 
-`maxMembers` counts *lifetime created* members, and names are permanent, so "one new teammate per
-task" exhausts the budget and then nothing can spawn. Reuse a fixed roster instead: create a small
-set of stable roles once (`explorer`, `implementer`, `reviewer`, …) and hand out work with
-`send_message`. `retire_teammate` (available once the team-reclaim patch is applied) is for
-correcting that — a mis-named or failed member, or a role that is genuinely done — not for daily
-flow. `retire_teammate` needs the member to be idle: `interrupt_agent` a running one first. Only the
-Lead may retire, the name stays reserved, and the slot returns to the pool.
+`maxMembers` counts *non-retired* members and names are permanent, so "one new teammate per task"
+would exhaust the budget. DSH now manages this automatically: a failed creation never holds a slot
+(the next spawn reclaims it), and at the limit DSH retires the least-recently-active member that owns
+no open task and has been idle past the grace period (default 5 min) to make room. You don't call
+anything, and you don't write this into a prompt — the injected Team policy also tells the model to
+reuse an idle teammate with `send_message` before spawning a new name. Prefer a small fixed roster
+reused with `send_message`; use `retire_teammate` only to correct a mistake (needs the member idle —
+`interrupt_agent` a running one first). A reclaimed member is no longer addressable, and its name
+stays reserved.
 
 ## After any configuration change
 
