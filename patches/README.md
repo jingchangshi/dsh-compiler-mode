@@ -48,98 +48,38 @@ start-up composition. Skipping either produces "the patch looks applied but noth
 - `member.model` shows the member's own route only while it is live; the durable truth is the
   child's `subagent/descriptor` event.
 
-# Patch 0002 — team member reclaim (retire + lifetime-slot recycling)
+# Patch 0002 — role-first Team topology (roles, slots, generations)
 
-Applies to `deepseek-harness` @ `296181d1c2` (branch `dev`; this HEAD already
-contains patch 0001, landed as `b62215edfa`).
+Applies to `deepseek-harness` @ `296181d1c2` (this HEAD already carries patch 0001 as `b62215edfa`).
 
 ## Why it exists
 
-Agent Teams had no member reclamation: `TeamMemberPhase` was
-`provisioning | active | failed`, `spawnAdmitted()` counted every row against
-`maxMembers`, and the name check rejected any reused name. Failed and finished
-teammates therefore permanently consume the lifetime budget, so a long session
-eventually cannot spawn another teammate at all. This patch reclaims a slot
-without giving up name uniqueness.
+The earlier dynamic-spawn model had no role concept: any task could be message-routed to any member,
+reclamation was role-blind, and a member name was an unstable namespace with no rebuildable position.
+This patch replaces it with a role-first topology: declared roles with fixed model routes and per-role
+concurrency, four reserved/pinned plus four flex slots, and per-member `roleId/slotId/generation` so a
+slot can be rebuilt under a new generation while names stay permanently reserved.
 
-It follows the P1 checklist in `docs/design/team-member-reclaim-solution.md`
-(T3), with one deviation required by the task brief: a **running** target is
-rejected (`TEAM_MEMBER_RUNNING`) instead of being drained inside `retire`.
+## What it changes (18 files, +1105 / −3378)
 
-## What it changes (11 files, +283/−23)
-
-| File | Change |
+| Area | Change |
 |---|---|
-| `agent-team/src/types.ts` | terminal phase `retired`; `TeamMemberView['status']` gains `retired`; `TeamMemberProjection.phase` keeps the full union (tombstones stay in the client view); `team/member` event map version `2 \| 3`; `RetireTeammateResult`; `maxMembers` = non-retired members |
-| `agent-team/src/projection.ts` | snapshot/projection phase enums accept `retired`; `teamMemberEventSchema` accepts v2 or v3; state machine allows `active\|failed → retired` with `retired` absorbing; retired rows stay in the wire view; `stateVersion` 4 → 5 |
-| `agent-team/src/roster.ts` | slot limit counts only non-retired members; new `retire(caller, targetName)`: Lead-only, rejects running (`TEAM_MEMBER_RUNNING`) and provisioning members, drains the child session first, appends a v3 tombstone; repeat call is an idempotent no-op; `list()` shows `status: 'retired'`; `tryMembership()` retired guard |
-| `agent-team/src/index.ts` | `TeamService.retireTeammate(caller, targetName)` |
-| `agent-team/tests/*` | slot reclaim + retired row shown/non-addressable, failed-member retire, repeated-retire no-op, non-Lead/unknown/`lead`/running rejection, replay + absorbing-state, wire-view tombstone, stateVersion 5 |
-| `client-ui-agent-team/src/client/TeamAction.tsx` | `MemberStatus` gains `retired`; inert row with an idle dot |
-| `client-ui-agent-team/src/client/locales.ts` | `memberStatus.retired` = `已退役` / `Retired` |
-| `tool-agent-team/src/index.ts` | `MEMBER_VIEW_SCHEMA.status` gains `retired`; new `retire_teammate` tool (`target`); policy/list text mention retire and the lifetime limit |
-| `tool-agent-team/tests/tool-team.spec.ts` | retired status in the status matrix; tool-set, forwarding and policy-text coverage |
-
-Design choices (full rationale in `evidence/design/member-reclaim-spike.md`):
-reuse the `phase` field rather than a new event type; `team/member` payload is
-**version 2|3** (retirement edges written as 3, existing edges byte-identical);
-**`stateVersion` 4 → 5** because the checkpoint state schema widens and
-`restore()` does not guard `stateSchema.parse`; names stay **permanently
-reserved**, only the slot is reclaimed; retired rows remain as non-addressable
-tombstones so task `ownerName` still resolves.
+| `agent-team/src/types.ts` | `RoleSpec`, `TeamSlotSnapshot`, member `roleId/slotId/generation`, `team/slot` event, task `requiredRole`, slot-plan config |
+| `agent-team/src/projection.ts` | folds `team/slot`, new member/task versions, wire view with roles/slots, `stateVersion` 6 |
+| `agent-team/src/roster.ts` | role routing, slot allocation (reserved then flex), generation naming, retire, role-aware reclaim, admission lock |
+| `agent-team/src/{index,task-board,task-view,journal}.ts` | default roles + 4/4 slot plan, `requiredRole` enforcement, slots in state |
+| `tool-agent-team/src/index.ts` | `spawn_teammate({role,task,slot})`, `send_message` `expected_role`, `retire_teammate`, task `required_role`, role-catalog policy |
+| `client-ui-agent-team` | show role/generation, retired status |
+| `core/session/src/known-event-types.ts` | register the new `team/slot` session event (generated) |
+| tests | rewritten for the role/slot model |
 
 ## Verification
 
-In a copy of the checkout (`/tmp/reclaim-spike/repo`, same HEAD): `vitest` for
-the agent-team, tool-agent-team and client-ui-agent-team suites → **173/173
-tests pass**; `tsc -b` of the three packages and full `tsc -b tsconfig.host.json`
-→ clean; `git apply --check` against the real baseline → exit 0. No live Host
-build/boot was performed — see the evidence doc for residual risks.
+In a copy of the checkout: agent-team 68 + tool-agent-team 6 + client-ui 31 = 105 tests pass; `tsc -b`
+of the three packages and the full `tsc -b tsconfig.host.json` are clean; `git apply --check` against
+the baseline exits 0.
 
 ## Apply / revert
 
-```bash
-cd ~/workspace/deepseek-harness
-git apply ~/workspace/dsh-compiler-mode/patches/0002-team-member-reclaim.patch
-node node_modules/typescript/bin/tsc -b tsconfig.host.json
-npx tsdown --config-loader native --env.DSH_BUILD_FACE host   # REQUIRED: the Host loads lib/
-```
-Revert: `git apply -R .../patches/0002-team-member-reclaim.patch` then rebuild and restart.
-
-**Rebuild and restart are both mandatory** — `apps/cli` loads `lib/`, and a running Host keeps its
-start-up composition.
-
----
-
-# Patch 0003 — automatic member reclaim (dead-slot + idle grace)
-
-Applies on top of patch 0002, to `deepseek-harness` @ `296181d1c2` with 0002 applied.
-
-## Why it exists
-
-0002 added an explicit `retire_teammate`, but a long-horizon session should not have to remember to
-call it, and it should not have to write prompt guidance either. 0003 makes the runtime manage the
-roster: a failed creation never holds a slot (the next spawn reclaims it), and when the member limit
-is reached the least-recently-active member that owns no open task and has been idle past the grace
-period is retired automatically to make room. No prompt discipline and no manual retire required.
-
-## What it changes (5 files, +157/−12)
-
-| File | Change |
-|---|---|
-| `agent-team/src/types.ts` | `Config`: `autoRetireFailed` (default true), `memberIdleGraceMs` (default 300000, `0` disables idle reclaim) |
-| `agent-team/src/index.ts` | schema + validation, hand the options to `TeamRoster`, track agent status for idle measurement |
-| `agent-team/src/roster.ts` | non-retired slot count; `reclaimCandidate`/`reclaimForCapacity` before each spawn; idle tracking; clearer `TEAM_MEMBER_LIMIT` message naming why nothing was reclaimable |
-| `tool-agent-team/src/index.ts` | policy text: reuse an idle teammate before spawning; DSH auto-reclaims dead/idle members |
-| `agent-team/tests/team.spec.ts` | dead-slot reclaimed at next spawn; idle member reclaimed; a member owning an open task is NOT reclaimed |
-
-## Tradeoff
-
-Automatic reclaim only targets `failed` members, or `active` members that are idle past the grace,
-not running, and own no open task. A reclaimed member is no longer addressable, so the durable
-pattern is a fixed roster reused with `send_message`; retire explicitly only to correct a mistake.
-
-## Verification
-
-In the same copy of the checkout: 144/144 tests across agent-team + tool-agent-team, `tsc -b` clean,
-and `git apply --check` clean on top of 0002. `scripts/install.sh` applies 0002 then 0003 in order.
+`scripts/install.sh` applies it and rebuilds `lib/`; `scripts/uninstall.sh --revert-harness` reverses
+it. Rebuild and restart the Host are mandatory.
