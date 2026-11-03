@@ -74,44 +74,27 @@ else
   bad "preset-ai-compiler row missing from --dump-config"
 fi
 
-step "1c. harness team capabilities (patches applied and built)"
-# The team features are source patches, not bundle rows, so a Host can look
-# healthy while lacking them. Report each patch's state, and when applied assert
-# the BUILT lib actually contains it: applying a patch without rebuilding lib/
-# is the exact silent-stale failure this check exists to catch.
+step "1c. harness team capability (role/slot topology)"
+# The role/slot topology is a source patch, not a bundle row, so a Host can look
+# healthy while lacking it. Report its state, and when applied assert the BUILT
+# lib actually contains it: applying a patch without rebuilding lib/ is the exact
+# silent-stale failure this check exists to catch.
 hp="$(node "$repo/scripts/lib/harness-patches.mjs" status --checkout "$checkout" 2>&1)"
 lib="$checkout/packages/experimental/agent-team/lib/index.js"
-p2_state="$(printf '%s\n' "$hp" | awk -F '\t' '/0002-team-member-reclaim/{print $1; exit}')"
-p3_state="$(printf '%s\n' "$hp" | awk -F '\t' '/0003-team-auto-reclaim/{print $1; exit}')"
-case "$p2_state" in
+p_state="$(printf '%s\n' "$hp" | awk -F '\t' '/0002-team-roles-slots/{print $1; exit}')"
+case "$p_state" in
   applied)
-    if grep -q 'retireTeammate' "$lib" 2>/dev/null; then
-      ok "patch 0002 applied and built (retire_teammate present)"
+    if grep -q 'TEAM_NO_CAPACITY' "$lib" 2>/dev/null; then
+      ok "role/slot topology patch applied and built"
     else
-      bad "patch 0002 applied in source but lib/ is stale — run: pnpm run build:lib:host"
-    fi ;;
-  pending|blocked)
-    printf 'INFO  patch 0002 NOT applied; retire_teammate is unavailable (run scripts/install.sh)\n' ;;
-  conflict)
-    bad "patch 0002 does not apply to this checkout (base moved?) — see scripts/lib/harness-patches.mjs status" ;;
-  *)
-    printf 'INFO  patch 0002 state unknown\n' ;;
-esac
-case "$p3_state" in
-  applied)
-    if grep -q 'reclaimForCapacity' "$lib" 2>/dev/null; then
-      ok "patch 0003 applied and built (automatic slot reclamation present)"
-    else
-      bad "patch 0003 applied in source but lib/ is stale — run: pnpm run build:lib:host"
+      bad "role/slot topology patch applied in source but lib/ is stale — run: pnpm run build:lib:host"
     fi ;;
   pending)
-    printf 'INFO  patch 0003 NOT applied; automatic slot reclamation is unavailable (run scripts/install.sh)\n' ;;
-  blocked)
-    printf 'INFO  patch 0003 blocked on patch 0002\n' ;;
+    printf 'INFO  role/slot topology patch NOT applied; the role-based Team tools are unavailable (run scripts/install.sh)\n' ;;
   conflict)
-    bad "patch 0003 does not apply to this checkout (base moved?)" ;;
+    bad "role/slot topology patch does not apply to this checkout (base moved?) — see scripts/lib/harness-patches.mjs status" ;;
   *)
-    printf 'INFO  patch 0003 state unknown\n' ;;
+    printf 'INFO  role/slot topology patch state unknown\n' ;;
 esac
 
 step "1d. capability-patch helper self-test"

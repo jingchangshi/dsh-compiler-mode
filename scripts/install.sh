@@ -236,7 +236,7 @@ fi
 # A bundle can add rows to the profile, but it CANNOT add a service method or a
 # model tool that the installed source does not have. The Agent Teams reclaim
 # capability (terminal `retired` phase + `retire_teammate`) is such a change and
-# is pinned as patches/0002-team-member-reclaim.patch. Apply it idempotently and
+# is pinned as patches/0002-team-roles-slots.patch. Apply it idempotently and
 # reversibly, then rebuild the Host lib so the running Host actually loads it.
 #
 # This is the ONLY step that writes to the DSH checkout. It is opt-out

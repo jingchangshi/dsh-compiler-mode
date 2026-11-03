@@ -43,14 +43,9 @@ const repoRoot = path.resolve(libDir, '..', '..')
  */
 const PATCHES = [
   {
-    file: '0002-team-member-reclaim.patch',
-    feature: 'Team member reclaim (terminal retired phase + retire_teammate)',
-    probe: { file: 'packages/experimental/agent-team/src/types.ts', needle: '| \'retired\'' },
-  },
-  {
-    file: '0003-team-auto-reclaim.patch',
-    feature: 'Automatic member reclaim (dead-slot at spawn, idle grace reclaim)',
-    probe: { file: 'packages/experimental/agent-team/src/roster.ts', needle: 'reclaimForCapacity' },
+    file: '0002-team-roles-slots.patch',
+    feature: 'Role-first team topology (roles, 4 reserved + 4 flex slots, generations)',
+    probe: { file: 'packages/experimental/agent-team/src/roster.ts', needle: 'TEAM_NO_CAPACITY' },
   },
 ]
 
