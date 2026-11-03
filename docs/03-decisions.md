@@ -165,3 +165,30 @@ PiEngineeringHarness migration.
 **Decision** — the bundle ships no `SKILL.md`, mounts the standard `skill-filesystem` + `tool-skill`
 pair unchanged (so user skills keep working through the normal discovery path), and defines no
 analysis protocol. `docs/01-architecture.md` reserves the Adapter entry point without specifying it.
+
+---
+
+## ADR-011 — Capability source patches are pinned, applied by `install.sh`, and reversible
+
+**Context** — A DSH *bundle* adds rows to a profile, but it cannot add a service method or a model
+tool that the installed source lacks. The Agent Teams member-reclaim capability (terminal
+`retired` phase + `retire_teammate`) is exactly such a change: rc.3's `agent-team` package has no
+removal path and no `retired` phase. Two ways to deliver it existed: (a) land it upstream in
+`deepseek-harness`, or (b) ship it as a pinned patch this delivery applies.
+
+**Decision** — Ship it as `patches/0002-team-member-reclaim.patch` and have `scripts/install.sh`
+apply it to the checkout, idempotently and reversibly, then rebuild the Host `lib/`. Upstreaming is
+out of scope for a delivery that must install on an unmodified rc.3 checkout. This extends the
+earlier invariant: the profile's `cordis.patch.yml` is still never edited, but the checkout is now
+modified by exactly one pinned, reversible patch.
+
+**Evidence** — `scripts/lib/harness-patches.mjs` decides state from `git apply --check [-R]`:
+`pending` / `applied` / `conflict`, never a silent skip. `tests/integration/harness-patches.mjs`
+proves apply → idempotent re-apply → revert → conflict on a throwaway git tree.
+`scripts/verify.sh` step 1c asserts the patch is applied AND that the built
+`agent-team/lib/index.js` contains `retireTeammate`, so "applied but not rebuilt" fails loudly.
+
+**Consequence** — `install.sh --no-harness-patch` skips it; `uninstall.sh --revert-harness` reverses
+it. `rollback.sh` stays profile-only: the patch is source, not profile state, and is reversed on its
+own. A checkout that has moved past the pinned base reports `conflict` and fails the install rather
+than applying a fuzzy diff.

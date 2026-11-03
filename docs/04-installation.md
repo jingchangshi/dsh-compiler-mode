@@ -3,7 +3,13 @@
 The mode ships as one bundle: `@local/dsh-ai-compiler-preset`
 (`config/bundle-ai-compiler/`). Installing it never edits a shipped preset and never
 touches the profile's `cordis.patch.yml` (your model settings stay byte-identical;
-`scripts/verify.sh` step 5 asserts that).
+`scripts/verify.sh` step 6 asserts that).
+
+One capability is not expressible as a bundle row and ships as a **pinned source patch** instead:
+the Agent Teams member-reclaim feature (`retired` phase + `retire_teammate`). `scripts/install.sh`
+applies `patches/0002-team-member-reclaim.patch` to the DSH checkout, idempotently and reversibly,
+then rebuilds the Host `lib/`. This is the only step that writes to the checkout; it is opt-out
+(`--no-harness-patch`) and reversible (`scripts/uninstall.sh --revert-harness`). See ADR-011.
 
 ## What gets installed
 
@@ -11,6 +17,9 @@ touches the profile's `cordis.patch.yml` (your model settings stay byte-identica
 |---|---|---|
 | `bundles.patch.yml` | Host | `lsp`, `lsp-stdio` (clangd), `tool-lsp`, `agent-team`, `tool-agent-team`, `ui-agent-team` |
 | `cordis.patch.yml` | Preset | one `preset-ai-compiler` declaration (`config.id: ai-compiler`) |
+
+Plus one source patch: `patches/0002-team-member-reclaim.patch` → the DSH checkout
+(`agent-team`, `tool-agent-team`, `client-ui-agent-team`; rebuilds `lib/`).
 
 Two extra steps are unavoidable in rc.3 and are handled by the script:
 
@@ -25,12 +34,15 @@ Two extra steps are unavoidable in rc.3 and are handled by the script:
 ## Automated install
 
 ```bash
-scripts/install.sh            # backs up the profile, links the LSP packages, links + selects the bundle
+scripts/install.sh            # backs up the profile, links the LSP packages, links + selects the bundle,
+                              # applies + builds the team-reclaim patch
 # restart the DSH Web Host, then:
-scripts/verify.sh             # 5 checks, exit 0 = installed correctly
+scripts/verify.sh             # all checks, exit 0 = installed correctly
 ```
 
-`scripts/install.sh --dry-run` prints every action without writing.
+Flags: `--dry-run` prints every action without writing; `--no-harness-patch` leaves the DSH
+checkout untouched (then `retire_teammate` is unavailable); `--no-build` applies the patch but
+skips the Host `lib/` rebuild (run `pnpm run build:lib:host` before restarting).
 
 ## Manual equivalent (Web GUI)
 
@@ -50,16 +62,19 @@ scripts/verify.sh             # 5 checks, exit 0 = installed correctly
 - A new chat's preset chip offers it; `session/create {agentPreset:'ai-compiler'}` returns
   `agentPreset: "ai-compiler"`.
 - Inside a `run_code` program, `Object.keys(tools)` contains `spawn_teammate`,
-  `team_task_create`, `lsp` and does **not** contain `subagent`/`subagent_fork`.
+  `retire_teammate`, `team_task_create`, `lsp` and does **not** contain `subagent`/`subagent_fork`.
 
 ## Uninstall
 
 ```bash
 scripts/uninstall.sh          # deselects the bundle layer and removes the linked package
-# restart the Host
+scripts/uninstall.sh --revert-harness   # also reverse the team-reclaim source patch
+# restart the Host (rebuild lib/ first if you used --revert-harness)
 ```
 
 `--keep-deps` leaves the package on disk (deselect only); `--dry-run` prints the plan.
+`--revert-harness` is opt-in: the patch is a source change, and leaving it applied is harmless once
+no preset mounts the Team bundle.
 
 ## Rollback to the pre-install state
 
@@ -70,14 +85,18 @@ scripts/rollback.sh --dry-run
 ```
 
 Rollback restores `package.json`, `cordis.patch.yml`, `cordis.yml`, `pnpm-workspace.yaml`, prunes
-`node_modules` back to the restored manifest, and tells you to restart the Host. The DSH checkout,
-the model configuration and every compiler repository are outside its scope and are never touched.
+`node_modules` back to the restored manifest, and tells you to restart the Host. The model
+configuration and every compiler repository are outside its scope and are never touched. Rollback
+is profile-only by design: the team-reclaim patch is source, not profile state, and is reversed with
+`scripts/uninstall.sh --revert-harness` (or `node scripts/lib/harness-patches.mjs revert`).
 
 ## Where things live
 
 | Artifact | Path |
 |---|---|
 | Bundle source | `config/bundle-ai-compiler/` |
+| Capability source patch | `patches/0002-team-member-reclaim.patch` |
+| Capability patch helper | `scripts/lib/harness-patches.mjs` |
 | clangd LLVM 22 overlay | `config/overlays/clangd-llvm22.patch.yml` |
 | Pre-install capture (the one rollback restores) | `evidence/backup/profile-web-orig/` |
 | Test + benchmark output | `evidence/tests/`, `evidence/e2e/`, `evidence/benchmarks/` |

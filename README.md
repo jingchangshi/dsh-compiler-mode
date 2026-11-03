@@ -11,8 +11,8 @@ surface.
 | Preset id | `ai-compiler` |
 | Display name | **AI Compiler Engineering** |
 | Base | official `ptc` preset (33/33 rows, 2 declared diffs) |
-| Model surface | `run_code` only (PTC), **31 tools** bound inside the SDK |
-| Delegation | Agent Teams only (`spawn_teammate`, `send_message`, `list_agents`, `wait_agent`, `interrupt_agent`, `team_task_*`) |
+| Model surface | `run_code` only (PTC), **31 tools** bound inside the SDK (**32** once the team-reclaim patch adds `retire_teammate`) |
+| Delegation | Agent Teams only (`spawn_teammate`, `send_message`, `list_agents`, `wait_agent`, `interrupt_agent`, `retire_teammate`, `team_task_*`) |
 | Code navigation | `lsp` over clangd, real `compile_commands.json` |
 | Skills | none preinstalled; the standard `skill-filesystem` + `tool-skill` pair is unchanged |
 | Compiler adapters | none (reserved entry point documented, not implemented) |
@@ -20,18 +20,22 @@ surface.
 ## Quick start
 
 ```bash
-scripts/install.sh        # link the bundle + the LSP packages into the Web profile
+scripts/install.sh        # link the bundle + LSP packages, and apply+build the team-reclaim patch
 # restart the DSH Web Host
-scripts/verify.sh         # 5 checks, exit 0 = installed
+scripts/verify.sh         # all checks, exit 0 = installed
 ```
 
 Then: new chat → preset chip → **AI Compiler Engineering**.
 
+The team-reclaim patch is a source change, so `install.sh` applies it to the DSH checkout
+(idempotent, reversible; skip with `--no-harness-patch`) and rebuilds the Host `lib/`.
+
 Uninstall / rollback:
 
 ```bash
-scripts/uninstall.sh      # deselect + remove the linked package
-scripts/rollback.sh       # restore the profile from the pre-install backup
+scripts/uninstall.sh                  # deselect + remove the linked package
+scripts/uninstall.sh --revert-harness # also reverse the team-reclaim source patch (then rebuild lib/)
+scripts/rollback.sh                   # restore the profile from the pre-install backup
 ```
 
 ## Layout
@@ -41,10 +45,10 @@ config/bundle-ai-compiler/     the deliverable bundle
   bundles.patch.yml              HOST plane: lsp, lsp-stdio(clangd), tool-lsp, agent-team, tool-agent-team, ui-agent-team
   cordis.patch.yml               PRESET plane: the preset-ai-compiler declaration
 config/overlays/               alternative clangd builds (LLVM 22)
-scripts/                       install / uninstall / verify / rollback + shared helpers
+scripts/                       install / uninstall / verify / rollback + harness-patch helper
 tests/
   preset/                      declaration vs official PTC (declared-diff gate)
-  integration/                 composition suite (47 deterministic checks)
+  integration/                 composition suite (47 deterministic checks) + harness-patch helper test
   permissions/                 real allow/deny assertions
   clangd/                      how clangd parses a real compile_commands.json
   e2e/                         Web-session driver, case A/B/C, independent verifiers
@@ -60,7 +64,7 @@ evidence/  config snapshots, backups, e2e session logs, benchmark data, machine-
 | Area | Result |
 |---|---|
 | Custom mode registered, selectable, no shipped preset modified | PASS |
-| PTC inside the mode | PASS (`run_code` real; 31 SDK bindings) |
+| PTC inside the mode | PASS (`run_code` real; 31 SDK bindings, +`retire_teammate` with the team-reclaim patch) |
 | Agent Teams + PTC | PASS (Leader + teammates + task DAG + interrupt + restart recovery) |
 | Spill / compaction | spill storage PASS; **compaction NOT_TESTED** (needs a small-context model) |
 | LSP on a real C++ tree | PASS (`goToDefinition` / `findReferences` at real symbols) |
