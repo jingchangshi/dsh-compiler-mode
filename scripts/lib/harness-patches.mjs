@@ -47,6 +47,11 @@ const PATCHES = [
     feature: 'Team member reclaim (terminal retired phase + retire_teammate)',
     probe: { file: 'packages/experimental/agent-team/src/types.ts', needle: '| \'retired\'' },
   },
+  {
+    file: '0003-team-auto-reclaim.patch',
+    feature: 'Automatic member reclaim (dead-slot at spawn, idle grace reclaim)',
+    probe: { file: 'packages/experimental/agent-team/src/roster.ts', needle: 'reclaimForCapacity' },
+  },
 ]
 
 function parseArgs(argv) {
@@ -115,9 +120,32 @@ function applyOne(patch, direction) {
 }
 
 if (args.command === 'status') {
+  const rows = []
+  const lastFile = PATCHES.at(-1).file
+  const firstFile = PATCHES[0].file
+  if (gitMode && PATCHES.length > 1) {
+    // Chain-level verdicts first: reverse of the LAST patch proves the whole
+    // chain is applied; forward of the FIRST proves it is entirely pending.
+    // Per-patch reverse checks are ambiguous once later patches are stacked on
+    // top, so they are only a fallback for a partially applied chain.
+    const lastApplied = git(['apply', '--check', '--reverse', path.join(patchDir, lastFile)]).status === 0
+    const firstPending = git(['apply', '--check', path.join(patchDir, firstFile)]).status === 0
+    if (lastApplied && !firstPending) {
+      for (const patch of PATCHES) rows.push(['applied', patch])
+    } else if (firstPending) {
+      PATCHES.forEach((patch, index) => rows.push([index === 0 ? 'pending' : 'blocked', patch]))
+    }
+  }
+  if (rows.length === 0) {
+    let previousApplied = true
+    for (const patch of PATCHES) {
+      const state = previousApplied ? stateOf(patch) : 'blocked'
+      rows.push([state, patch])
+      previousApplied = state === 'applied'
+    }
+  }
   let worst = 0
-  for (const patch of PATCHES) {
-    const state = stateOf(patch)
+  for (const [state, patch] of rows) {
     console.log(`${state}\t${patch.file}\t${patch.feature}`)
     if (state === 'conflict') worst = 1
   }
@@ -126,17 +154,23 @@ if (args.command === 'status') {
 
 let changed = false
 let failed = false
-for (const patch of PATCHES) {
+let blocked = false
+// Apply in order; revert in reverse order so each patch is removed before the
+// one it was built on.
+const ordered = args.command === 'revert' ? [...PATCHES].reverse() : PATCHES
+for (const patch of ordered) {
+  if (blocked) { console.log(`blocked\t${patch.file}\t${patch.feature}`); continue }
   const state = stateOf(patch)
   if (args.command === 'apply') {
     if (state === 'applied') { console.log(`already-applied\t${patch.file}\t${patch.feature}`); continue }
     if (state === 'conflict') {
       console.error(`harness-patches: ${patch.file} does not apply to ${checkout} (not at the pinned base?)`)
       failed = true
+      blocked = true
       continue
     }
     if (args.dry) { console.log(`would-apply\t${patch.file}\t${patch.feature}`); changed = true; continue }
-    if (!applyOne(patch, 'apply')) { failed = true; continue }
+    if (!applyOne(patch, 'apply')) { failed = true; blocked = true; continue }
     console.log(`applied\t${patch.file}\t${patch.feature}`)
     changed = true
   } else {
@@ -144,10 +178,11 @@ for (const patch of PATCHES) {
     if (state === 'conflict') {
       console.error(`harness-patches: ${patch.file} is neither cleanly applied nor cleanly revertible in ${checkout}`)
       failed = true
+      blocked = true
       continue
     }
     if (args.dry) { console.log(`would-revert\t${patch.file}\t${patch.feature}`); changed = true; continue }
-    if (!applyOne(patch, 'revert')) { failed = true; continue }
+    if (!applyOne(patch, 'revert')) { failed = true; blocked = true; continue }
     console.log(`reverted\t${patch.file}\t${patch.feature}`)
     changed = true
   }

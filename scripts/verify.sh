@@ -74,26 +74,44 @@ else
   bad "preset-ai-compiler row missing from --dump-config"
 fi
 
-step "1c. harness team-reclaim capability"
-# The team-reclaim feature is a source patch, not a bundle row, so a Host can
-# look healthy while lacking it. Report its state, and when it is applied assert
+step "1c. harness team capabilities (patches applied and built)"
+# The team features are source patches, not bundle rows, so a Host can look
+# healthy while lacking them. Report each patch's state, and when applied assert
 # the BUILT lib actually contains it: applying a patch without rebuilding lib/
 # is the exact silent-stale failure this check exists to catch.
 hp="$(node "$repo/scripts/lib/harness-patches.mjs" status --checkout "$checkout" 2>&1)"
-hp_state="$(printf '%s\n' "$hp" | awk -F '\t' '/0002-team-member-reclaim/{print $1; exit}')"
-case "$hp_state" in
+lib="$checkout/packages/experimental/agent-team/lib/index.js"
+p2_state="$(printf '%s\n' "$hp" | awk -F '\t' '/0002-team-member-reclaim/{print $1; exit}')"
+p3_state="$(printf '%s\n' "$hp" | awk -F '\t' '/0003-team-auto-reclaim/{print $1; exit}')"
+case "$p2_state" in
   applied)
-    if grep -q 'retireTeammate' "$checkout/packages/experimental/agent-team/lib/index.js" 2>/dev/null; then
-      ok "team-reclaim patch applied and built (retireTeammate present in lib)"
+    if grep -q 'retireTeammate' "$lib" 2>/dev/null; then
+      ok "patch 0002 applied and built (retire_teammate present)"
     else
-      bad "team-reclaim patch applied in source but lib/ is stale — run: pnpm run build:lib:host"
+      bad "patch 0002 applied in source but lib/ is stale — run: pnpm run build:lib:host"
+    fi ;;
+  pending|blocked)
+    printf 'INFO  patch 0002 NOT applied; retire_teammate is unavailable (run scripts/install.sh)\n' ;;
+  conflict)
+    bad "patch 0002 does not apply to this checkout (base moved?) — see scripts/lib/harness-patches.mjs status" ;;
+  *)
+    printf 'INFO  patch 0002 state unknown\n' ;;
+esac
+case "$p3_state" in
+  applied)
+    if grep -q 'reclaimForCapacity' "$lib" 2>/dev/null; then
+      ok "patch 0003 applied and built (automatic slot reclamation present)"
+    else
+      bad "patch 0003 applied in source but lib/ is stale — run: pnpm run build:lib:host"
     fi ;;
   pending)
-    printf 'INFO  team-reclaim patch NOT applied; retire_teammate is unavailable (run scripts/install.sh)\n' ;;
+    printf 'INFO  patch 0003 NOT applied; automatic slot reclamation is unavailable (run scripts/install.sh)\n' ;;
+  blocked)
+    printf 'INFO  patch 0003 blocked on patch 0002\n' ;;
   conflict)
-    bad "team-reclaim patch does not apply to this checkout (base moved?) — see scripts/lib/harness-patches.mjs status" ;;
+    bad "patch 0003 does not apply to this checkout (base moved?)" ;;
   *)
-    printf 'INFO  team-reclaim patch state unknown\n' ;;
+    printf 'INFO  patch 0003 state unknown\n' ;;
 esac
 
 step "1d. capability-patch helper self-test"
