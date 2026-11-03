@@ -1,3 +1,5 @@
+> **已被取代（历史）**：本文档描述旧的动态回收方案；现行实现为「角色一等契约 + 4 保留槽/4 弹性槽」，见 `patches/0002-team-roles-slots.patch` 与 `docs/03-decisions.md` 的 ADR-013。
+
 # Agent Team 队友名额回收：候选机制、权衡与分阶段推荐路线（T3）
 
 - 上游事实基础：`docs/design/team-member-reclaim-rootcause.md`（T1 源码审计，9 张证据表）、`evidence/design/team-member-reclaim-real-session.md`（真实会话 `session-b4aa3158`）、`evidence/design/member-reclaim-probe.json` + `tests/design/member-reclaim-probe.mjs`（T2 可重复实测）。

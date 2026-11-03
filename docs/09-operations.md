@@ -10,17 +10,17 @@
    C/C++ file under the session's working directory (clangd picks up the nearest
    `compile_commands.json`).
 
-### Teammate slots are managed for you
+### Roles and slots
 
-`maxMembers` counts *non-retired* members and names are permanent, so "one new teammate per task"
-would exhaust the budget. DSH now manages this automatically: a failed creation never holds a slot
-(the next spawn reclaims it), and at the limit DSH retires the least-recently-active member that owns
-no open task and has been idle past the grace period (default 5 min) to make room. You don't call
-anything, and you don't write this into a prompt — the injected Team policy also tells the model to
-reuse an idle teammate with `send_message` before spawning a new name. Prefer a small fixed roster
-reused with `send_message`; use `retire_teammate` only to correct a mistake (needs the member idle —
-`interrupt_agent` a running one first). A reclaimed member is no longer addressable, and its name
-stays reserved.
+Teammates are **roles**, not per-task hires. Six roles (architect, explorer, implementer, reviewer,
+challenger, validator) each fix a model route and a concurrency cap. The team has four reserved/pinned
+slots and four flexible slots; spawning fills a matching slot and names the member `<slot>-g<gen>`.
+Dispatch by role with `spawn_teammate({ role, task })`; reuse an idle teammate of the same role with
+`send_message` (pass `expected_role` to assert) before creating a new one. A task's `required_role` is
+enforced on claim/reassign, and a mismatched `expected_role` send is refused — work is never silently
+routed to the wrong role. When capacity is full the runtime returns **backpressure** naming the blocked
+role: wait, or retire a finished member; it will not steal a pinned role. A retired member keeps its
+name forever but is no longer addressable.
 
 ## After any configuration change
 

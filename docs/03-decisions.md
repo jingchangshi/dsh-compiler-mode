@@ -176,7 +176,7 @@ tool that the installed source lacks. The Agent Teams member-reclaim capability 
 removal path and no `retired` phase. Two ways to deliver it existed: (a) land it upstream in
 `deepseek-harness`, or (b) ship it as a pinned patch this delivery applies.
 
-**Decision** — Ship it as `patches/0002-team-member-reclaim.patch` and have `scripts/install.sh`
+**Decision** — Ship it as a pinned capability patch (now `patches/0002-team-roles-slots.patch`, superseding the older 0002/0003 reclaim patches) and have `scripts/install.sh`
 apply it to the checkout, idempotently and reversibly, then rebuild the Host `lib/`. Upstreaming is
 out of scope for a delivery that must install on an unmodified rc.3 checkout. This extends the
 earlier invariant: the profile's `cordis.patch.yml` is still never edited, but the checkout is now
@@ -219,3 +219,30 @@ chain applies and reverts in order.
 cost is that a reclaimed member is no longer addressable, so the durable pattern is a fixed roster
 reused with `send_message`; the grace period keeps a between-rounds role from being reclaimed too
 eagerly. `autoRetireFailed=false` and `memberIdleGraceMs=0` restore fully manual behaviour.
+
+---
+
+## ADR-013 — Role-first Team topology replaces dynamic spawn + role-blind reclaim
+
+**Context** — The dynamic model (ADR-011/012) left three gaps: a "member name" carried four unrelated
+responsibilities (role discovery, executor identity, context container, capacity), reclamation was
+role-blind (LRU), and the send/task paths had no shared role contract, so work could reach the wrong
+role. Names were also an unstable namespace with no rebuildable position.
+
+**Decision** — Ship one pinned capability patch (`patches/0002-team-roles-slots.patch`) that makes a
+role a first-class contract: `RoleSpec` with provider/model/`maxConcurrent`; a slot topology of four
+reserved/pinned plus four flex slots; per-member `roleId/slotId/generation` where a slot is rebuilt
+under `generation+1` and named `<slot>-g<gen>` (names stay permanently reserved). Spawn selects a
+matching slot and applies the role's route; `retire_teammate` releases the slot; automatic reclamation
+only targets failed members or idle flex members (never pinned). Role mismatch is refused at spawn,
+task `claim/reassign` (`requiredRole`) and `send_message` (`expectedRole`); full capacity returns
+explicit backpressure naming the blocked role. `stateVersion` 6; the new `team/slot` session event is
+registered in the generated event vocabulary.
+
+**Evidence** — Agent-team 68 + tool 6 + client 31 tests pass; three-package `tsc -b` and the full
+`tsc -b tsconfig.host.json` are clean; the patch applies to `296181d1c2` (`git apply --check` exit 0).
+
+**Consequence** — The user never writes role/lifecycle guidance: the injected policy carries the role
+catalog and the routing rules, and the runtime enforces them. Automatic reclaim is safe because pinned
+slots are protected and role-mismatched dispatch is structurally refused; capacity pressure is honest
+backpressure, not a wrong-role fallback. This supersedes ADR-011/012's reclamation semantics.

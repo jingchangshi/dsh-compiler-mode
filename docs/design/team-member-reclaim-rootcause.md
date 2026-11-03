@@ -1,3 +1,5 @@
+> **已被取代（历史）**：本文档描述旧的动态回收方案；现行实现为「角色一等契约 + 4 保留槽/4 弹性槽」，见 `patches/0002-team-roles-slots.patch` 与 `docs/03-decisions.md` 的 ADR-013。
+
 # Agent Team 队友名额不可回收：根因溯源（源码审计）
 
 - 审计对象：`~/workspace/deepseek-harness`，commit `296181d1c2`（`feat(agent-team): generic Team task completion policy extension point`）。

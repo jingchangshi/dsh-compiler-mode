@@ -5,14 +5,13 @@ The mode ships as one bundle: `@local/dsh-ai-compiler-preset`
 touches the profile's `cordis.patch.yml` (your model settings stay byte-identical;
 `scripts/verify.sh` step 6 asserts that).
 
-One capability is not expressible as a bundle row and ships as **pinned source patches** instead:
-the Agent Teams member-reclaim feature. `patches/0002-team-member-reclaim.patch` adds the `retired`
-phase and `retire_teammate`; `patches/0003-team-auto-reclaim.patch` makes the runtime manage slots
-automatically (a failed creation never holds a slot, and at the limit the least-recently-active,
-task-free, idle-beyond-grace member is retired to make room). `scripts/install.sh` applies both in
-order, idempotently and reversibly, then rebuilds the Host `lib/`. This is the only step that writes
-to the checkout; it is opt-out (`--no-harness-patch`) and reversible
-(`scripts/uninstall.sh --revert-harness`). See ADR-011 and ADR-012.
+One capability is not expressible as a bundle row and ships as a **pinned source patch** instead:
+the Agent Teams role-first topology. `patches/0002-team-roles-slots.patch` adds `RoleSpec`, the
+`TeamSlotSnapshot` roster (4 reserved/pinned + 4 flex), per-member `roleId/slotId/generation`, role
+routing at spawn, role-aware reclamation, `retire_teammate`, and task `requiredRole` / message
+`expected_role` validation. `scripts/install.sh` applies it idempotently and reversibly, then rebuilds
+the Host `lib/`. This is the only step that writes to the checkout; it is opt-out
+(`--no-harness-patch`) and reversible (`scripts/uninstall.sh --revert-harness`). See ADR-013.
 
 ## What gets installed
 
@@ -21,9 +20,9 @@ to the checkout; it is opt-out (`--no-harness-patch`) and reversible
 | `bundles.patch.yml` | Host | `lsp`, `lsp-stdio` (clangd), `tool-lsp`, `agent-team`, `tool-agent-team`, `ui-agent-team` |
 | `cordis.patch.yml` | Preset | one `preset-ai-compiler` declaration (`config.id: ai-compiler`) |
 
-Plus two source patches, applied in order: `patches/0002-team-member-reclaim.patch` (explicit
-`retire_teammate`) and `patches/0003-team-auto-reclaim.patch` (automatic slot reclamation) → the DSH
-checkout (`agent-team`, `tool-agent-team`, `client-ui-agent-team`; rebuilds `lib/`).
+Plus one source patch: `patches/0002-team-roles-slots.patch` → the DSH checkout (`agent-team`,
+`tool-agent-team`, `client-ui-agent-team`, and the generated session event vocabulary; rebuilds
+`lib/`).
 
 Two extra steps are unavoidable in rc.3 and are handled by the script:
 
@@ -99,7 +98,7 @@ is profile-only by design: the team-reclaim patch is source, not profile state, 
 | Artifact | Path |
 |---|---|
 | Bundle source | `config/bundle-ai-compiler/` |
-| Capability source patches | `patches/0002-team-member-reclaim.patch`, `patches/0003-team-auto-reclaim.patch` |
+| Capability source patch | `patches/0002-team-roles-slots.patch` |
 | Capability patch helper | `scripts/lib/harness-patches.mjs` |
 | clangd LLVM 22 overlay | `config/overlays/clangd-llvm22.patch.yml` |
 | Pre-install capture (the one rollback restores) | `evidence/backup/profile-web-orig/` |

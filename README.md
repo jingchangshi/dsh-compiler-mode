@@ -11,8 +11,8 @@ surface.
 | Preset id | `ai-compiler` |
 | Display name | **AI Compiler Engineering** |
 | Base | official `ptc` preset (33/33 rows, 2 declared diffs) |
-| Model surface | `run_code` only (PTC), **31 tools** bound inside the SDK (**32** once the team-reclaim patch adds `retire_teammate`) |
-| Delegation | Agent Teams only (`spawn_teammate`, `send_message`, `list_agents`, `wait_agent`, `interrupt_agent`, `retire_teammate`, `team_task_*`) |
+| Model surface | `run_code` only (PTC); role-based Agent Teams tools (`spawn_teammate` by role, `retire_teammate`, `send_message` with `expected_role`, task `required_role`) |
+| Delegation | Agent Teams only, **role-first**: 6 roles (architect/explorer/implementer/reviewer/challenger/validator) with per-role models, 4 reserved + 4 flex slots, generations; tools `spawn_teammate`/`send_message`/`retire_teammate`/`list_agents`/`wait_agent`/`interrupt_agent`/`team_task_*` |
 | Code navigation | `lsp` over clangd, real `compile_commands.json` |
 | Skills | none preinstalled; the standard `skill-filesystem` + `tool-skill` pair is unchanged |
 | Compiler adapters | none (reserved entry point documented, not implemented) |
@@ -27,11 +27,11 @@ scripts/verify.sh         # all checks, exit 0 = installed
 
 Then: new chat → preset chip → **AI Compiler Engineering**.
 
-The team features are source patches, so `install.sh` applies them to the DSH checkout (idempotent,
-reversible; skip with `--no-harness-patch`) and rebuilds the Host `lib/`. Once installed, DSH reclaims
-member slots automatically — a failed creation never holds a slot, and at the limit it retires the
-least-recently-active task-free member past the idle grace — so long sessions need no prompt
-discipline and no manual retire.
+The Team role/slot topology is a source patch, so `install.sh` applies `patches/0002-team-roles-slots.patch`
+to the DSH checkout (idempotent, reversible; skip with `--no-harness-patch`) and rebuilds the Host
+`lib/`. Dispatch work by role; the runtime fixes each role's model and concurrency, reuses same-role
+idle members, rejects role-mismatched dispatch (`expected_role` / task `required_role`), and returns
+backpressure instead of sending work to the wrong role.
 
 Uninstall / rollback:
 
@@ -67,7 +67,7 @@ evidence/  config snapshots, backups, e2e session logs, benchmark data, machine-
 | Area | Result |
 |---|---|
 | Custom mode registered, selectable, no shipped preset modified | PASS |
-| PTC inside the mode | PASS (`run_code` real; 31 SDK bindings, +`retire_teammate` with the team-reclaim patch) |
+| PTC inside the mode | PASS (`run_code` real; role-based Team tools incl. `spawn_teammate` by role and `retire_teammate`) |
 | Agent Teams + PTC | PASS (Leader + teammates + task DAG + interrupt + restart recovery) |
 | Spill / compaction | spill storage PASS; **compaction NOT_TESTED** (needs a small-context model) |
 | LSP on a real C++ tree | PASS (`goToDefinition` / `findReferences` at real symbols) |
