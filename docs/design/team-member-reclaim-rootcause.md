@@ -1,6 +1,6 @@
 # Agent Team 队友名额不可回收：根因溯源（源码审计）
 
-- 审计对象：`/home/s00653124/workspace/deepseek-harness`，commit `296181d1c2`（`feat(agent-team): generic Team task completion policy extension point`）。
+- 审计对象：`~/workspace/deepseek-harness`，commit `296181d1c2`（`feat(agent-team): generic Team task completion policy extension point`）。
 - 审计范围：`packages/experimental/agent-team/src/{index,roster,projection,types,journal,lifecycle,task-board}.ts`、`packages/experimental/tool-agent-team/src/index.ts`、该两包的 README 与 tests、`packages/subagent/subagent/src/{index,manager}.ts`、`packages/session/session-projection/src/index.ts`、历史实测 `evidence/design/member-limit-probe.json`。
 - 方式：只读分析。基线仓库未做任何写操作（无编辑、无分支、无 stash）。
 - 结论口径：本文只回答"为什么名额只增不减"，不重新判断产品需求。

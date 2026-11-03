@@ -27,7 +27,7 @@
  *      projection includes failed rows, matching the runtime view.
  *
  * HOW TO RUN
- *   cd /home/s00653124/workspace/dsh-compiler-mode
+ *   cd ~/workspace/dsh-compiler-mode
  *   node tests/design/member-reclaim-probe.mjs
  *   -> writes evidence/design/member-reclaim-probe.json
  *

@@ -12,7 +12,7 @@ non-running target.
 
 ## 1. Environment and method
 
-- Baseline (read-only): `/home/s00653124/workspace/deepseek-harness`
+- Baseline (read-only): `~/workspace/deepseek-harness`
   at commit **`296181d1c2`** (branch `dev`, working tree clean). This HEAD
   already contains patch 0001's per-teammate route work (`b62215edfa`).
 - To avoid touching the baseline worktree, the whole checkout was copied with

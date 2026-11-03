@@ -99,8 +99,8 @@ build/boot was performed — see the evidence doc for residual risks.
 ## Apply / revert
 
 ```bash
-cd /home/s00653124/workspace/deepseek-harness
-git apply /home/s00653124/workspace/dsh-compiler-mode/patches/0002-team-member-reclaim.patch
+cd ~/workspace/deepseek-harness
+git apply ~/workspace/dsh-compiler-mode/patches/0002-team-member-reclaim.patch
 node node_modules/typescript/bin/tsc -b tsconfig.host.json
 npx tsdown --config-loader native --env.DSH_BUILD_FACE host   # REQUIRED: the Host loads lib/
 ```

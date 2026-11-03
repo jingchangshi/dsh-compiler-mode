@@ -79,15 +79,15 @@
 #   node node_modules/typescript/bin/tsc -b tsconfig.host.json -> exit 0
 #
 # Apply:
-#   git -C /home/s00653124/workspace/deepseek-harness apply \
-#     /home/s00653124/workspace/dsh-compiler-mode/patches/0002-team-member-reclaim.patch
+#   git -C ~/workspace/deepseek-harness apply \
+#     ~/workspace/dsh-compiler-mode/patches/0002-team-member-reclaim.patch
 #   # Host lib/ rebuild + restart are still required:
 #   node node_modules/typescript/bin/tsc -b tsconfig.host.json
 #   npx tsdown --config-loader native --env.DSH_BUILD_FACE host
 #
 # Revert:
-#   git -C /home/s00653124/workspace/deepseek-harness apply -R \
-#     /home/s00653124/workspace/dsh-compiler-mode/patches/0002-team-member-reclaim.patch
+#   git -C ~/workspace/deepseek-harness apply -R \
+#     ~/workspace/dsh-compiler-mode/patches/0002-team-member-reclaim.patch
 #
 # ============================================================================
 
