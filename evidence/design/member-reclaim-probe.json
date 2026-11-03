@@ -1,0 +1,657 @@
+{
+  "at": "2026-11-03T10:34:22.988Z",
+  "probe": "member-reclaim",
+  "env": {
+    "dshCheckout": "/home/s00653124/workspace/deepseek-harness",
+    "profile": "ai-compiler-scratch",
+    "headlessTaskArg": "probe",
+    "overlays": [
+      "tests/e2e/cases/model-overlay.yml",
+      "<temp>/agent-team-maxMembers-2.yml"
+    ],
+    "maxMembers": 2,
+    "spawnRoute": {
+      "provider": "magpie",
+      "model": "auto/deepseek-v4.1-flash"
+    },
+    "routeNote": "Raw agents.create() in a headless probe does not apply the profile default model, so the ai-compiler preset's {{model}} prompt variable stays unset and the child turn dies before its first request (TEAM_PROVISIONING_CONFLICT). Every spawn therefore passes an explicit route, the same one the model overlay configures. This does not change limit/roster semantics.",
+    "oneShotRunner": "disabled via the temp overlay (headless-runner) so no extra model turn runs beside the probe",
+    "spawnTimeoutMs": 240000,
+    "idleTimeoutMs": 120000,
+    "node": "v24.20.0"
+  },
+  "attempts": [
+    {
+      "index": 1,
+      "name": "m-1",
+      "provider": "spawn",
+      "created": true,
+      "code": null,
+      "message": null,
+      "memberId": "180f128b-b8e4-499b-a19b-07e629437d8b",
+      "status": "running",
+      "elapsedMs": 110
+    },
+    {
+      "index": 2,
+      "name": "m-2",
+      "provider": "spawn",
+      "created": true,
+      "code": null,
+      "message": null,
+      "memberId": "72343440-ab99-4d94-800c-7baf76273f09",
+      "status": "running",
+      "elapsedMs": 29
+    },
+    {
+      "index": 3,
+      "name": "m-3",
+      "provider": "spawn",
+      "created": false,
+      "code": "TEAM_MEMBER_LIMIT",
+      "message": "Team member limit 2 reached",
+      "memberId": null,
+      "status": null,
+      "elapsedMs": 0
+    }
+  ],
+  "availableServiceMethods": {
+    "expression": "Object.getOwnPropertyNames(Object.getPrototypeOf(ctx.agentTeams))",
+    "prototypeChain": [
+      {
+        "className": "TeamService",
+        "ownPropertyNames": [
+          "membership",
+          "listMembers",
+          "spawnTeammate",
+          "sendMessage",
+          "createTask",
+          "getTask",
+          "listTasks",
+          "updateTask",
+          "registerCompletionPolicy",
+          "waitForChange",
+          "interrupt",
+          "tryMembership",
+          "sendAdmitted",
+          "scheduleRecovery",
+          "disposeRuntime"
+        ]
+      },
+      {
+        "className": "Service",
+        "ownPropertyNames": []
+      }
+    ],
+    "serviceMethods": [
+      "membership",
+      "listMembers",
+      "spawnTeammate",
+      "sendMessage",
+      "createTask",
+      "getTask",
+      "listTasks",
+      "updateTask",
+      "registerCompletionPolicy",
+      "waitForChange",
+      "interrupt",
+      "tryMembership",
+      "sendAdmitted",
+      "scheduleRecovery",
+      "disposeRuntime"
+    ],
+    "publicMethods": [
+      "membership",
+      "listMembers",
+      "spawnTeammate",
+      "sendMessage",
+      "createTask",
+      "getTask",
+      "listTasks",
+      "updateTask",
+      "registerCompletionPolicy",
+      "waitForChange",
+      "interrupt",
+      "tryMembership"
+    ],
+    "prototypePrivateMethods": [
+      "sendAdmitted",
+      "scheduleRecovery",
+      "disposeRuntime"
+    ],
+    "instanceOwnKeys": [
+      "ctx",
+      "name",
+      "config",
+      "activity",
+      "completion",
+      "lifecycle",
+      "journal",
+      "roster",
+      "tasks"
+    ],
+    "reclaimLikeMethods": [
+      "disposeRuntime"
+    ],
+    "publicReclaimLikeMethods": [],
+    "teammateAffectingMethods": [
+      "membership",
+      "listMembers",
+      "spawnTeammate",
+      "sendMessage",
+      "interrupt",
+      "tryMembership"
+    ],
+    "privateRuntimeTeardown": "disposeRuntime exists only as a TS-`private` method on the prototype; it is not part of the public Team service definition, takes no member selector, and is invoked only from service/context disposal (it tears down the whole Team runtime)."
+  },
+  "cleanupAttempts": [
+    {
+      "kind": "idle-wait",
+      "label": "wait until every teammate is inactive",
+      "attempted": true,
+      "ok": true,
+      "result": {
+        "settled": true,
+        "elapsedMs": 7006,
+        "members": [
+          {
+            "name": "m-1",
+            "status": "inactive"
+          },
+          {
+            "name": "m-2",
+            "status": "inactive"
+          }
+        ]
+      },
+      "error": null,
+      "rosterAfterAction": {
+        "rosterSize": 3,
+        "rows": [
+          {
+            "name": "lead",
+            "role": "lead",
+            "status": "inactive"
+          },
+          {
+            "name": "m-1",
+            "role": "teammate",
+            "status": "inactive"
+          },
+          {
+            "name": "m-2",
+            "role": "teammate",
+            "status": "inactive"
+          }
+        ]
+      },
+      "spawnAfter": {
+        "name": "after-idle-wait",
+        "provider": "spawn",
+        "created": false,
+        "code": "TEAM_MEMBER_LIMIT",
+        "message": "Team member limit 2 reached",
+        "memberId": null,
+        "status": null,
+        "elapsedMs": 1
+      }
+    },
+    {
+      "kind": "interrupt",
+      "label": "interrupt an idle teammate",
+      "attempted": true,
+      "ok": true,
+      "result": {
+        "target": "m-1",
+        "targetStatusBefore": "inactive",
+        "result": {
+          "previousStatus": "inactive"
+        }
+      },
+      "error": null,
+      "rosterAfterAction": {
+        "rosterSize": 3,
+        "rows": [
+          {
+            "name": "lead",
+            "role": "lead",
+            "status": "inactive"
+          },
+          {
+            "name": "m-1",
+            "role": "teammate",
+            "status": "inactive"
+          },
+          {
+            "name": "m-2",
+            "role": "teammate",
+            "status": "inactive"
+          }
+        ]
+      },
+      "spawnAfter": {
+        "name": "after-interrupt",
+        "provider": "spawn",
+        "created": false,
+        "code": "TEAM_MEMBER_LIMIT",
+        "message": "Team member limit 2 reached",
+        "memberId": null,
+        "status": null,
+        "elapsedMs": 0
+      }
+    },
+    {
+      "kind": "task-board",
+      "label": "create/claim/release/delete a shared task",
+      "attempted": true,
+      "ok": true,
+      "result": [
+        {
+          "action": "create",
+          "taskId": "task-1",
+          "revision": 1,
+          "status": "pending"
+        },
+        {
+          "action": "claim",
+          "revision": 2,
+          "status": "in_progress"
+        },
+        {
+          "action": "release",
+          "revision": 3,
+          "status": "pending"
+        },
+        {
+          "action": "delete",
+          "revision": 4,
+          "status": "deleted"
+        },
+        {
+          "listTasksAfterDelete": []
+        }
+      ],
+      "error": null,
+      "rosterAfterAction": {
+        "rosterSize": 3,
+        "rows": [
+          {
+            "name": "lead",
+            "role": "lead",
+            "status": "inactive"
+          },
+          {
+            "name": "m-1",
+            "role": "teammate",
+            "status": "inactive"
+          },
+          {
+            "name": "m-2",
+            "role": "teammate",
+            "status": "inactive"
+          }
+        ]
+      },
+      "spawnAfter": {
+        "name": "after-task-board",
+        "provider": "spawn",
+        "created": false,
+        "code": "TEAM_MEMBER_LIMIT",
+        "message": "Team member limit 2 reached",
+        "memberId": null,
+        "status": null,
+        "elapsedMs": 0
+      }
+    },
+    {
+      "kind": "send-message-wake",
+      "label": "wake an idle teammate via sendMessage, then wait inactive",
+      "attempted": true,
+      "ok": true,
+      "result": {
+        "target": "m-1",
+        "messageId": "3ef7f0ec-62f6-4c56-8e13-43b2cb103263",
+        "idleAfterSend": {
+          "settled": true,
+          "elapsedMs": 4504,
+          "members": [
+            {
+              "name": "m-1",
+              "status": "inactive"
+            },
+            {
+              "name": "m-2",
+              "status": "inactive"
+            }
+          ]
+        }
+      },
+      "error": null,
+      "rosterAfterAction": {
+        "rosterSize": 3,
+        "rows": [
+          {
+            "name": "lead",
+            "role": "lead",
+            "status": "inactive"
+          },
+          {
+            "name": "m-1",
+            "role": "teammate",
+            "status": "inactive"
+          },
+          {
+            "name": "m-2",
+            "role": "teammate",
+            "status": "inactive"
+          }
+        ]
+      },
+      "spawnAfter": {
+        "name": "after-send-wake",
+        "provider": "spawn",
+        "created": false,
+        "code": "TEAM_MEMBER_LIMIT",
+        "message": "Team member limit 2 reached",
+        "memberId": null,
+        "status": null,
+        "elapsedMs": 0
+      }
+    },
+    {
+      "kind": "subagent-drain",
+      "label": "ctx.subagents.drainChildren(lead, teammateIds)",
+      "attempted": true,
+      "ok": true,
+      "result": {
+        "drainedChildIds": [
+          "180f128b-b8e4-499b-a19b-07e629437d8b",
+          "72343440-ab99-4d94-800c-7baf76273f09"
+        ],
+        "rosterSizeAfterDrain": 3,
+        "rowsAfterDrain": [
+          {
+            "name": "lead",
+            "role": "lead",
+            "status": "inactive"
+          },
+          {
+            "name": "m-1",
+            "role": "teammate",
+            "status": "inactive"
+          },
+          {
+            "name": "m-2",
+            "role": "teammate",
+            "status": "inactive"
+          }
+        ],
+        "projectionMemberCountAfterDrain": 2
+      },
+      "error": null,
+      "rosterAfterAction": {
+        "rosterSize": 3,
+        "rows": [
+          {
+            "name": "lead",
+            "role": "lead",
+            "status": "inactive"
+          },
+          {
+            "name": "m-1",
+            "role": "teammate",
+            "status": "inactive"
+          },
+          {
+            "name": "m-2",
+            "role": "teammate",
+            "status": "inactive"
+          }
+        ]
+      },
+      "spawnAfter": {
+        "name": "after-subagent-drain",
+        "provider": "spawn",
+        "created": false,
+        "code": "TEAM_MEMBER_LIMIT",
+        "message": "Team member limit 2 reached",
+        "memberId": null,
+        "status": null,
+        "elapsedMs": 0
+      }
+    }
+  ],
+  "roster": [
+    {
+      "team": "A",
+      "phase": "after-attempts",
+      "leadSessionId": "session-reclaim-a-1793702064322",
+      "rosterSize": 3,
+      "teammateRows": 2,
+      "rows": [
+        {
+          "name": "lead",
+          "role": "lead",
+          "status": "inactive",
+          "diagnostics": [],
+          "id": "session-reclaim-a-1793702064322"
+        },
+        {
+          "name": "m-1",
+          "role": "teammate",
+          "status": "running",
+          "provider": "spawn",
+          "context": "fresh",
+          "model": "auto/deepseek-v4.1-flash",
+          "diagnostics": [],
+          "id": "180f128b-b8e4-499b-a19b-07e629437d8b"
+        },
+        {
+          "name": "m-2",
+          "role": "teammate",
+          "status": "running",
+          "provider": "spawn",
+          "context": "fresh",
+          "model": "auto/deepseek-v4.1-flash",
+          "diagnostics": [],
+          "id": "72343440-ab99-4d94-800c-7baf76273f09"
+        }
+      ],
+      "projectionKey": "agentTeam",
+      "projectionMemberCount": 2,
+      "projectionMembers": [
+        {
+          "name": "m-1",
+          "phase": "active"
+        },
+        {
+          "name": "m-2",
+          "phase": "active"
+        }
+      ]
+    },
+    {
+      "team": "A",
+      "phase": "after-cleanup",
+      "leadSessionId": "session-reclaim-a-1793702064322",
+      "rosterSize": 3,
+      "teammateRows": 2,
+      "rows": [
+        {
+          "name": "lead",
+          "role": "lead",
+          "status": "inactive",
+          "diagnostics": [],
+          "id": "session-reclaim-a-1793702064322"
+        },
+        {
+          "name": "m-1",
+          "role": "teammate",
+          "status": "inactive",
+          "provider": "spawn",
+          "context": "fresh",
+          "diagnostics": [],
+          "id": "180f128b-b8e4-499b-a19b-07e629437d8b"
+        },
+        {
+          "name": "m-2",
+          "role": "teammate",
+          "status": "inactive",
+          "provider": "spawn",
+          "context": "fresh",
+          "diagnostics": [],
+          "id": "72343440-ab99-4d94-800c-7baf76273f09"
+        }
+      ],
+      "projectionKey": "agentTeam",
+      "projectionMemberCount": 2,
+      "projectionMembers": [
+        {
+          "name": "m-1",
+          "phase": "active"
+        },
+        {
+          "name": "m-2",
+          "phase": "active"
+        }
+      ]
+    },
+    {
+      "team": "B",
+      "phase": "final",
+      "leadSessionId": "session-reclaim-b-1793702076024",
+      "rosterSize": 3,
+      "teammateRows": 2,
+      "rows": [
+        {
+          "name": "lead",
+          "role": "lead",
+          "status": "inactive",
+          "diagnostics": [],
+          "id": "session-reclaim-b-1793702076024"
+        },
+        {
+          "name": "b-bad",
+          "role": "teammate",
+          "status": "failed",
+          "provider": "definitely-not-a-provider",
+          "context": "fresh",
+          "diagnostics": [
+            "no subagent provider registered for \"definitely-not-a-provider\""
+          ],
+          "id": "a9b13caa-b628-41f3-a50d-48bd9820d574"
+        },
+        {
+          "name": "b-good",
+          "role": "teammate",
+          "status": "running",
+          "provider": "spawn",
+          "context": "fresh",
+          "model": "auto/deepseek-v4.1-flash",
+          "diagnostics": [],
+          "id": "170db10f-d926-445e-815c-d0434a1284ba"
+        }
+      ],
+      "projectionKey": "agentTeam",
+      "projectionMemberCount": 2,
+      "projectionMembers": [
+        {
+          "name": "b-bad",
+          "phase": "failed",
+          "error": "no subagent provider registered for \"definitely-not-a-provider\""
+        },
+        {
+          "name": "b-good",
+          "phase": "active"
+        }
+      ]
+    }
+  ],
+  "rosterSize": 3,
+  "projectionComparison": [
+    {
+      "team": "A",
+      "listMembersLength": 3,
+      "projectionMemberCount": 2,
+      "rowsWithFailedPhase": 0
+    },
+    {
+      "team": "B",
+      "listMembersLength": 3,
+      "projectionMemberCount": 2,
+      "rowsWithFailedPhase": 1
+    }
+  ],
+  "failedProvisioningEvidence": {
+    "team": "B",
+    "maxMembers": 2,
+    "failedSpawn": {
+      "name": "b-bad",
+      "provider": "definitely-not-a-provider",
+      "created": false,
+      "code": "NO_PROVIDER",
+      "message": "no subagent provider registered for \"definitely-not-a-provider\"",
+      "memberId": null,
+      "status": null,
+      "elapsedMs": 5
+    },
+    "failedRowInRoster": {
+      "name": "b-bad",
+      "phase": "failed",
+      "error": "no subagent provider registered for \"definitely-not-a-provider\""
+    },
+    "liveSpawn": {
+      "name": "b-good",
+      "provider": "spawn",
+      "created": true,
+      "code": null,
+      "message": null,
+      "memberId": "170db10f-d926-445e-815c-d0434a1284ba",
+      "status": "running",
+      "elapsedMs": 55
+    },
+    "spawnAfterFailedPlusLive": {
+      "name": "b-over",
+      "provider": "spawn",
+      "created": false,
+      "code": "TEAM_MEMBER_LIMIT",
+      "message": "Team member limit 2 reached",
+      "memberId": null,
+      "status": null,
+      "elapsedMs": 1
+    },
+    "rosterSize": 3,
+    "projectionMemberCount": 2,
+    "rows": [
+      {
+        "name": "lead",
+        "role": "lead",
+        "status": "inactive",
+        "diagnostics": []
+      },
+      {
+        "name": "b-bad",
+        "role": "teammate",
+        "status": "failed",
+        "diagnostics": [
+          "no subagent provider registered for \"definitely-not-a-provider\""
+        ]
+      },
+      {
+        "name": "b-good",
+        "role": "teammate",
+        "status": "running",
+        "diagnostics": []
+      }
+    ]
+  },
+  "evidenceGaps": [],
+  "conclusions": [
+    "maxMembers=2: spawns 1..2 succeeded; the next spawn was refused with TEAM_MEMBER_LIMIT \"Team member limit 2 reached\".",
+    "Public Team service methods: membership, listMembers, spawnTeammate, sendMessage, createTask, getTask, listTasks, updateTask, registerCompletionPolicy, waitForChange, interrupt, tryMembership. Reclaim-like public member API: NONE. The only teammate-turn method is interrupt (cancels a turn, records previousStatus, does not free a slot). Exposed prototype-private members: sendAdmitted, scheduleRecovery, disposeRuntime; disposeRuntime is whole-Team teardown called from service disposal only, not a member API.",
+    "inactive != released: after every teammate reached inactive, spawning again was refused with TEAM_MEMBER_LIMIT — idle teammates keep their slots.",
+    "All 5 cleanup attempts (idle-wait, interrupt, task-board, send-message-wake, subagent-drain) left rosterSize at 3/3/3/3/3; every follow-up spawn was still refused with TEAM_MEMBER_LIMIT.",
+    "Failed provisioning permanently occupies a slot: one bogus-provider spawn (NO_PROVIDER) + one live spawn filled maxMembers=2, and the next spawn was refused with TEAM_MEMBER_LIMIT.",
+    "listMembers = 1 Lead row + durable projection members; failed rows are counted by the projection too (team A projection=2, listMembers=3; team B rowsWithFailedPhase=1)."
+  ]
+}
