@@ -2,7 +2,10 @@
 # Verify the installed mode end to end, without a model.
 #
 # Checks, in order:
+#   0. external prerequisites exist
 #   1. the profile records the bundle layer and the ai-compiler preset row
+#   1c. the harness team-reclaim patch is applied AND built (retireTeammate in lib)
+#   1d. the capability-patch helper passes its apply/idempotent/revert/conflict test
 #   2. the preset declaration still matches official PTC + the declared diffs
 #   3. the MCP bridge actually registers the agentgates tools (see below)
 #   4. the deterministic composition suite passes (tools, planes, isolation)
@@ -69,6 +72,35 @@ if node "$checkout/apps/cli/lib/bin.js" --profile web --dump-config 2>/dev/null 
   ok "preset-ai-compiler row composes"
 else
   bad "preset-ai-compiler row missing from --dump-config"
+fi
+
+step "1c. harness team-reclaim capability"
+# The team-reclaim feature is a source patch, not a bundle row, so a Host can
+# look healthy while lacking it. Report its state, and when it is applied assert
+# the BUILT lib actually contains it: applying a patch without rebuilding lib/
+# is the exact silent-stale failure this check exists to catch.
+hp="$(node "$repo/scripts/lib/harness-patches.mjs" status --checkout "$checkout" 2>&1)"
+hp_state="$(printf '%s\n' "$hp" | awk -F '\t' '/0002-team-member-reclaim/{print $1; exit}')"
+case "$hp_state" in
+  applied)
+    if grep -q 'retireTeammate' "$checkout/packages/experimental/agent-team/lib/index.js" 2>/dev/null; then
+      ok "team-reclaim patch applied and built (retireTeammate present in lib)"
+    else
+      bad "team-reclaim patch applied in source but lib/ is stale — run: pnpm run build:lib:host"
+    fi ;;
+  pending)
+    printf 'INFO  team-reclaim patch NOT applied; retire_teammate is unavailable (run scripts/install.sh)\n' ;;
+  conflict)
+    bad "team-reclaim patch does not apply to this checkout (base moved?) — see scripts/lib/harness-patches.mjs status" ;;
+  *)
+    printf 'INFO  team-reclaim patch state unknown\n' ;;
+esac
+
+step "1d. capability-patch helper self-test"
+if node "$repo/tests/integration/harness-patches.mjs" >/tmp/ai-compiler-harness-patch.log 2>&1; then
+  ok "harness-patches helper: apply / idempotent / revert / conflict all correct"
+else
+  bad "harness-patches helper self-test failed (see /tmp/ai-compiler-harness-patch.log)"
 fi
 
 step "1b. acceptance profile"

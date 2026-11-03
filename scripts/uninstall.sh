@@ -11,17 +11,23 @@
 # them behind would point the next installation at a stale checkout. Any other
 # line in that file belongs to the operator and is preserved.
 #
-# Usage: scripts/uninstall.sh [--dry-run] [--keep-deps]
+# Usage: scripts/uninstall.sh [--dry-run] [--keep-deps] [--revert-harness]
+#   --revert-harness also reverses the capability patch that install.sh applied
+#   to the DSH checkout. It is opt-in because the patch is a source change the
+#   operator may want to keep; leaving it applied is harmless once no preset
+#   mounts the Team bundle.
 # Exit: 0 removed, 1 failed, 2 usage error.
 set -euo pipefail
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 profile_dir="${DSH_PROFILE_DIR:-$HOME/.dsh/profiles/web}"
+checkout="${DSH_CHECKOUT:-$repo/../deepseek-harness}"
 manifest="$profile_dir/package.json"
-dry=0; keep=0
+dry=0; keep=0; revert_harness=0
 for arg in "$@"; do
   case "$arg" in
     --dry-run) dry=1 ;;
     --keep-deps) keep=1 ;;
+    --revert-harness) revert_harness=1 ;;
     *) printf 'uninstall: unknown option %s\n' "$arg" >&2; exit 2 ;;
   esac
 done
@@ -81,5 +87,20 @@ console.log('gates    : dropped AGENT_GATES_* from ' + path)
 NODE
   fi
 fi
+
+# Optionally reverse the capability patch install.sh applied to the DSH checkout.
+# Opt-in: the patch is a source change, and leaving it applied is harmless once
+# no preset mounts the Team bundle.
+if [ "$revert_harness" = 1 ]; then
+  if [ "$dry" = 1 ]; then
+    say "harness  : would revert capability patches"
+    node "$repo/scripts/lib/harness-patches.mjs" revert --dry-run --checkout "$checkout" || true
+  else
+    node "$repo/scripts/lib/harness-patches.mjs" revert --checkout "$checkout" \
+      || say "harness  : revert FAILED (run git status in $checkout, then revert by hand)"
+    say "harness  : rebuild the Host lib (pnpm run build:lib:host) before restarting"
+  fi
+fi
+
 say ""
 say "Restart the DSH Web Host to drop the rows from its live composition."

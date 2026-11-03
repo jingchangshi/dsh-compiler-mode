@@ -2,19 +2,36 @@
 # Install the `ai-compiler` mode into the live Web profile.
 #
 # Idempotent: re-running re-installs the same bundle. Never edits the profile's
-# cordis.patch.yml (verified by scripts/verify.sh). Requires the DSH Host to be
+# cordis.patch.yml (verified by scripts/verify.sh). It DOES apply the pinned
+# capability patch under patches/ to the DSH checkout (idempotent and
+# reversible; skip with --no-harness-patch). Requires the DSH Host to be
 # (re)started afterwards so the new rows exist in its composition.
 #
-# Usage: scripts/install.sh [--dry-run]
+# Usage: scripts/install.sh [--dry-run] [--no-harness-patch] [--no-build]
 # Exit: 0 installed, 1 failed, 2 usage error.
+#
+# --no-harness-patch  do not touch the DSH checkout; the team-reclaim capability
+#                     stays absent until it is applied some other way.
+# --no-build          apply the patch but skip the Host lib rebuild (then run
+#                     `pnpm run build:lib:host` yourself before restarting).
 set -euo pipefail
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 bundle="$repo/config/bundle-ai-compiler"
 profile_dir="${DSH_PROFILE_DIR:-$HOME/.dsh/profiles/web}"
-dsh_cli="${DSH_CLI:-$repo/../deepseek-harness/apps/cli/lib/bin.js}"
+checkout="${DSH_CHECKOUT:-$repo/../deepseek-harness}"
+dsh_cli="${DSH_CLI:-$checkout/apps/cli/lib/bin.js}"
 dry=0
-[ "${1:-}" = "--dry-run" ] && dry=1
+harness=0
+build=0
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) dry=1 ;;
+    --no-harness-patch) harness=1 ;;
+    --no-build) build=1 ;;
+    *) printf 'install: unknown option %s\n' "$arg" >&2; exit 2 ;;
+  esac
+done
 
 say() { printf '%s\n' "$*"; }
 fail() { printf 'install: %s\n' "$*" >&2; exit 1; }
@@ -121,7 +138,7 @@ for pkg in lsp/lsp lsp/lsp-stdio lsp/tool-lsp mcp/mcp-client; do
     say "dep      : $name already present"
   else
     [ "$dry" = 1 ] && { say "dep      : would add $name"; continue; }
-    node "$dsh_cli" plugin --profile web add --link "$repo/../deepseek-harness/packages/$pkg" >/dev/null \
+    node "$dsh_cli" plugin --profile web add --link "$checkout/packages/$pkg" >/dev/null \
       || fail "could not add $name"
     say "dep      : added $name"
   fi
@@ -212,6 +229,46 @@ manifest.dsh = { ...manifest.dsh, profile: { ...manifest.dsh?.profile, bundles: 
 writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`)
 console.log('bundle   : selected')
 NODE
+fi
+
+# 3b. Harness capability patch: Team member reclaim.
+#
+# A bundle can add rows to the profile, but it CANNOT add a service method or a
+# model tool that the installed source does not have. The Agent Teams reclaim
+# capability (terminal `retired` phase + `retire_teammate`) is such a change and
+# is pinned as patches/0002-team-member-reclaim.patch. Apply it idempotently and
+# reversibly, then rebuild the Host lib so the running Host actually loads it.
+#
+# This is the ONLY step that writes to the DSH checkout. It is opt-out
+# (--no-harness-patch) and reversible (scripts/uninstall.sh --revert-harness).
+if [ "$harness" = 1 ]; then
+  say ""
+  say "harness  : SKIPPED (--no-harness-patch) — retire_teammate will be unavailable"
+elif [ "$dry" = 1 ]; then
+  say ""
+  say "== harness capability patch (dry run) =="
+  node "$repo/scripts/lib/harness-patches.mjs" status --checkout "$checkout" || true
+else
+  say ""
+  say "== harness capability patch =="
+  hp_out="$(node "$repo/scripts/lib/harness-patches.mjs" apply --checkout "$checkout")" \
+    || fail "harness capability patch could not be applied (see the message above)"
+  printf '%s\n' "$hp_out"
+  hp_changed="$(printf '%s\n' "$hp_out" | sed -n 's/^HARNESS_PATCH_CHANGED=//p' | tail -n 1)"
+  if [ "$hp_changed" = "1" ]; then
+    if [ "$build" = 1 ]; then
+      say "harness  : BUILD SKIPPED (--no-build) — run 'pnpm run build:lib:host' before restarting"
+    else
+      say "harness  : rebuilding the Host lib so the patch is actually loaded ..."
+      ( cd "$checkout" \
+        && node --max-old-space-size=4096 ./node_modules/typescript/bin/tsc -b tsconfig.host.json \
+        && ./node_modules/.bin/tsdown --config-loader native --env.DSH_BUILD_FACE host ) \
+        || fail "Host lib rebuild failed; the patch is applied in source but lib/ is stale"
+      say "harness  : lib rebuilt"
+    fi
+  else
+    say "harness  : already applied; no rebuild needed"
+  fi
 fi
 
 say ""
