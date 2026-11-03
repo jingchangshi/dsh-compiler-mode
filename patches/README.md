@@ -47,3 +47,64 @@ start-up composition. Skipping either produces "the patch looks applied but noth
 - `maxTokens` is passed through unvalidated (no clamp against the model cap).
 - `member.model` shows the member's own route only while it is live; the durable truth is the
   child's `subagent/descriptor` event.
+
+# Patch 0002 — team member reclaim (retire + lifetime-slot recycling)
+
+Applies to `deepseek-harness` @ `296181d1c2` (branch `dev`; this HEAD already
+contains patch 0001, landed as `b62215edfa`).
+
+## Why it exists
+
+Agent Teams had no member reclamation: `TeamMemberPhase` was
+`provisioning | active | failed`, `spawnAdmitted()` counted every row against
+`maxMembers`, and the name check rejected any reused name. Failed and finished
+teammates therefore permanently consume the lifetime budget, so a long session
+eventually cannot spawn another teammate at all. This patch reclaims a slot
+without giving up name uniqueness.
+
+It follows the P1 checklist in `docs/design/team-member-reclaim-solution.md`
+(T3), with one deviation required by the task brief: a **running** target is
+rejected (`TEAM_MEMBER_RUNNING`) instead of being drained inside `retire`.
+
+## What it changes (11 files, +283/−23)
+
+| File | Change |
+|---|---|
+| `agent-team/src/types.ts` | terminal phase `retired`; `TeamMemberView['status']` gains `retired`; `TeamMemberProjection.phase` keeps the full union (tombstones stay in the client view); `team/member` event map version `2 \| 3`; `RetireTeammateResult`; `maxMembers` = non-retired members |
+| `agent-team/src/projection.ts` | snapshot/projection phase enums accept `retired`; `teamMemberEventSchema` accepts v2 or v3; state machine allows `active\|failed → retired` with `retired` absorbing; retired rows stay in the wire view; `stateVersion` 4 → 5 |
+| `agent-team/src/roster.ts` | slot limit counts only non-retired members; new `retire(caller, targetName)`: Lead-only, rejects running (`TEAM_MEMBER_RUNNING`) and provisioning members, drains the child session first, appends a v3 tombstone; repeat call is an idempotent no-op; `list()` shows `status: 'retired'`; `tryMembership()` retired guard |
+| `agent-team/src/index.ts` | `TeamService.retireTeammate(caller, targetName)` |
+| `agent-team/tests/*` | slot reclaim + retired row shown/non-addressable, failed-member retire, repeated-retire no-op, non-Lead/unknown/`lead`/running rejection, replay + absorbing-state, wire-view tombstone, stateVersion 5 |
+| `client-ui-agent-team/src/client/TeamAction.tsx` | `MemberStatus` gains `retired`; inert row with an idle dot |
+| `client-ui-agent-team/src/client/locales.ts` | `memberStatus.retired` = `已退役` / `Retired` |
+| `tool-agent-team/src/index.ts` | `MEMBER_VIEW_SCHEMA.status` gains `retired`; new `retire_teammate` tool (`target`); policy/list text mention retire and the lifetime limit |
+| `tool-agent-team/tests/tool-team.spec.ts` | retired status in the status matrix; tool-set, forwarding and policy-text coverage |
+
+Design choices (full rationale in `evidence/design/member-reclaim-spike.md`):
+reuse the `phase` field rather than a new event type; `team/member` payload is
+**version 2|3** (retirement edges written as 3, existing edges byte-identical);
+**`stateVersion` 4 → 5** because the checkpoint state schema widens and
+`restore()` does not guard `stateSchema.parse`; names stay **permanently
+reserved**, only the slot is reclaimed; retired rows remain as non-addressable
+tombstones so task `ownerName` still resolves.
+
+## Verification
+
+In a copy of the checkout (`/tmp/reclaim-spike/repo`, same HEAD): `vitest` for
+the agent-team, tool-agent-team and client-ui-agent-team suites → **173/173
+tests pass**; `tsc -b` of the three packages and full `tsc -b tsconfig.host.json`
+→ clean; `git apply --check` against the real baseline → exit 0. No live Host
+build/boot was performed — see the evidence doc for residual risks.
+
+## Apply / revert
+
+```bash
+cd /home/s00653124/workspace/deepseek-harness
+git apply /home/s00653124/workspace/dsh-compiler-mode/patches/0002-team-member-reclaim.patch
+node node_modules/typescript/bin/tsc -b tsconfig.host.json
+npx tsdown --config-loader native --env.DSH_BUILD_FACE host   # REQUIRED: the Host loads lib/
+```
+Revert: `git apply -R .../patches/0002-team-member-reclaim.patch` then rebuild and restart.
+
+**Rebuild and restart are both mandatory** — `apps/cli` loads `lib/`, and a running Host keeps its
+start-up composition.
