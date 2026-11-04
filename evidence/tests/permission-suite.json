@@ -1,6 +1,6 @@
 {
-  "at": "2026-10-28T16:39:59.506Z",
-  "root": "/tmp/dsh-perm-root-TydZOq",
+  "at": "2026-11-03T16:35:52.050Z",
+  "root": "/tmp/dsh-perm-root-2FrksP",
   "results": [
     {
       "kind": "PASS",
@@ -10,7 +10,7 @@
     {
       "kind": "PASS",
       "name": "workspace-write denies a write outside the workspace root and /tmp",
-      "detail": "DENIED: FS_SANDBOX_DENIED (outside=/home/shijingchang/.dsh-perm-outside-tLhpHi)"
+      "detail": "DENIED: FS_SANDBOX_DENIED (outside=/home/s00653124/.dsh-perm-outside-sKSt39)"
     },
     {
       "kind": "PASS",
@@ -24,13 +24,13 @@
     },
     {
       "kind": "INFO",
-      "name": "sandbox backend selects confinement for read-only",
-      "detail": "runner=bwrap --ro-bind /, enforcement=full"
+      "name": "sandbox backend CANNOT confine read-only on this host",
+      "detail": "SandboxUnavailableError: sandbox mode \"read-only\" is requested but no sandbox backend is usable on this host; refusing to run the command unconfined. Install bubblewrap or run a Landlock-enforcing kernel (Linux), ensure sandbox-exec is usable (macOS), or ensure the ACL restricted-token runner can start (Windows) — otherwise switch the consumer to danger-full-access."
     },
     {
       "kind": "INFO",
-      "name": "sandbox backend selects confinement for workspace-write",
-      "detail": "runner=bwrap --ro-bind /, enforcement=full"
+      "name": "sandbox backend CANNOT confine workspace-write on this host",
+      "detail": "SandboxUnavailableError: sandbox mode \"workspace-write\" is requested but no sandbox backend is usable on this host; refusing to run the command unconfined. Install bubblewrap or run a Landlock-enforcing kernel (Linux), ensure sandbox-exec is usable (macOS), or ensure the ACL restricted-token runner can start (Windows) — otherwise switch the consumer to danger-full-access."
     },
     {
       "kind": "INFO",

@@ -1,8 +1,8 @@
 {
   "profile": "ai-compiler-scratch",
-  "server": "/home/shijingchang/workspace/AgentGates/.venv/bin/python",
+  "server": "/home/s00653124/workspace/AgentGates/.venv/bin/python",
   "stub": false,
-  "at": "2026-10-28T16:39:51.517Z",
+  "at": "2026-11-03T16:35:48.955Z",
   "expectedTools": [
     "mcp__agentgates__cancel",
     "mcp__agentgates__doctor",
@@ -16,39 +16,39 @@
     "mcp__agentgates__wait"
   ],
   "measurement": {
-    "server": "/home/shijingchang/workspace/AgentGates/.venv/bin/python",
+    "server": "/home/s00653124/workspace/AgentGates/.venv/bin/python",
     "stub": false,
     "profile": "ai-compiler-scratch",
     "note": "presets mount eagerly: EVERY boot spawns 2 MCP server children (one per compiler preset, shared by every Agent of that preset), whichever preset the session later uses",
     "perPreset": [
       {
         "preset": "ai-compiler",
-        "bootMs": 3416,
-        "agentCreateMs": 21.3,
-        "bridgesAtBoot": 2,
-        "bridgesWithAgent": 2,
-        "bridgeRssMiB": [
-          67.5,
-          67.4
-        ],
-        "childCmdlines": [
-          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
-          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
-        ]
-      },
-      {
-        "preset": "standard",
-        "bootMs": 3451.9,
-        "agentCreateMs": 21.4,
+        "bootMs": 1297.4,
+        "agentCreateMs": 29.7,
         "bridgesAtBoot": 2,
         "bridgesWithAgent": 2,
         "bridgeRssMiB": [
           67.6,
-          67.4
+          67.5
         ],
         "childCmdlines": [
-          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
-          "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+        ]
+      },
+      {
+        "preset": "standard",
+        "bootMs": 1293.6,
+        "agentCreateMs": 12.8,
+        "bridgesAtBoot": 2,
+        "bridgesWithAgent": 2,
+        "bridgeRssMiB": [
+          67.5,
+          67.6
+        ],
+        "childCmdlines": [
+          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server",
+          "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
         ]
       }
     ]
@@ -124,13 +124,13 @@
       "group": "process",
       "name": "every bridge is a real python MCP server process",
       "ok": true,
-      "detail": "/home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server | /home/shijingchang/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
+      "detail": "/home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server | /home/s00653124/workspace/AgentGates/.venv/bin/python -s -m agent_gates.mcp_server"
     },
     {
       "group": "resources",
       "name": "every bridge holds a measurable RSS",
       "ok": true,
-      "detail": "ai-compiler=67.5+67.4 MiB, standard=67.6+67.4 MiB"
+      "detail": "ai-compiler=67.6+67.5 MiB, standard=67.5+67.6 MiB"
     }
   ],
   "verdict": "PASS"
