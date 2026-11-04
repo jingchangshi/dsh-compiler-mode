@@ -33,6 +33,11 @@ to the DSH checkout (idempotent, reversible; skip with `--no-harness-patch`) and
 idle members, rejects role-mismatched dispatch (`expected_role` / task `required_role`), and returns
 backpressure instead of sending work to the wrong role.
 
+A local `plugins/llm-fallback` host row (TS, no checkout patch) covers per-day quota exhaustion: when
+a `corp` route fails on a quota/auth-class error it remaps that agent to the same-family `magpie`
+model and stays pinned to it for the session (sticky — it never walks back to the spent key on its
+own; a new session or Host restart re-probes the primary). Switching model keeps the full context.
+
 Uninstall / rollback:
 
 ```bash

@@ -39,7 +39,7 @@
             name: mimo-v2-6-flash
             contextWindow: 1048576
             maxTokens: 131072
-          - id: auto/qwen3.8-flash
+          - id: opencode-go/qwen3.8-flash
             name: Qwen3.8 Flash
             contextWindow: 1000000
             maxTokens: 131072

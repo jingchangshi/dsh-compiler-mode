@@ -80,6 +80,47 @@
     - id: ui-agent-team
       name: '@deepseek-ai/dsh-experimental-client-ui-agent-team'
 
+    # ── Provider-route fallback (quota headroom) ──────────────────────────────
+    # A HOST row so it covers the Lead and every teammate (any agent that makes a
+    # model request). The `corp` gateway has a per-DAY budget; when it is
+    # exhausted every corp-family role (explorer/implementer/reviewer) would
+    # otherwise fail the same way on every attempt. This remaps a degraded route
+    # to its same-family counterpart on `magpie`, which keeps the role's model
+    # lineage (qwen/deepseek/glm) while drawing on a separate budget.
+    #
+    # Trigger: quota/auth-class failures only (QUOTA, AUTH, plus a generic 429
+    # whose message names budget/quota). STICKY: once failed over, the agent
+    # never returns to the primary on its own — a per-day quota does not recover
+    # within a session, and toggling back would re-hit the dead key. A new
+    # session / Host restart starts the probe over. `globalSticky` also lets a
+    # sibling agent start directly on the fallback instead of eating the first
+    # doomed attempt.
+    - id: ai-compiler-llm-fallback
+      name: '@local/dsh-ai-compiler-preset/plugins/llm-fallback'
+      config:
+        routes:
+          - from: { provider: corp, model: Qwen3.8-Flash }
+            to:
+              - { provider: magpie, model: opencode-go/qwen3.8-flash }
+              - { provider: magpie, model: auto/claude-haiku-5-5 }
+          - from: { provider: corp, model: DeepSeek-V4.1-Flash-1017 }
+            to:
+              - { provider: magpie, model: auto/deepseek-v4.1-flash }
+          - from: { provider: corp, model: GLM-5.3-Flash }
+            to:
+              - { provider: magpie, model: auto/glm-5.3-flash }
+          # magpie primaries get their own safety hop (architect/challenger use
+          # codex; validator uses mimo).
+          - from: { provider: magpie, model: codex/gpt-6.1-sol }
+            to:
+              - { provider: magpie, model: claude/claude-sonnet-5-5 }
+          - from: { provider: magpie, model: auto/mimo-v2.6-flash }
+            to:
+              - { provider: magpie, model: auto/deepseek-v4.1-flash }
+        onCodes: [QUOTA, AUTH]
+        globalSticky: true
+        maxHops: 3
+
     # ── AgentGates completion gate (P5b) ──────────────────────────────────────
     # A HOST row, not a preset row: the policy must be registered on the Agent
     # Teams service so EVERY preset that can complete a task consults it. A

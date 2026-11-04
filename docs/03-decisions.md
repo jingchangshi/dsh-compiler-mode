@@ -246,3 +246,57 @@ registered in the generated event vocabulary.
 catalog and the routing rules, and the runtime enforces them. Automatic reclaim is safe because pinned
 slots are protected and role-mismatched dispatch is structurally refused; capacity pressure is honest
 backpressure, not a wrong-role fallback. This supersedes ADR-011/012's reclamation semantics.
+
+---
+
+## ADR-014 — Quota-driven provider-route failover is a sticky local bundle plugin
+
+**Context** — The `corp` gateway enforces a per-day budget (~¥50). When it is spent, every
+corp-family role (explorer/implementer/reviewer) fails identically on every attempt: the pi-ai
+adapter flattens the `429 budget_exceeded` body into a generic `RATE_LIMIT`, so `llm-retry` spends
+its bounded retries on a key that cannot recover until the next day. The roles' models are otherwise
+fine; they just need the same model lineage on a different budget. Reconfiguring roles to magpie
+would work but loses the "corp is primary / cheap" intent and has no automatic hand-off.
+
+**Decision** — Ship `plugins/llm-fallback` (a TS plugin in the local bundle, loaded through the
+Host's tsx loader; no checkout patch, no lib rebuild). It hooks two existing agent-loop waterfalls:
+`agent/request` rewrites `provider/model` when an agent is pinned to a fallback; `agent/request-error`
+advances the pin one hop and returns `{kind:'retry'}` on a quota/auth-class failure. Both are
+registered with `prepend:true` so a quota failure is handled before `llm-retry` wastes retries.
+Trigger is quota/auth-class only: `QUOTA`, `AUTH`, or a generic `RATE_LIMIT` whose message names
+budget/quota (the corp case). The route table maps each corp model to its same-family magpie
+counterpart, so quality is preserved (`auto/deepseek-v4.1-flash`, `auto/glm-5.3-flash`; the gateway
+serves the qwen family as `opencode-go/qwen3.8-flash`, because `auto/qwen3.8-flash` is not a served
+id — see ADR-014 Addendum). Failover is **STICKY**: once advanced, an agent never returns
+to the primary on its own — a per-day quota does not recover within a session, and toggling back
+would re-hit the dead key and make the session non-deterministic. `globalSticky` also lets a sibling
+agent start directly on the degraded route.
+
+**Evidence** — `plugins/llm-fallback/logic.test.ts` + `wiring.test.ts` (16 tests: eligibility,
+sticky, multi-hop bound, global sticky, prepend registration, retry action) pass with `node --test`;
+`verify.sh` step 1e runs them and asserts the row composes via `--dump-config`. The plugin resolves
+and loads through the Host's own loader (`node --import tsx/dist/loader.mjs` from the profile cwd).
+Failover does not drop context: every attempt rebuilds the whole history from the session.
+
+**Consequence** — When corp budget is spent, the affected roles transparently continue on the magpie
+same-family model until the next session/restart re-probes the primary. It is opt-in (the bundle row)
+and profile-wide, but inert for routes not in the table. Switching model does not lose context, but
+it does append a `[model changed]`-style notice and changes which model authored later turns; the
+`assistant/message.source` records the actual route for audit.
+
+### ADR-014 Addendum (2026-11-04) — qwen route id corrected after the live test
+
+The live end-to-end test after the first Host restart (`evidence/e2e/fallback-live/2026-11-04-live-test.md`)
+found the qwen fallback target invalid: the magpie gateway no longer serves `auto/qwen3.8-flash` (its
+`/v1/models` lists the qwen family only as `opencode-go/qwen3.8-flash`), so the rewritten request
+returned `404 not_found` (`PI_AI_ERROR`) and the explorer turn died. The DeepSeek and GLM routes and
+`globalSticky` were verified working in the same run.
+
+Fix (user-approved, Option A): the qwen route now targets `magpie/opencode-go/qwen3.8-flash`. This is a
+one-line id change in the live profile (`llm-pi-ai.providers.magpie.models`) plus the matching route in
+`bundles.patch.yml`. It intentionally touches the user's model config, so `verify.sh` check 6 (profile
+byte-identical to the pre-install backup) now additionally reports this approved delta — check 6 was
+already failing on a pre-existing `agent-default-model` drift before this change.
+
+Lesson: an offline suite that only parses routes and composes the row cannot catch a stale model id.
+Only a real request to the provider can; the live probe is now the acceptance gate for this plugin.

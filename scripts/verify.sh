@@ -104,6 +104,24 @@ else
   bad "harness-patches helper self-test failed (see /tmp/ai-compiler-harness-patch.log)"
 fi
 
+step "1e. provider-route fallback plugin"
+# The fallback is a local bundle plugin (TS, loaded through the Host's tsx
+# loader), so there is no lib to rebuild; its correctness is proven by its unit
+# and wiring tests, and its presence by the composed profile. A row that failed
+# to compose would silently leave corp-family roles dying on a spent daily
+# budget again.
+fb="$repo/config/bundle-ai-compiler/plugins/llm-fallback"
+if node --test "$fb/logic.test.ts" "$fb/wiring.test.ts" >/tmp/ai-compiler-fallback.log 2>&1; then
+  ok "llm-fallback unit + wiring tests pass"
+else
+  bad "llm-fallback tests failed (see /tmp/ai-compiler-fallback.log)"
+fi
+if node "$checkout/apps/cli/lib/bin.js" --profile web --dump-config 2>/dev/null | grep -q 'ai-compiler-llm-fallback'; then
+  ok "llm-fallback row composes into the profile"
+else
+  bad "llm-fallback row missing from --dump-config"
+fi
+
 step "1b. acceptance profile"
 # The suites below boot a throwaway profile rather than the live Web one, and
 # nothing else creates it. Without this step a fresh machine fails at the first
