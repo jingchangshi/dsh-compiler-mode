@@ -109,12 +109,15 @@
           - from: { provider: corp, model: GLM-5.3-Flash }
             to:
               - { provider: magpie, model: auto/glm-5.3-flash }
-          # magpie primaries get their own safety hop (architect/challenger use
-          # codex; validator uses mimo).
-          - from: { provider: magpie, model: codex/gpt-6.1-sol }
+          # magpie group primaries get their own safety hop (architect and
+          # challenger share the sonnet fallback; validator keeps a deepseek hop).
+          - from: { provider: magpie, model: group/architect }
             to:
               - { provider: magpie, model: claude/claude-sonnet-5-5 }
-          - from: { provider: magpie, model: auto/mimo-v2.6-flash }
+          - from: { provider: magpie, model: group/challenger }
+            to:
+              - { provider: magpie, model: claude/claude-sonnet-5-5 }
+          - from: { provider: magpie, model: group/validator }
             to:
               - { provider: magpie, model: auto/deepseek-v4.1-flash }
         onCodes: [QUOTA, AUTH]
