@@ -88,6 +88,10 @@
     # to its same-family counterpart on `magpie`, which keeps the role's model
     # lineage (qwen/deepseek/glm) while drawing on a separate budget.
     #
+    # Only the three `corp` routes below are mapped. `magpie` routes — including
+    # the group/architect|challenger|validator role models — deliberately have no
+    # entry, so they pass through unchanged and are never switched across routes.
+    #
     # Trigger: quota/auth-class failures only (QUOTA, AUTH, plus a generic 429
     # whose message names budget/quota). STICKY: once failed over, the agent
     # never returns to the primary on its own — a per-day quota does not recover
@@ -102,24 +106,12 @@
           - from: { provider: corp, model: Qwen3.8-Flash }
             to:
               - { provider: magpie, model: opencode-go/qwen3.8-flash }
-              - { provider: magpie, model: auto/claude-haiku-5-5 }
           - from: { provider: corp, model: DeepSeek-V4.1-Flash-1017 }
             to:
               - { provider: magpie, model: auto/deepseek-v4.1-flash }
           - from: { provider: corp, model: GLM-5.3-Flash }
             to:
               - { provider: magpie, model: auto/glm-5.3-flash }
-          # magpie group primaries get their own safety hop (architect and
-          # challenger share the sonnet fallback; validator keeps a deepseek hop).
-          - from: { provider: magpie, model: group/architect }
-            to:
-              - { provider: magpie, model: claude/claude-sonnet-5-5 }
-          - from: { provider: magpie, model: group/challenger }
-            to:
-              - { provider: magpie, model: claude/claude-sonnet-5-5 }
-          - from: { provider: magpie, model: group/validator }
-            to:
-              - { provider: magpie, model: auto/deepseek-v4.1-flash }
         onCodes: [QUOTA, AUTH]
         globalSticky: true
         maxHops: 3
