@@ -211,13 +211,14 @@ corp/Qwen3.8-Flash                  -> child 回复自身 model id "Qwen3.8-Flas
 | quota/auth 类失败（`QUOTA`、`AUTH`，或消息含 budget/quota 的 `RATE_LIMIT`） | 前进到下一跳并返回 `{kind:'retry'}` | `agent/request-error`（`prepend`，抢在 `llm-retry` 前） |
 | 该 agent 已 pin 到 fallback | 把请求的 provider/model 改写为 fallback | `agent/request`（每次重试都会重跑） |
 
-路由表（同族、跨预算；注：magpie 网关已不提供 `auto/qwen3.8-flash`，qwen 现由 `opencode-go/qwen3.8-flash` 承载）：`corp/Qwen3.8-Flash → magpie/opencode-go/qwen3.8-flash`、
+路由表（同族、跨预算；注：magpie 网关已不提供 `auto/qwen3.8-flash`，qwen 现由 `opencode-go/qwen3.8-flash` 承载；每条链只有一跳）：`corp/Qwen3.8-Flash → magpie/opencode-go/qwen3.8-flash`、
 `corp/DeepSeek-V4.1-Flash-1017 → magpie/auto/deepseek-v4.1-flash`、
-`corp/GLM-5.3-Flash → magpie/auto/glm-5.3-flash`；magpie 系主路由也各留一跳。
+`corp/GLM-5.3-Flash → magpie/auto/glm-5.3-flash`。**只映射 corp 系路由**——magpie 路由（含
+architect/challenger/validator 的 `group/*` 模型）不在表中，不会被改写或跨族切换。
 
 **Sticky**：一旦因配额切走，本会话不再自动切回主路由（配额当天不会恢复，来回切只会反复撞死 key、
 且会让会话不确定）；新会话 / Host 重启才重新探测。`globalSticky` 让同进程内的兄弟 agent 直接走
 fallback，省掉第一次注定失败的请求。切模型**不丢上下文**（每次请求都从会话重建全量历史），但会留下
 一条 `[model changed]` 通知，`assistant/message.source` 记录真实路由。
 
-测试：`plugins/llm-fallback/{logic,wiring}.test.ts`（16 项）；`scripts/verify.sh` 步骤 1e 覆盖。
+测试：`plugins/llm-fallback/{logic,wiring}.test.ts`（18 项）；`scripts/verify.sh` 步骤 1e 覆盖。

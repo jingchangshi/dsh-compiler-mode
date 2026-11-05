@@ -267,13 +267,16 @@ Trigger is quota/auth-class only: `QUOTA`, `AUTH`, or a generic `RATE_LIMIT` who
 budget/quota (the corp case). The route table maps each corp model to its same-family magpie
 counterpart, so quality is preserved (`auto/deepseek-v4.1-flash`, `auto/glm-5.3-flash`; the gateway
 serves the qwen family as `opencode-go/qwen3.8-flash`, because `auto/qwen3.8-flash` is not a served
-id — see ADR-014 Addendum). Failover is **STICKY**: once advanced, an agent never returns
+id — see ADR-014 Addendum). The table maps `corp` routes only: `magpie` routes (including the
+`group/*` role models) have no entry, so a magpie-side failure is never rewritten to another route.
+Failover is **STICKY**: once advanced, an agent never returns
 to the primary on its own — a per-day quota does not recover within a session, and toggling back
 would re-hit the dead key and make the session non-deterministic. `globalSticky` also lets a sibling
 agent start directly on the degraded route.
 
-**Evidence** — `plugins/llm-fallback/logic.test.ts` + `wiring.test.ts` (16 tests: eligibility,
-sticky, multi-hop bound, global sticky, prepend registration, retry action) pass with `node --test`;
+**Evidence** — `plugins/llm-fallback/logic.test.ts` + `wiring.test.ts` (18 tests: eligibility,
+sticky, single-hop chain end, multi-hop bound, magpie pass-through, global sticky, prepend
+registration, retry action) pass with `node --test`;
 `verify.sh` step 1e runs them and asserts the row composes via `--dump-config`. The plugin resolves
 and loads through the Host's own loader (`node --import tsx/dist/loader.mjs` from the profile cwd).
 Failover does not drop context: every attempt rebuilds the whole history from the session.
