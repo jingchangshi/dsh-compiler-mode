@@ -265,9 +265,9 @@ advances the pin one hop and returns `{kind:'retry'}` on a quota/auth-class fail
 registered with `prepend:true` so a quota failure is handled before `llm-retry` wastes retries.
 Trigger is quota/auth-class only: `QUOTA`, `AUTH`, or a generic `RATE_LIMIT` whose message names
 budget/quota (the corp case). The route table maps each corp model to its same-family magpie
-counterpart, so quality is preserved (`auto/deepseek-v4.1-flash`, `auto/glm-5.3-flash`; the gateway
-serves the qwen family as `opencode-go/qwen3.8-flash`, because `auto/qwen3.8-flash` is not a served
-id — see ADR-014 Addendum). The table maps `corp` routes only: `magpie` routes (including the
+counterpart, so quality is preserved (`auto/deepseek-v4.1-flash`, `auto/glm-5.3-flash`; the qwen
+family is mapped to `group/qwen-3.8-flash`, the id declared in the live profile — see ADR-014
+Addenda). The table maps `corp` routes only: `magpie` routes (including the
 `group/*` role models) have no entry, so a magpie-side failure is never rewritten to another route.
 Failover is **STICKY**: once advanced, an agent never returns
 to the primary on its own — a per-day quota does not recover within a session, and toggling back
@@ -287,19 +287,31 @@ and profile-wide, but inert for routes not in the table. Switching model does no
 it does append a `[model changed]`-style notice and changes which model authored later turns; the
 `assistant/message.source` records the actual route for audit.
 
-### ADR-014 Addendum (2026-11-04) — qwen route id corrected after the live test
+### ADR-014 Addendum 1 (2026-11-04) — qwen route id corrected after the live test
 
 The live end-to-end test after the first Host restart (`evidence/e2e/fallback-live/2026-11-04-live-test.md`)
 found the qwen fallback target invalid: the magpie gateway no longer serves `auto/qwen3.8-flash` (its
-`/v1/models` lists the qwen family only as `opencode-go/qwen3.8-flash`), so the rewritten request
-returned `404 not_found` (`PI_AI_ERROR`) and the explorer turn died. The DeepSeek and GLM routes and
-`globalSticky` were verified working in the same run.
+`/v1/models` listed the qwen family only as `opencode-go/qwen3.8-flash` at the time), so the rewritten
+request returned `404 not_found` (`PI_AI_ERROR`) and the explorer turn died. The DeepSeek and GLM
+routes and `globalSticky` were verified working in the same run.
 
-Fix (user-approved, Option A): the qwen route now targets `magpie/opencode-go/qwen3.8-flash`. This is a
-one-line id change in the live profile (`llm-pi-ai.providers.magpie.models`) plus the matching route in
-`bundles.patch.yml`. It intentionally touches the user's model config, so `verify.sh` check 6 (profile
-byte-identical to the pre-install backup) now additionally reports this approved delta — check 6 was
-already failing on a pre-existing `agent-default-model` drift before this change.
+Fix (user-approved, Option A): the qwen route then targeted `magpie/opencode-go/qwen3.8-flash` (see
+Addendum 2 for its current id). This was a one-line id change in the live profile
+(`llm-pi-ai.providers.magpie.models`) plus the matching route in `bundles.patch.yml`. It
+intentionally touches the user's model config, so `verify.sh` check 6 (profile byte-identical to the
+pre-install backup) now additionally reports this approved delta — check 6 was already failing on a
+pre-existing `agent-default-model` drift before this change.
 
 Lesson: an offline suite that only parses routes and composes the row cannot catch a stale model id.
 Only a real request to the provider can; the live probe is now the acceptance gate for this plugin.
+
+### ADR-014 Addendum 2 (2026-11-05) — qwen target moved to `group/qwen-3.8-flash`
+
+The live profile was refreshed with the current magpie model catalogue, which replaces the
+`opencode-go/*` alias with the `group/*` family (the profile now declares `group/qwen-3.8-flash`
+and no longer lists `opencode-go/qwen3.8-flash`). The qwen fallback target follows the catalogue:
+`corp/Qwen3.8-Flash -> magpie/group/qwen-3.8-flash`.
+
+Addendum 1's lesson still applies — the route id must be a *served, declared* id, so this is a
+config-and-tests change only; the plugin code is unchanged. The offline suite mirrors the new id in
+its fixtures, and the acceptance gate remains a real failover request on the running Host.

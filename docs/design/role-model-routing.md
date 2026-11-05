@@ -211,7 +211,7 @@ corp/Qwen3.8-Flash                  -> child 回复自身 model id "Qwen3.8-Flas
 | quota/auth 类失败（`QUOTA`、`AUTH`，或消息含 budget/quota 的 `RATE_LIMIT`） | 前进到下一跳并返回 `{kind:'retry'}` | `agent/request-error`（`prepend`，抢在 `llm-retry` 前） |
 | 该 agent 已 pin 到 fallback | 把请求的 provider/model 改写为 fallback | `agent/request`（每次重试都会重跑） |
 
-路由表（同族、跨预算；注：magpie 网关已不提供 `auto/qwen3.8-flash`，qwen 现由 `opencode-go/qwen3.8-flash` 承载；每条链只有一跳）：`corp/Qwen3.8-Flash → magpie/opencode-go/qwen3.8-flash`、
+路由表（同族、跨预算；注：qwen 现由 magpie 近期的 `group/qwen-3.8-flash` 承载，旧的 `auto/qwen3.8-flash`、`opencode-go/qwen3.8-flash` 均已在模型目录中下线；每条链只有一跳）：`corp/Qwen3.8-Flash → magpie/group/qwen-3.8-flash`、
 `corp/DeepSeek-V4.1-Flash-1017 → magpie/auto/deepseek-v4.1-flash`、
 `corp/GLM-5.3-Flash → magpie/auto/glm-5.3-flash`。**只映射 corp 系路由**——magpie 路由（含
 architect/challenger/validator 的 `group/*` 模型）不在表中，不会被改写或跨族切换。
