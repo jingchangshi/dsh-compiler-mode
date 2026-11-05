@@ -91,6 +91,8 @@
     # Only the three `corp` routes below are mapped. `magpie` routes — including
     # the group/architect|challenger|validator role models — deliberately have no
     # entry, so they pass through unchanged and are never switched across routes.
+    # Targets must be ids the live profile actually declares: the qwen family is
+    # `group/qwen-3.8-flash` (old `auto/` and `opencode-go/` ids are gone).
     #
     # Trigger: quota/auth-class failures only (QUOTA, AUTH, plus a generic 429
     # whose message names budget/quota). STICKY: once failed over, the agent
@@ -105,7 +107,7 @@
         routes:
           - from: { provider: corp, model: Qwen3.8-Flash }
             to:
-              - { provider: magpie, model: opencode-go/qwen3.8-flash }
+              - { provider: magpie, model: group/qwen-3.8-flash }
           - from: { provider: corp, model: DeepSeek-V4.1-Flash-1017 }
             to:
               - { provider: magpie, model: auto/deepseek-v4.1-flash }
