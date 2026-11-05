@@ -12,13 +12,31 @@ import {
   type RawConfig,
 } from './logic.ts'
 
+/**
+ * Mirrors the shipped table in `bundles.patch.yml`
+ * (`ai-compiler-llm-fallback.routes`): the three corp routes, one magpie hop
+ * each. Keep this fixture and that YAML in sync.
+ */
 const ROUTES: RawConfig = {
   routes: [
-    { from: { provider: 'corp', model: 'Qwen3.8-Flash' }, to: [{ provider: 'magpie', model: 'opencode-go/qwen3.8-flash' }, { provider: 'magpie', model: 'auto/claude-haiku-5-5' }] },
+    { from: { provider: 'corp', model: 'Qwen3.8-Flash' }, to: [{ provider: 'magpie', model: 'opencode-go/qwen3.8-flash' }] },
     { from: { provider: 'corp', model: 'DeepSeek-V4.1-Flash-1017' }, to: [{ provider: 'magpie', model: 'auto/deepseek-v4.1-flash' }] },
+    { from: { provider: 'corp', model: 'GLM-5.3-Flash' }, to: [{ provider: 'magpie', model: 'auto/glm-5.3-flash' }] },
   ],
   onCodes: ['QUOTA', 'AUTH'],
   globalSticky: true,
+  maxHops: 3,
+}
+
+/** Synthetic multi-hop chain: the shipped table is single-hop, so the hop bound needs its own fixture. */
+const MULTI_HOP: RawConfig = {
+  routes: [
+    { from: { provider: 'corp', model: 'Qwen3.8-Flash' }, to: [
+      { provider: 'magpie', model: 'opencode-go/qwen3.8-flash' },
+      { provider: 'magpie', model: 'auto/glm-5.3-flash' },
+      { provider: 'magpie', model: 'auto/deepseek-v4.1-flash' },
+    ] },
+  ],
   maxHops: 2,
 }
 
@@ -37,10 +55,13 @@ test('parseSettings defaults and validation', () => {
   assert.equal(s.chains.size, 0)
 
   const parsed = parseSettings(ROUTES)
-  assert.equal(parsed.chains.size, 2)
-  // chains include the primary as element 0
+  assert.equal(parsed.chains.size, 3)
+  // chains include the primary as element 0; the shipped table has no second hop
   assert.deepEqual(parsed.chains.get(routeKey({ provider: 'corp', model: 'Qwen3.8-Flash' }))?.map(describeRoute), [
-    'corp/Qwen3.8-Flash', 'magpie/opencode-go/qwen3.8-flash', 'magpie/auto/claude-haiku-5-5',
+    'corp/Qwen3.8-Flash', 'magpie/opencode-go/qwen3.8-flash',
+  ])
+  assert.deepEqual(parsed.chains.get(routeKey({ provider: 'corp', model: 'GLM-5.3-Flash' }))?.map(describeRoute), [
+    'corp/GLM-5.3-Flash', 'magpie/auto/glm-5.3-flash',
   ])
 })
 
@@ -61,12 +82,17 @@ test('isEligible: quota/auth only, budget wording counts, transient/server do no
   assert.equal(isEligible(server, s), false)
 })
 
-test('a primary route with no configured fallback passes through unchanged', () => {
-  const c = new FallbackController(parseSettings(ROUTES))
-  const resolved: CallConfigLike = { provider: 'magpie', model: 'auto/deepseek-v4.1-flash' }
-  const out = c.resolve('a1', resolved)
-  assert.equal(out.changed, false)
-  assert.equal(out.config, resolved)
+test('magpie group routes have no fallback entry and pass through unchanged', () => {
+  const s = parseSettings(ROUTES)
+  const c = new FallbackController(s)
+  for (const model of ['group/architect', 'group/challenger', 'group/validator']) {
+    assert.equal(s.chains.has(routeKey({ provider: 'magpie', model })), false)
+    const resolved: CallConfigLike = { provider: 'magpie', model }
+    const out = c.resolve('a1', resolved)
+    assert.equal(out.changed, false)
+    assert.equal(out.config, resolved)
+    assert.equal(c.onFailure('a1', 'magpie', quota).advance, false)
+  }
 })
 
 test('quota failure advances to the first fallback and the retry uses it', () => {
@@ -99,13 +125,20 @@ test('STICKY: once failed over, the agent never returns to the primary', () => {
   assert.equal(c.planOf('a1')?.index, 1)
 })
 
-test('multi-hop is bounded by maxHops and the chain length', () => {
-  const c = new FallbackController(parseSettings(ROUTES)) // maxHops 2, chain length 3 (indices 0..2)
+test('the shipped single-hop chain stops at its only fallback', () => {
+  const c = new FallbackController(parseSettings(ROUTES)) // chain length 2 (indices 0..1)
+  c.resolve('a1', primary())
+  assert.equal(c.onFailure('a1', 'corp', quota).advance, true)
+  assert.equal(c.onFailure('a1', 'magpie', quota).advance, false)
+  assert.equal(c.planOf('a1')?.index, 1)
+})
+
+test('multi-hop fails over until maxHops is spent', () => {
+  const c = new FallbackController(parseSettings(MULTI_HOP)) // maxHops 2, chain length 4 (indices 0..3)
   c.resolve('a1', primary())
   assert.equal(c.onFailure('a1', 'corp', quota).advance, true)            // 0 -> 1
   assert.equal(c.onFailure('a1', 'magpie', quota).advance, true)          // 1 -> 2
-  const atEnd = c.onFailure('a1', 'magpie', quota)                       // end of chain
-  assert.equal(atEnd.advance, false)
+  assert.equal(c.onFailure('a1', 'magpie', quota).advance, false)         // maxHops spent
   assert.equal(c.planOf('a1')?.index, 2)
 })
 
