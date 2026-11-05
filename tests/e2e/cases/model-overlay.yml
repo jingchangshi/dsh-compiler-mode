@@ -1,5 +1,6 @@
-# Model plane for the headless smoke: copied verbatim from the live profile.
-# Keys stay in $DSH_HOME/.credentials.yaml; nothing is inlined here.
+# Model plane for the headless smoke and the design probes. Keep every model the
+# fallback table can rewrite to declared here; keys stay in
+# $DSH_HOME/.credentials.yaml and nothing is inlined.
 - id: permission
   name: "@deepseek-ai/dsh-permission-presets"
   config:
@@ -38,6 +39,10 @@
           - id: auto/mimo-v2.6-flash
             name: mimo-v2-6-flash
             contextWindow: 1048576
+            maxTokens: 131072
+          - id: group/qwen-3.8-flash
+            name: qwen-3.8-flash
+            contextWindow: 1000000
             maxTokens: 131072
           - id: opencode-go/qwen3.8-flash
             name: Qwen3.8 Flash

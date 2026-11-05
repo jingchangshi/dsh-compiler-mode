@@ -11,7 +11,7 @@ import type { CallConfigLike } from './logic.ts'
  */
 const RAW = {
   routes: [
-    { from: { provider: 'corp', model: 'Qwen3.8-Flash' }, to: [{ provider: 'magpie', model: 'opencode-go/qwen3.8-flash' }] },
+    { from: { provider: 'corp', model: 'Qwen3.8-Flash' }, to: [{ provider: 'magpie', model: 'group/qwen-3.8-flash' }] },
     { from: { provider: 'corp', model: 'DeepSeek-V4.1-Flash-1017' }, to: [{ provider: 'magpie', model: 'auto/deepseek-v4.1-flash' }] },
     { from: { provider: 'corp', model: 'GLM-5.3-Flash' }, to: [{ provider: 'magpie', model: 'auto/glm-5.3-flash' }] },
   ],
@@ -77,7 +77,7 @@ test('request passes through the primary until a failure advances it', async () 
 
   const second = await onRequest.fn({ agent: { id: 'lead' } }, async () => primary())
   assert.equal(second.provider, 'magpie')
-  assert.equal(second.model, 'opencode-go/qwen3.8-flash')
+  assert.equal(second.model, 'group/qwen-3.8-flash')
 })
 
 test('a non-quota failure delegates to the next handler (undefined)', async () => {
@@ -103,7 +103,7 @@ test('sticky single hop: a later request keeps the fallback; a second failure de
   await onRequest.fn({ agent: { id: 'w1' } }, async () => primary())
   await onError.fn({ agent: { id: 'w1' }, provider: 'corp', failure: budget }, async () => undefined)
   const pinned = await onRequest.fn({ agent: { id: 'w1' } }, async () => primary())
-  assert.equal(pinned.model, 'opencode-go/qwen3.8-flash')
+  assert.equal(pinned.model, 'group/qwen-3.8-flash')
   // the shipped chain has one hop, so a failure on the fallback has nowhere to go
   const beyondChain = await onError.fn(
     { agent: { id: 'w1' }, provider: 'magpie', failure: { code: 'QUOTA', message: 'x' } },

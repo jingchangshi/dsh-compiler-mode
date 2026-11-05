@@ -19,7 +19,7 @@ import {
  */
 const ROUTES: RawConfig = {
   routes: [
-    { from: { provider: 'corp', model: 'Qwen3.8-Flash' }, to: [{ provider: 'magpie', model: 'opencode-go/qwen3.8-flash' }] },
+    { from: { provider: 'corp', model: 'Qwen3.8-Flash' }, to: [{ provider: 'magpie', model: 'group/qwen-3.8-flash' }] },
     { from: { provider: 'corp', model: 'DeepSeek-V4.1-Flash-1017' }, to: [{ provider: 'magpie', model: 'auto/deepseek-v4.1-flash' }] },
     { from: { provider: 'corp', model: 'GLM-5.3-Flash' }, to: [{ provider: 'magpie', model: 'auto/glm-5.3-flash' }] },
   ],
@@ -32,7 +32,7 @@ const ROUTES: RawConfig = {
 const MULTI_HOP: RawConfig = {
   routes: [
     { from: { provider: 'corp', model: 'Qwen3.8-Flash' }, to: [
-      { provider: 'magpie', model: 'opencode-go/qwen3.8-flash' },
+      { provider: 'magpie', model: 'group/qwen-3.8-flash' },
       { provider: 'magpie', model: 'auto/glm-5.3-flash' },
       { provider: 'magpie', model: 'auto/deepseek-v4.1-flash' },
     ] },
@@ -58,7 +58,7 @@ test('parseSettings defaults and validation', () => {
   assert.equal(parsed.chains.size, 3)
   // chains include the primary as element 0; the shipped table has no second hop
   assert.deepEqual(parsed.chains.get(routeKey({ provider: 'corp', model: 'Qwen3.8-Flash' }))?.map(describeRoute), [
-    'corp/Qwen3.8-Flash', 'magpie/opencode-go/qwen3.8-flash',
+    'corp/Qwen3.8-Flash', 'magpie/group/qwen-3.8-flash',
   ])
   assert.deepEqual(parsed.chains.get(routeKey({ provider: 'corp', model: 'GLM-5.3-Flash' }))?.map(describeRoute), [
     'corp/GLM-5.3-Flash', 'magpie/auto/glm-5.3-flash',
@@ -102,12 +102,12 @@ test('quota failure advances to the first fallback and the retry uses it', () =>
   // a budget 429 on the primary advances and asks for a retry
   const f = c.onFailure('a1', 'corp', budget)
   assert.equal(f.advance, true)
-  assert.equal(describeRoute(f.to as never), 'magpie/opencode-go/qwen3.8-flash')
+  assert.equal(describeRoute(f.to as never), 'magpie/group/qwen-3.8-flash')
   // next resolve rewrites the route to the fallback and drops inherited reasoning fields
   const out = c.resolve('a1', { ...primary(), reasoningEffort: 'high' })
   assert.equal(out.changed, true)
   assert.equal(out.config.provider, 'magpie')
-  assert.equal(out.config.model, 'opencode-go/qwen3.8-flash')
+  assert.equal(out.config.model, 'group/qwen-3.8-flash')
   assert.equal(out.config.reasoningEffort, undefined)
   // unrelated fields (maxTokens) are preserved
   assert.equal(out.config.maxTokens, 1000)
@@ -162,7 +162,7 @@ test('globalSticky: a sibling agent starts directly on the degraded fallback', (
   c.onFailure('a1', 'corp', quota)                 // remembers corp -> index 1
   const fresh = c.resolve('a2', primary())         // a2 never saw the failure
   assert.equal(fresh.changed, true)
-  assert.equal(fresh.config.model, 'opencode-go/qwen3.8-flash')
+  assert.equal(fresh.config.model, 'group/qwen-3.8-flash')
 })
 
 test('globalSticky:false keeps each agent independent', () => {
