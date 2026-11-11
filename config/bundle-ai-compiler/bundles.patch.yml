@@ -62,7 +62,22 @@
     - id: tool-lsp
       name: '@deepseek-ai/dsh-tool-lsp'
 
-    # ── Agent Teams (A4) — the shipped optional bundle's rows, unchanged ──────
+    # ── Agent Teams (A4) — the shipped optional bundle's rows plus preset routes ─
+    # The three rows and their capacity limits are the shipped optional bundle's;
+    # only `presetRoles` below is added by this delivery.
+    # `presetRoles` is the ONLY source of a teammate's model route: the Lead's
+    # preset id selects one complete table here, and the tool that spawns a
+    # teammate (`spawn_teammate`) carries no provider/model parameter at all.
+    # A preset therefore cannot route itself, and a table below REPLACES
+    # `roles` wholesale rather than merging with it.
+    #
+    # Keys are the presets' own `config.id` from cordis.patch.yml, character for
+    # character. Every table must list every role the shared `slotPlan` reserves
+    # (architect, reviewer, explorer, implementer), because one slot plan serves
+    # all presets; startup validation rejects a table that cannot fill them.
+    #
+    # A preset with no entry here falls back to `roles` (the built-in table),
+    # so adding a third preset neither inherits a route by accident nor breaks.
     - id: agent-team
       name: '@deepseek-ai/dsh-experimental-agent-team'
       config:
@@ -70,6 +85,29 @@
         maxTasks: 256
         maxMessageBytes: 65536
         disposalTimeoutMs: 5000
+        presetRoles:
+          # Preset order 5. The default mixed fleet: architecture work and
+          # adversarial review on `magpie`, implementation and verification on
+          # the `corp` gateway. These are exactly the routes the persona table
+          # in cordis.patch.yml documents, and the routes the fallback row below
+          # compensates for when `corp` runs out of budget.
+          ai-compiler:
+            - { id: architect,   description: Architecture and design, provider: magpie, model: group/architect,         maxConcurrent: 1 }
+            - { id: explorer,    description: Explore and research,    provider: corp,   model: Qwen3.8-Flash,           maxConcurrent: 2 }
+            - { id: implementer, description: Implement changes,       provider: corp,   model: DeepSeek-V4.1-Flash-1017, maxConcurrent: 2 }
+            - { id: reviewer,    description: Review changes,          provider: corp,   model: GLM-5.3-Flash,           maxConcurrent: 1 }
+            - { id: challenger,  description: Challenge assumptions,   provider: magpie, model: group/challenger,        maxConcurrent: 1 }
+            - { id: validator,   description: Validate outcomes,       provider: magpie, model: group/validator,         maxConcurrent: 1 }
+          # Preset order 6. One reachable provider: the whole fleet on `magpie`,
+          # keeping the same concurrency limits so a role's capacity does not
+          # change when an operator switches preset.
+          ai-compiler-magpie:
+            - { id: architect,   description: Architecture and design, provider: magpie, model: group/architect,   maxConcurrent: 1 }
+            - { id: explorer,    description: Explore and research,    provider: magpie, model: group/explorer,    maxConcurrent: 2 }
+            - { id: implementer, description: Implement changes,       provider: magpie, model: group/implementer, maxConcurrent: 2 }
+            - { id: reviewer,    description: Review changes,          provider: magpie, model: group/reviewer,    maxConcurrent: 1 }
+            - { id: challenger,  description: Challenge assumptions,   provider: magpie, model: group/challenger,  maxConcurrent: 1 }
+            - { id: validator,   description: Validate outcomes,       provider: magpie, model: group/validator,   maxConcurrent: 1 }
 
     - id: tool-agent-team
       name: '@deepseek-ai/dsh-experimental-tool-agent-team'
@@ -83,14 +121,19 @@
     # ── Provider-route fallback (quota headroom) ──────────────────────────────
     # A HOST row so it covers the Lead and every teammate (any agent that makes a
     # model request). The `corp` gateway has a per-DAY budget; when it is
-    # exhausted every corp-family role (explorer/implementer/reviewer) would
-    # otherwise fail the same way on every attempt. This remaps a degraded route
-    # to its same-family counterpart on `magpie`, which keeps the role's model
+    # exhausted the three corp roles of the `ai-compiler` preset (explorer,
+    # implementer, reviewer) would otherwise fail the same way on every attempt.
+    # The `ai-compiler-magpie` preset never needs this row: its whole fleet is
+    # already on `magpie`. This remaps a degraded route to its
+    # same-family counterpart on `magpie`, which keeps the role's model
     # lineage (qwen/deepseek/glm) while drawing on a separate budget.
     #
-    # Only the three `corp` routes below are mapped. `magpie` routes — including
-    # the group/architect|challenger|validator role models — deliberately have no
-    # entry, so they pass through unchanged and are never switched across routes.
+    # Only the three `corp` routes below are mapped — the ones the
+    # `ai-compiler` table in `agent-team.presetRoles` uses (Qwen3.8-Flash,
+    # DeepSeek-V4.1-Flash-1017, GLM-5.3-Flash). `magpie` routes — including the
+    # group/architect|challenger|validator role models and the whole
+    # `ai-compiler-magpie` table — deliberately have no entry, so they pass
+    # through unchanged and are never switched across routes.
     # Targets must be ids the live profile actually declares: the qwen family is
     # `group/qwen-3.8-flash` (old `auto/` and `opencode-go/` ids are gone).
     #
