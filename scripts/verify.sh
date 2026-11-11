@@ -307,6 +307,43 @@ if [ "$quick" = 0 ]; then
     bad "composition suite failed (see /tmp/ai-compiler-composition.log)"
   fi
 
+  step "4b. session-757fa075 regression guards"
+  # WHY THIS STEP EXISTS
+  # --------------------
+  # docs/14-session-757fa075-postmortem.md records seven ways one session lost
+  # its work: an absolute write scope, a promoted result with no .stdout, exit 2
+  # treated as a total failure, guessed paths, a search timeout, a sibling abort,
+  # and an unwrapped TeamError that ended the run with zero tasks. Prose cannot
+  # stop those from coming back, so they are pinned as executable guards: each
+  # one was validated by reverting its fix and watching this suite go red.
+  #
+  # The suite needs NO Host and no model — it reads the checkout's sources and
+  # its PURE built helpers — so it is safe to run on every verify. It reports
+  # FAIL (never a silent skip) when the checkout or the F4 workspace is missing,
+  # because a guard that cannot run must not look green.
+  #
+  # ORDERING MATTERS: the behavioural guards execute packages/*/lib/index.js,
+  # NOT src. A source fix that was never rebuilt therefore changes nothing here,
+  # and a stale lib would make those guards pass without ever looking at the fix
+  # — the same "green because it never ran" defect this whole suite exists to
+  # kill. The suite enforces its own precondition (its F0 group compares each lib
+  # mtime against its src mtime and FAILS naming the rebuild command), so this
+  # step must never be moved BEFORE a build, and must never treat a stale tree as
+  # a pass. It also runs last on purpose: by this point every earlier step has
+  # already exercised the built profile, so a lib that was rebuilt for them is
+  # the same lib these guards read.
+  if node "$repo/tests/integration/session-regressions.mjs" >/tmp/ai-compiler-session-regressions.log 2>&1; then
+    ok "session regression guards $(grep -c '^PASS' /tmp/ai-compiler-session-regressions.log) checks"
+  else
+    bad "session regression guards FAILED — a failure mode from session 757fa075 may have returned"
+    # Surface the actionable lines rather than making the operator open the log.
+    grep -E '^FAIL' /tmp/ai-compiler-session-regressions.log | head -8 | sed 's/^/      /'
+    printf '      full detail: /tmp/ai-compiler-session-regressions.log
+'
+    printf '      each failing [F<n>] group maps to a section of docs/14-session-757fa075-postmortem.md
+'
+  fi
+
   step "5. permission suite"
   if node "$repo/tests/permissions/permission-suite.mjs" >/tmp/ai-compiler-permissions.log 2>&1; then
     ok "permission suite $(grep -c '^PASS' /tmp/ai-compiler-permissions.log) checks"
