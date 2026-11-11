@@ -47,6 +47,43 @@ reserved role (architect, reviewer, explorer, implementer) or startup validation
 `config/bundle-ai-compiler/bundles.patch.yml`, reinstall the bundle, then **restart the Host**. Nothing
 at runtime can change it — not a task, a message, nor anything the Lead passes to `spawn_teammate`.
 
+### Adding or renaming a model
+
+The model catalog is **not** owned by this bundle. It lives in the profile's user layer,
+`$DSH_HOME/profiles/web/cordis.patch.yml` (this deployment's `llm-pi-ai` row), and `install.sh`
+never writes it — that file is the operator's, and `scripts/verify.sh` step 6 fails if the installer
+ever touches it. Two separate things must agree:
+
+| what | where | who owns it |
+|---|---|---|
+| the id the provider serves | `llm-pi-ai.providers.<provider>.models` in the profile's `cordis.patch.yml` | operator |
+| the id a role asks for | `agent-team.presetRoles.<preset>[].model` in `bundles.patch.yml` | this bundle |
+
+To add a model:
+
+1. Add it under the right provider in the profile's `cordis.patch.yml`. Copy `maxTokens` and
+   `contextWindow` from the provider's own numbers — a wrong `maxTokens` does not fail loudly, it
+   truncates. Declare `reasoningEfforts` only if the provider actually accepts them.
+2. Restart the Host. The catalog is read at start-up.
+3. Only if a **role** should use it, change that role's `model` in `bundles.patch.yml`,
+   `scripts/install.sh`, restart.
+
+**A model id that is never declared does not fail at start-up.** Core routing accepts any id, so the
+Host comes up healthy, `--dump-config` looks right, and the first `spawn_teammate` for that role dies
+with `UNKNOWN_MODEL` — which reads like a Team defect rather than a typo. `verify.sh` step 1f now
+resolves all twelve routed pairs against the profile's own catalog and fails with the exact missing
+ids.
+
+The related trap is that the throwaway acceptance profile (`ai-compiler-scratch`) declares **no**
+operator models — it is built from the shipped template, which knows only the public ones. A routed
+`group/*` model therefore resolves in `web` and not in `scratch`; that is why the cross-check lives
+in `verify.sh` (which reads the live profile) and not in the composition suite.
+
+**Reasoning effort**: only a model that declares `reasoningEfforts` accepts an effort at all; every
+other route refuses with `UNSUPPORTED_REASONING_EFFORT`. `RoleSpec` has no effort field and
+`spawn_teammate` takes no effort parameter, so a role's effort is not configurable here — it comes
+from the model's own declaration, if any.
+
 ## After any configuration change
 
 **Restart the Host.** A running Host keeps its start-up composition; new or removed rows only

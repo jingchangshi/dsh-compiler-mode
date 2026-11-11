@@ -202,6 +202,44 @@ else
       printf '%s\n' "$pr_block" | grep -qE '^[[:space:]]+ai-compiler-magpie:[[:space:]]*$' || miss="$miss ai-compiler-magpie"
       if [ -z "$miss" ]; then
         ok "first agent-team row (of $seg_count) carries presetRoles for ai-compiler + ai-compiler-magpie"
+        # Every routed model must exist in the catalog the SAME profile declares.
+        # Core routing accepts an unlisted id, so a typo is not rejected at load:
+        # the Host looks healthy and the first spawn of that role dies with
+        # UNKNOWN_MODEL. Resolve all 12 routed pairs against the dump's own
+        # llm-pi-ai catalog here, where the real profile (not the scratch one,
+        # which carries no operator models) is the subject.
+        missing_models="$(printf '%s\n' "$dump" | awk -F'\\n' '
+          # Collect every "id: <model>" under providers -> <name> -> models.
+          function flush(  k) {}
+          {
+            line = $0
+            # providers -> <MPROV> -> models -> "- id: <MMODEL>"
+            if (line ~ /^      [a-z][a-z0-9-]*:[[:space:]]*$/) { provider = line; sub(/^ +/, "", provider); sub(/:.*$/, "", provider) }
+            if (provider != "" && line ~ /^          - id: /) {
+              model = line; sub(/^ *- id:[[:space:]]*/, "", model); sub(/[[:space:]]+$/, "", model)
+              catalog[provider SUBSEP model] = 1
+            }
+          }
+          END {
+            split("magpie:group/architect magpie:group/explorer magpie:group/implementer magpie:group/reviewer magpie:group/challenger magpie:group/validator corp:Qwen3.8-Flash corp:DeepSeek-V4.1-Flash-1017 corp:GLM-5.3-Flash", want, " ")
+            for (i = 1; i <= 9; i++) {
+              split(want[i], pair, ":")
+              if (!((pair[1] SUBSEP pair[2]) in catalog)) printf "%s/%s ", pair[1], pair[2]
+            }
+          }')"
+        if [ -z "$missing_models" ]; then
+          ok "every model a role routes to is declared in the profile's own catalog"
+        else
+          bad "agent-team routes to model id(s) the profile never declares:$missing_models"
+          printf '      A role would spawn and then die with UNKNOWN_MODEL, so the role is\n'
+          printf '      unusable even though the Host starts cleanly. Fix either side:\n'
+          printf '      add the id under llm-pi-ai.providers.<provider>.models in\n'
+          printf '      %s/cordis.patch.yml, or point the table at a declared id\n' "$profile_dir"
+          printf '      (config/bundle-ai-compiler/bundles.patch.yml -> agent-team.presetRoles).\n'
+          printf '      NOTE: this reads the LIVE profile. A throwaway acceptance profile\n'
+          printf '      does not declare the operator models, so a failure here is about\n'
+          printf '      the profile under test, not about the suite.\n'
+        fi
       else
         bad "agent-team: the FIRST composed row (the winner) has presetRoles but is MISSING key(s):$miss"
         printf '      presetRoles replaces "roles" wholesale, so a preset whose key is\n'
