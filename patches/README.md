@@ -1,4 +1,4 @@
-# Patch 0001 — per-teammate model route
+# Patch 0001 — per-teammate model route (historical: superseded by 0002, do not apply)
 
 Applies to `deepseek-harness` @ `1f81c047fc` (rc.3), branch `ai-compiler/team-agent-options`.
 
@@ -42,8 +42,14 @@ start-up composition. Skipping either produces "the patch looks applied but noth
 
 ## Known limits (measured, not assumed)
 
-- `reasoningEffort` is **not exposed** on the tool: none of the six role models declares reasoning
-  capability, so any explicit effort fails with `UNSUPPORTED_REASONING_EFFORT`.
+- **This patch is historical: 0002 removed its `agent_options` capability.** The model-facing
+  `agent_options` parameter and `SpawnTeammateRequest.agentOptions` no longer exist;
+  `spawn_teammate` takes only role/task/context/slot/description. Routes are now fixed
+  deployment configuration — see patch 0003 and `docs/design/preset-role-routing.md`.
+  Do not re-apply 0001 on its own.
+- `reasoningEffort` is **not exposed**: none of the six role models declares reasoning
+  capability, so any explicit effort fails with `UNSUPPORTED_REASONING_EFFORT`. `RoleSpec`
+  has no `reasoningEffort` field at all.
 - `maxTokens` is passed through unvalidated (no clamp against the model cap).
 - `member.model` shows the member's own route only while it is live; the durable truth is the
   child's `subagent/descriptor` event.
@@ -83,3 +89,45 @@ the baseline exits 0.
 
 `scripts/install.sh` applies it and rebuilds `lib/`; `scripts/uninstall.sh --revert-harness` reverses
 it. Rebuild and restart the Host are mandatory.
+
+# Patch 0003 — per-preset Team role routes (`presetRoles`)
+
+Applies on top of 0002. Requires the same rebuild + Host restart.
+
+## Why it exists
+
+After 0002 the Team had ONE role table for the whole Host, so every preset routed the six roles to
+the same models. `ai-compiler-magpie` could DESCRIBE a one-provider fleet in its persona but could
+never actually run one — and nothing failed when the description disagreed with reality. That silent
+disagreement is the defect this patch removes: the route is now derived from one table keyed by the
+Lead's preset, and a suite check fails if the persona text drifts from it.
+
+## What it changes (9 files)
+
+| Area | Change |
+|---|---|
+| `agent-team/src/routes.ts` | **new** — `presetIdOf()` and `resolveRoles()`, the single resolver |
+| `agent-team/src/types.ts` | `Config.presetRoles` + JSDoc on every role/slot field |
+| `agent-team/src/index.ts` | schema (`z.dict(ROLE_TABLE)`), `rolesFor(agent)`, `validateRoleTable`, cross-table slot validation |
+| `agent-team/src/roster.ts` | spawn resolves the role in the order's table, not `config.roles` |
+| `tool-agent-team/src/index.ts` | role catalog rendered from `rolesFor(agent)` as a function provider |
+| tests + both READMEs | 8 new tests, `agentPresets` stub in the fixture, role-route documentation |
+
+Nothing in `DEFAULT_ROLES` changed, and no field gained a `reasoningEffort` option. With no
+`presetRoles` configured, resolution falls through to `roles` (then `DEFAULT_ROLES`), so behaviour is
+identical to before the patch.
+
+## Verification
+
+agent-team + tool-agent-team: 83 tests pass (baseline 81, +8). `tsc -b tsconfig.host.json` clean.
+The patch applies and reverts cleanly on a pristine worktree of the pinned HEAD.
+
+## Known limits
+
+- Resolution reads `agentPresets.composedPreset()` through a **structural** interface, so agent-team
+  gains no dependency on the optional preset registry. A Host without that registry still resolves
+  through `session.header.agentPreset`.
+- A preset switch mid-session affects only FUTURE spawns; an already-spawned teammate keeps the
+  route it started with. This follows from resolving at spawn time and is not separately measured.
+- Changing a route needs a config edit plus a Host restart; a running Host keeps its start-up tables.
+

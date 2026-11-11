@@ -1,0 +1,780 @@
+diff --git a/docs/config-catalog.md b/docs/config-catalog.md
+index 875563ce39..458bee3cae 100644
+--- a/docs/config-catalog.md
++++ b/docs/config-catalog.md
+@@ -841,20 +841,74 @@ export interface Config {
+ ## `@deepseek-ai/dsh-experimental-agent-team`
+ 
+ - `inject`: `agents` · `sessions` · `sessionPersistence` · `sessionProjections` · `subagents`
+-- `source`: [`packages/experimental/agent-team/src/types.ts:153`](../packages/experimental/agent-team/src/types.ts)
++- `refs`: [`Branded`](../packages/util/brand/src/index.ts)
++- `source`: [`packages/experimental/agent-team/src/types.ts:229`](../packages/experimental/agent-team/src/types.ts)
+ 
+ ```ts config-catalog
+ /** Team-service deployment limits. */
+ export interface Config {
+-  /** Maximum immutable teammate names retained by one Team. */
++  /**
++   * Base role table used by every Team whose Lead preset has no
++   * {@link Config.presetRoles} entry. Defaults to the built-in table.
++   */
++  readonly roles?: readonly RoleSpec[]
++  /**
++   * Complete role tables keyed by preset id — the preset's own `config.id`,
++   * such as `ai-compiler-magpie`. The Lead of a Team selects its Team's table:
++   * a Lead whose preset has an entry uses that entry *instead of*
++   * {@link Config.roles}. An entry replaces the base table wholesale and is
++   * never merged field by field, so it must repeat every role the Team needs —
++   * including every role `slotPlan.reserved` names. Defaults to `{}`, which
++   * leaves the base table authoritative.
++   */
++  readonly presetRoles?: Readonly<Record<string, readonly RoleSpec[]>>
++  /** Positions every Team publishes before its first spawn; one plan serves every role table. */
++  readonly slotPlan?: TeamSlotPlan
++  /** How long an idle, unowned teammate stays reclaimable before a spawn of its role may replace it; 0 disables reclaim. */
++  readonly memberIdleGraceMs?: number
++  /** Maximum non-retired teammate instances admitted by one Team. */
+   readonly maxMembers?: number
+   /** Maximum non-deleted tasks retained by one Team. */
+   readonly maxTasks?: number
+   /** Maximum UTF-8 bytes in one complete sender-framed delivery. */
+   readonly maxMessageBytes?: number
+-  /** Maximum milliseconds for shared operation settlement and for each Team child drain. */
++  /** Maximum milliseconds runtime disposal waits for shared work and child drains. */
+   readonly disposalTimeoutMs?: number
+ }
++
++/** Deployment-owned role route and concurrency limit. */
++export interface RoleSpec {
++  /** Lower-kebab-case registry key the Lead names in `spawn_teammate({ role })`; never "lead". */
++  readonly id: RoleId
++  /** Default description for a teammate in this role, used when the spawn omits one. */
++  readonly description: string
++  /** Route half one: the LLM provider the spawned child requests. */
++  readonly provider: string
++  /** Route half two: the model id that provider serves; sent with {@link RoleSpec.provider} as the child's route at spawn. */
++  readonly model: string
++  /** Output-token cap for the child's requests; omitted uses the model's own budget. */
++  readonly maxTokens?: number
++  /** How many members of THIS role may be on the roster at once; a further spawn is refused as role-full. */
++  readonly maxConcurrent: number
++  /** Text injected as the first block of the child's initial user message, ahead of its task. */
++  readonly persona?: string
++}
++
++/** Initial reserved positions and flexible capacity. */
++export interface TeamSlotPlan {
++  /** Pinned positions, each reserved for one role, that survive the departure of their occupant. */
++  readonly reserved: readonly {
++    /** Slot identity; also the name prefix of the member occupying it (`<id>-g<generation>`). */
++    readonly id: string
++    /** The one role allowed to occupy this position; a spawn of any other role cannot use it. */
++    readonly roleId: RoleId
++  }[]
++  /** Unpinned positions that any role may occupy when none of its own reserved positions is free. */
++  readonly flex: readonly string[]
++}
++
++/** Declared business role identity. */
++export type RoleId = Branded<'RoleId'>
+ ```
+ <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-agent-team -->
+ 
+diff --git a/docs/config-catalog.zh.md b/docs/config-catalog.zh.md
+index 52b98e69d8..b730425af6 100644
+--- a/docs/config-catalog.zh.md
++++ b/docs/config-catalog.zh.md
+@@ -843,20 +843,74 @@ export interface Config {
+ ## `@deepseek-ai/dsh-experimental-agent-team`
+ 
+ - `inject`: `agents` · `sessions` · `sessionPersistence` · `sessionProjections` · `subagents`
+-- `source`: [`packages/experimental/agent-team/src/types.ts:153`](../packages/experimental/agent-team/src/types.ts)
++- `refs`: [`Branded`](../packages/util/brand/src/index.ts)
++- `source`: [`packages/experimental/agent-team/src/types.ts:229`](../packages/experimental/agent-team/src/types.ts)
+ 
+ ```ts config-catalog
+ /** Team-service deployment limits. */
+ export interface Config {
+-  /** Maximum immutable teammate names retained by one Team. */
++  /**
++   * Base role table used by every Team whose Lead preset has no
++   * {@link Config.presetRoles} entry. Defaults to the built-in table.
++   */
++  readonly roles?: readonly RoleSpec[]
++  /**
++   * Complete role tables keyed by preset id — the preset's own `config.id`,
++   * such as `ai-compiler-magpie`. The Lead of a Team selects its Team's table:
++   * a Lead whose preset has an entry uses that entry *instead of*
++   * {@link Config.roles}. An entry replaces the base table wholesale and is
++   * never merged field by field, so it must repeat every role the Team needs —
++   * including every role `slotPlan.reserved` names. Defaults to `{}`, which
++   * leaves the base table authoritative.
++   */
++  readonly presetRoles?: Readonly<Record<string, readonly RoleSpec[]>>
++  /** Positions every Team publishes before its first spawn; one plan serves every role table. */
++  readonly slotPlan?: TeamSlotPlan
++  /** How long an idle, unowned teammate stays reclaimable before a spawn of its role may replace it; 0 disables reclaim. */
++  readonly memberIdleGraceMs?: number
++  /** Maximum non-retired teammate instances admitted by one Team. */
+   readonly maxMembers?: number
+   /** Maximum non-deleted tasks retained by one Team. */
+   readonly maxTasks?: number
+   /** Maximum UTF-8 bytes in one complete sender-framed delivery. */
+   readonly maxMessageBytes?: number
+-  /** Maximum milliseconds for shared operation settlement and for each Team child drain. */
++  /** Maximum milliseconds runtime disposal waits for shared work and child drains. */
+   readonly disposalTimeoutMs?: number
+ }
++
++/** Deployment-owned role route and concurrency limit. */
++export interface RoleSpec {
++  /** Lower-kebab-case registry key the Lead names in `spawn_teammate({ role })`; never "lead". */
++  readonly id: RoleId
++  /** Default description for a teammate in this role, used when the spawn omits one. */
++  readonly description: string
++  /** Route half one: the LLM provider the spawned child requests. */
++  readonly provider: string
++  /** Route half two: the model id that provider serves; sent with {@link RoleSpec.provider} as the child's route at spawn. */
++  readonly model: string
++  /** Output-token cap for the child's requests; omitted uses the model's own budget. */
++  readonly maxTokens?: number
++  /** How many members of THIS role may be on the roster at once; a further spawn is refused as role-full. */
++  readonly maxConcurrent: number
++  /** Text injected as the first block of the child's initial user message, ahead of its task. */
++  readonly persona?: string
++}
++
++/** Initial reserved positions and flexible capacity. */
++export interface TeamSlotPlan {
++  /** Pinned positions, each reserved for one role, that survive the departure of their occupant. */
++  readonly reserved: readonly {
++    /** Slot identity; also the name prefix of the member occupying it (`<id>-g<generation>`). */
++    readonly id: string
++    /** The one role allowed to occupy this position; a spawn of any other role cannot use it. */
++    readonly roleId: RoleId
++  }[]
++  /** Unpinned positions that any role may occupy when none of its own reserved positions is free. */
++  readonly flex: readonly string[]
++}
++
++/** Declared business role identity. */
++export type RoleId = Branded<'RoleId'>
+ ```
+ <!-- END GENERATED config-catalog:@deepseek-ai/dsh-experimental-agent-team -->
+ 
+diff --git a/packages/experimental/agent-team/README.md b/packages/experimental/agent-team/README.md
+index 69d602f079..17a090e21c 100644
+--- a/packages/experimental/agent-team/README.md
++++ b/packages/experimental/agent-team/README.md
+@@ -48,11 +48,15 @@ With the tools installed, the model does the rest on request — for example, "c
+ 
+ | Field | Default | Meaning |
+ |---|---|---|
+-| `maxMembers` | `16` | Maximum teammates a team may ever create, including failed ones |
+-| `maxTasks` | `256` | Maximum active tasks on the board |
++| `roles` | built-in table | Base role table: every role's route and concurrency, used by any Lead whose preset has no `presetRoles` entry |
++| `presetRoles` | `{}` | Complete role tables keyed by preset id; a Lead composed under that preset uses that table *instead of* `roles`, never merged field by field |
++| `maxMembers` | `8` | Maximum non-retired teammate instances admitted by one Team |
++| `maxTasks` | `256` | Maximum non-deleted tasks retained by one Team |
+ | `maxMessageBytes` | `65,536` | Maximum size of one sent message |
+ | `disposalTimeoutMs` | `5,000` | Time allowed for shutdown cleanup |
+ 
++Role routing is deployment configuration, not a tool argument: `spawn_teammate` takes a role id only, and the Team resolves that id in its own table. One Team has one table — the one selected by the Lead's preset — and every reserved slot must name a role that exists in every configured table, because one `slotPlan` serves all of them.
++
+ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-aidsh-experimental-agent-team) is the exhaustive source for every accepted field and its JSDoc.
+ 
+ ### Teammates
+diff --git a/packages/experimental/agent-team/README.zh.md b/packages/experimental/agent-team/README.zh.md
+index 37bcdafded..c7d6e10698 100644
+--- a/packages/experimental/agent-team/README.zh.md
++++ b/packages/experimental/agent-team/README.zh.md
+@@ -48,11 +48,15 @@ kind: "package-reference"
+ 
+ | 字段 | 默认值 | 含义 |
+ |---|---|---|
+-| `maxMembers` | `16` | 一支团队最多可创建的 teammate 数，包括失败的 |
+-| `maxTasks` | `256` | 任务板上最多的活动任务数 |
++| `roles` | 内置角色表 | 基础角色表：每个角色的路由与并发上限；preset 未在 `presetRoles` 中登记的 Lead 使用它 |
++| `presetRoles` | `{}` | 以 preset id 为键的**完整**角色表；该 preset 下的 Lead 使用这张表**替换** `roles`，不做字段级合并 |
++| `maxMembers` | `8` | 一支团队最多可容纳的非 retired teammate 实例数 |
++| `maxTasks` | `256` | 一支团队最多保留的非 deleted 任务数 |
+ | `maxMessageBytes` | `65,536` | 单条发送消息的最大尺寸 |
+ | `disposalTimeoutMs` | `5,000` | 关闭清理允许的时间 |
+ 
++角色路由是部署配置，不是工具参数：`spawn_teammate` 只接受角色 id，由 Team 在自己的角色表里解析。一支 Team 只有一张表——由 Lead 的 preset 选定；同一个 `slotPlan` 服务所有表，所以每个保留槽位引用的角色都必须在每一张表中存在。
++
+ 生成的[配置目录](../../../docs/config-catalog.zh.md#deepseek-aidsh-experimental-agent-team)是每个受支持字段及其 JSDoc 的穷尽式真源。
+ 
+ ### Teammate
+diff --git a/packages/experimental/agent-team/src/index.ts b/packages/experimental/agent-team/src/index.ts
+index 78a60b69fb..cfd31550c3 100644
+--- a/packages/experimental/agent-team/src/index.ts
++++ b/packages/experimental/agent-team/src/index.ts
+@@ -14,6 +14,7 @@ import { TeamJournal } from './journal.ts'
+ import { TeamRuntimeLifecycle } from './lifecycle.ts'
+ import { teamProjectionDefinition } from './projection.ts'
+ import { resolveActiveMember, TeamRoster } from './roster.ts'
++import { resolveRoles } from './routes.ts'
+ import type { TeamMembership } from './roster.ts'
+ import { TeamTaskBoard } from './task-board.ts'
+ import { RoleId, TeamId, TeamTaskId } from './types.ts'
+@@ -50,6 +51,7 @@ export type {
+ } from './completion.ts'
+ export type { TeamMembership } from './roster.ts'
+ export { RoleId, TeamId, TeamMessageId, TeamTaskId } from './types.ts'
++export { presetIdOf, resolveRoles } from './routes.ts'
+ export { TeamError } from './error.ts'
+ 
+ declare module '@deepseek-ai/cordis' {
+@@ -79,6 +81,39 @@ const DEFAULT_MAX_TASKS = 256
+ const DEFAULT_MAX_MESSAGE_BYTES = 65_536
+ const DEFAULT_DISPOSAL_TIMEOUT_MS = 5_000
+ 
++/**
++ * One role row: identity, complete route, optional token cap and persona.
++ * Shared by `roles` and every `presetRoles` entry so a per-preset table is
++ * validated by exactly the same rules as the base table.
++ */
++const ROLE_ROW = z.object({
++  id: z.transform(z.string(), RoleId), description: z.string(), provider: z.string(), model: z.string(),
++  maxTokens: z.number().step(1).min(1), maxConcurrent: z.number().step(1).min(1), persona: z.string(),
++})
++
++/** One complete role table: the same row schema, applied to every table. */
++const ROLE_TABLE = z.array(ROLE_ROW)
++
++/**
++ * Validate one complete role table and return its role ids.
++ * @param label - configuration path used in the failure message.
++ * @param table - the table to validate.
++ * @returns the validated role ids, for slot-plan referential checks.
++ */
++function validateRoleTable(label: string, table: readonly RoleSpec[]): ReadonlySet<string> {
++  const ids = new Set<string>()
++  for (const role of table) {
++    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(role.id) || role.id === 'lead' || ids.has(role.id)
++      || !role.description.trim() || !role.provider.trim() || !role.model.trim()) {
++      throw new TeamError(`${label} require unique identities, descriptions, and complete routes`, 'TEAM_INVALID_CONFIG')
++    }
++    ids.add(role.id)
++    positiveLimit('maxConcurrent', role.maxConcurrent)
++    if (role.maxTokens !== undefined) positiveLimit('maxTokens', role.maxTokens)
++  }
++  return ids
++}
++
+ /** Validate one positive safe-integer deployment limit. */
+ function positiveLimit(name: string, value: number): number {
+   if (!Number.isSafeInteger(value) || value < 1) {
+@@ -92,10 +127,12 @@ export class TeamService extends Service {
+   static inject = ['agents', 'sessions', 'sessionPersistence', 'sessionProjections', 'subagents']
+ 
+   static Config: z<Config> = z.object({
+-    roles: z.array(z.object({
+-      id: z.transform(z.string(), RoleId), description: z.string(), provider: z.string(), model: z.string(),
+-      maxTokens: z.number().step(1).min(1), maxConcurrent: z.number().step(1).min(1), persona: z.string(),
+-    })).default([...DEFAULT_ROLES]),
++    roles: ROLE_TABLE.default([...DEFAULT_ROLES]),
++    /**
++     * Complete role tables keyed by preset id. A Lead whose preset has an entry
++     * replaces `roles` wholesale; see {@link Config.presetRoles}.
++     */
++    presetRoles: z.dict(ROLE_TABLE).default({}),
+     slotPlan: z.object({
+       reserved: z.array(z.object({ id: z.string(), roleId: z.transform(z.string(), RoleId) })),
+       flex: z.array(z.string()),
+@@ -122,6 +159,7 @@ export class TeamService extends Service {
+     super(ctx, 'agentTeams')
+     this.config = {
+       roles: structuredClone(config.roles ?? DEFAULT_ROLES),
++      presetRoles: structuredClone(config.presetRoles ?? {}),
+       slotPlan: structuredClone(config.slotPlan ?? DEFAULT_SLOT_PLAN),
+       memberIdleGraceMs: config.memberIdleGraceMs ?? DEFAULT_MEMBER_IDLE_GRACE_MS,
+       maxMembers: positiveLimit('maxMembers', config.maxMembers ?? DEFAULT_MAX_MEMBERS),
+@@ -160,6 +198,20 @@ export class TeamService extends Service {
+     for (const agent of ctx.agents.list()) this.scheduleRecovery(agent)
+   }
+ 
++  /**
++   * Resolve the role table that one Agent's Team uses.
++   *
++   * The table is selected by the Team Lead's preset, so a Team has exactly one
++   * route source and a teammate's own preset never overrides it. This is a
++   * read-only probe that runs during prompt assembly, so an Agent whose roster
++   * link is already gone resolves against itself instead of throwing.
++   * @param agent - any live member of the Team, or the Lead itself.
++   * @returns the Team's complete role table.
++   */
++  rolesFor(agent: Agent): readonly RoleSpec[] {
++    return resolveRoles(this.config, this.roster.tryMembership(agent)?.root ?? agent)
++  }
++
+   /**
+    * Resolve one exact live Agent's Team role.
+    * @param agent - exact live Agent used as the authority credential.
+@@ -345,24 +397,24 @@ export class TeamService extends Service {
+   }
+ 
+   private validateTopology(): void {
+-    const { roles, slotPlan, maxMembers, memberIdleGraceMs } = this.config
++    const { roles, presetRoles, slotPlan, maxMembers, memberIdleGraceMs } = this.config
+     if (!Number.isSafeInteger(memberIdleGraceMs) || memberIdleGraceMs < 0) {
+       throw new TeamError('memberIdleGraceMs must be a nonnegative safe integer', 'TEAM_INVALID_CONFIG')
+     }
+-    const ids = new Set<string>()
+-    for (const role of roles) {
+-      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(role.id) || role.id === 'lead' || ids.has(role.id)
+-        || !role.description.trim() || !role.provider.trim() || !role.model.trim()) {
+-        throw new TeamError('roles require unique identities, descriptions, and complete routes', 'TEAM_INVALID_CONFIG')
+-      }
+-      ids.add(role.id)
+-      positiveLimit('maxConcurrent', role.maxConcurrent)
+-      if (role.maxTokens !== undefined) positiveLimit('maxTokens', role.maxTokens)
+-    }
++    // The base table and every preset-specific replacement are validated by the
++    // same rules, because either one can become a Team's authoritative table.
++    const tableIds = [
++      validateRoleTable('roles', roles),
++      ...Object.entries(presetRoles).map(([presetId, table]) => validateRoleTable(`presetRoles.${presetId}`, table)),
++    ]
+     const slots = [...slotPlan.reserved.map(slot => slot.id), ...slotPlan.flex]
++    // One slot plan serves every preset, so a reserved position must name a
++    // role that exists in EVERY configured table. A table that omits a reserved
++    // role would otherwise be unable to fill that position at all.
++    const unfillable = tableIds.some(ids => slotPlan.reserved.some(slot => !ids.has(slot.roleId)))
+     if (slots.length > maxMembers || new Set(slots).size !== slots.length
+       || slots.some(id => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(id) || id.length > 44)
+-      || slotPlan.reserved.some(slot => !ids.has(slot.roleId))) {
++      || unfillable) {
+       throw new TeamError('slotPlan requires unique valid slots, declared reserved roles, and capacity <= maxMembers', 'TEAM_INVALID_CONFIG')
+     }
+   }
+diff --git a/packages/experimental/agent-team/src/roster.ts b/packages/experimental/agent-team/src/roster.ts
+index 70c75b86f0..9b17fa28ec 100644
+--- a/packages/experimental/agent-team/src/roster.ts
++++ b/packages/experimental/agent-team/src/roster.ts
+@@ -13,6 +13,7 @@ import type { TeamJournal } from './journal.ts'
+ import type { TeamRuntimeLifecycle } from './lifecycle.ts'
+ import { readPersistedSession } from './persisted.ts'
+ import type { TeamState } from './projection.ts'
++import { resolveRoles } from './routes.ts'
+ import { messageAccepted } from './session-message.ts'
+ import { TeamId } from './types.ts'
+ import type {
+@@ -65,7 +66,7 @@ export class TeamRoster {
+    * @param ctx - Team service context with Agent, Session, persistence, and subagent services.
+    * @param journal - authoritative Lead-log transaction owner.
+    * @param lifecycle - shared Team runtime admission cutoff.
+-   * @param config - Resolved role registry, slot plan, capacity, and idle grace.
++   * @param config - Resolved base role table, per-preset role tables, slot plan, capacity, and idle grace.
+    * @param admission - Shared Team admission owner.
+    */
+   constructor(
+@@ -385,7 +386,9 @@ export class TeamRoster {
+     const signal = AbortSignal.any([request.signal, this.lifecycle.signal])
+     signal.throwIfAborted()
+     const root = membership.root
+-    const role = this.config.roles.find(role => role.id === request.roleId)
++    // The Lead's preset selects the Team's role table, so the route applied to
++    // this child comes from the same table the Lead's other spawns used.
++    const role = resolveRoles(this.config, root).find(role => role.id === request.roleId)
+     if (!role) throw new TeamError(`unknown role "${request.roleId}"`, 'TEAM_UNKNOWN_ROLE')
+     const description = requiredText(request.description ?? role.description, 'description', 200)
+     const provider = request.context === 'fork' ? 'fork' : 'spawn'
+diff --git a/packages/experimental/agent-team/src/routes.ts b/packages/experimental/agent-team/src/routes.ts
+new file mode 100644
+index 0000000000..490c2cc905
+--- /dev/null
++++ b/packages/experimental/agent-team/src/routes.ts
+@@ -0,0 +1,50 @@
++/** Per-preset role-route resolution: the single authority for a Team's role table. */
++
++import type { Context } from '@deepseek-ai/cordis'
++import type { Agent } from '@deepseek-ai/dsh-agent'
++import type { Config, RoleSpec } from './types.ts'
++
++/**
++ * The one preset-registry capability this module consumes: map an Agent's
++ * context to the preset id it is currently composed under.
++ *
++ * Declared structurally on purpose. The preset registry is an optional host
++ * package, so Team routing reads it through the documented `ctx.get` pattern
++ * and never takes a dependency edge on it; a deployment without the registry
++ * keeps working through the durable session header below.
++ */
++interface PresetRoster {
++  composedPreset(ctx: Context): string | undefined
++}
++
++/**
++ * Resolve the preset one Agent runs under.
++ *
++ * The live composition wins because a Lead can switch preset while blank; the
++ * durable session header is the fallback for a Lead whose composition is no
++ * longer queryable, such as a cold resume where no preset roster is composed.
++ * @param agent - exact live Agent whose preset is requested.
++ * @returns the composed preset id, else the durable header preset id, else undefined.
++ */
++export function presetIdOf(agent: Agent): string | undefined {
++  const presets = agent.ctx.get('agentPresets') as PresetRoster | undefined
++  return presets?.composedPreset(agent.ctx) ?? agent.session.header.agentPreset
++}
++
++/**
++ * Resolve the role table one Team uses from its Lead's preset.
++ *
++ * A `presetRoles` entry replaces `roles` wholesale: a matching preset selects
++ * that complete table, and every other case — an unrelated preset, an
++ * unreadable preset identity, or an empty `presetRoles` — keeps the base
++ * table. Resolution reads the Lead alone; a teammate never selects a table, so
++ * all members of one Team share one route source.
++ * @param config - resolved Team-service configuration.
++ * @param lead - exact live Lead Agent whose Team role table is requested.
++ * @returns the configured role table for that Lead's preset, else the base table.
++ */
++export function resolveRoles(config: Required<Config>, lead: Agent): readonly RoleSpec[] {
++  const presetId = presetIdOf(lead)
++  if (presetId === undefined) return config.roles
++  return config.presetRoles[presetId] ?? config.roles
++}
+diff --git a/packages/experimental/agent-team/src/types.ts b/packages/experimental/agent-team/src/types.ts
+index 9b65cd2f9e..894337f177 100644
+--- a/packages/experimental/agent-team/src/types.ts
++++ b/packages/experimental/agent-team/src/types.ts
+@@ -30,12 +30,19 @@ export function RoleId(id: string): RoleId { return id as RoleId }
+ 
+ /** Deployment-owned role route and concurrency limit. */
+ export interface RoleSpec {
++  /** Lower-kebab-case registry key the Lead names in `spawn_teammate({ role })`; never "lead". */
+   readonly id: RoleId
++  /** Default description for a teammate in this role, used when the spawn omits one. */
+   readonly description: string
++  /** Route half one: the LLM provider the spawned child requests. */
+   readonly provider: string
++  /** Route half two: the model id that provider serves; sent with {@link RoleSpec.provider} as the child's route at spawn. */
+   readonly model: string
++  /** Output-token cap for the child's requests; omitted uses the model's own budget. */
+   readonly maxTokens?: number
++  /** How many members of THIS role may be on the roster at once; a further spawn is refused as role-full. */
+   readonly maxConcurrent: number
++  /** Text injected as the first block of the child's initial user message, ahead of its task. */
+   readonly persona?: string
+ }
+ 
+@@ -50,7 +57,14 @@ export interface TeamSlotSnapshot {
+ 
+ /** Initial reserved positions and flexible capacity. */
+ export interface TeamSlotPlan {
+-  readonly reserved: readonly { readonly id: string; readonly roleId: RoleId }[]
++  /** Pinned positions, each reserved for one role, that survive the departure of their occupant. */
++  readonly reserved: readonly {
++    /** Slot identity; also the name prefix of the member occupying it (`<id>-g<generation>`). */
++    readonly id: string
++    /** The one role allowed to occupy this position; a spawn of any other role cannot use it. */
++    readonly roleId: RoleId
++  }[]
++  /** Unpinned positions that any role may occupy when none of its own reserved positions is free. */
+   readonly flex: readonly string[]
+ }
+ 
+@@ -213,8 +227,24 @@ declare module '@deepseek-ai/dsh-llm' {
+ 
+ /** Team-service deployment limits. */
+ export interface Config {
++  /**
++   * Base role table used by every Team whose Lead preset has no
++   * {@link Config.presetRoles} entry. Defaults to the built-in table.
++   */
+   readonly roles?: readonly RoleSpec[]
++  /**
++   * Complete role tables keyed by preset id — the preset's own `config.id`,
++   * such as `ai-compiler-magpie`. The Lead of a Team selects its Team's table:
++   * a Lead whose preset has an entry uses that entry *instead of*
++   * {@link Config.roles}. An entry replaces the base table wholesale and is
++   * never merged field by field, so it must repeat every role the Team needs —
++   * including every role `slotPlan.reserved` names. Defaults to `{}`, which
++   * leaves the base table authoritative.
++   */
++  readonly presetRoles?: Readonly<Record<string, readonly RoleSpec[]>>
++  /** Positions every Team publishes before its first spawn; one plan serves every role table. */
+   readonly slotPlan?: TeamSlotPlan
++  /** How long an idle, unowned teammate stays reclaimable before a spawn of its role may replace it; 0 disables reclaim. */
+   readonly memberIdleGraceMs?: number
+   /** Maximum non-retired teammate instances admitted by one Team. */
+   readonly maxMembers?: number
+diff --git a/packages/experimental/agent-team/tests/fixture.ts b/packages/experimental/agent-team/tests/fixture.ts
+index 1f408f2fae..7c093e4760 100644
+--- a/packages/experimental/agent-team/tests/fixture.ts
++++ b/packages/experimental/agent-team/tests/fixture.ts
+@@ -20,7 +20,22 @@ export const signal = new AbortController().signal
+ export const text = (value: string) => [{ type: 'text' as const, text: value }]
+ export const testRoles = DEFAULT_ROLES.map(role => ({ ...role, provider: 'mock', model: 'mock', maxConcurrent: 8 }))
+ 
+-export async function stack(config: Config = {}, root?: string, script: ConstructorParameters<typeof MockAdapter>[0] = Array.from({ length: 30 }, () => textResponse('done')), resume = false) {
++/**
++ * @param config - Team-service configuration under test.
++ * @param root - reusable storage root, or a fresh temporary one.
++ * @param script - mock model responses.
++ * @param resume - resume a persisted Lead instead of creating one.
++ * @param composedPreset - stand-in for the optional preset roster: the Lead is
++ *   reported as composed under this preset id, which is how a deployment
++ *   selects a per-preset role table.
++ */
++export async function stack(
++  config: Config = {},
++  root?: string,
++  script: ConstructorParameters<typeof MockAdapter>[0] = Array.from({ length: 30 }, () => textResponse('done')),
++  resume = false,
++  composedPreset?: string,
++) {
+   const ctx = new Context()
+   const lifetime: { releaseLead?: () => Promise<void> } = {}
+   const ownRoot = root === undefined
+@@ -42,6 +57,17 @@ export async function stack(config: Config = {}, root?: string, script: Construc
+   await ctx.plugin(TeamService, { roles: testRoles, ...config })
+   const adapter = new MockAdapter(script)
+   ctx.llm.registerAdapter(['mock'], adapter)
++  if (composedPreset !== undefined) {
++    // Structural stand-in for the optional preset roster. Team routing reads
++    // ONLY `composedPreset` through the documented `ctx.get` pattern; the
++    // in-process child composition also probes the roster, so this stand-in
++    // reports the preset id and declines to join children to it rather than
++    // mounting a real preset generation.
++    ctx.provide('agentPresets', {
++      composedPreset: () => composedPreset,
++      composeFrom: () => undefined,
++    } as never)
++  }
+   const resumed = resume ? await ctx.agents.resume({ resumeSessionId: SessionId('lead'), agentOptions: { provider: 'mock', model: 'mock' } }) : undefined
+   if (resumed !== undefined) lifetime.releaseLead = async () => { await resumed.dispose() }
+   const lead = resumed?.agent ?? await ctx.agentLoop.create(SessionId('lead'), { provider: 'mock', model: 'mock' })
+diff --git a/packages/experimental/agent-team/tests/team.spec.ts b/packages/experimental/agent-team/tests/team.spec.ts
+index 64a8508703..73ae10b52a 100644
+--- a/packages/experimental/agent-team/tests/team.spec.ts
++++ b/packages/experimental/agent-team/tests/team.spec.ts
+@@ -86,6 +86,78 @@ describe('managed Team roles and slots', () => {
+ })
+ 
+ 
++describe('per-preset role tables', () => {
++  // A replacement table must repeat every reserved role, so both fixtures below
++  // differ from the base table only in the model each role routes to.
++  const table = (suffix: string) => testRoles.map(role => ({ ...role, model: `preset-${suffix}-${role.id}` }))
++
++  it('routes a spawn through the table of the Lead preset', async () => {
++    const team = await stack({
++      presetRoles: { 'ai-compiler-magpie': table('magpie'), 'ai-compiler': table('corp') },
++    }, undefined, undefined, false, 'ai-compiler-magpie')
++    const spawned = await team.spawn('architect')
++    await team.idle(spawned.member.id)
++    expect(team.adapter.requests).toEqual(expect.arrayContaining([
++      expect.objectContaining({ provider: 'mock', model: 'preset-magpie-architect' }),
++    ]))
++    expect(team.adapter.requests).not.toEqual(expect.arrayContaining([
++      expect.objectContaining({ model: 'preset-corp-architect' }),
++    ]))
++  })
++
++  it('falls back to the base role table when the Lead preset has no entry', async () => {
++    const team = await stack({
++      presetRoles: { 'ai-compiler-magpie': table('magpie') },
++    }, undefined, undefined, false, 'some-other-preset')
++    const spawned = await team.spawn('architect')
++    await team.idle(spawned.member.id)
++    expect(team.adapter.requests).toEqual(expect.arrayContaining([
++      expect.objectContaining({ provider: 'mock', model: 'mock' }),
++    ]))
++    expect(team.adapter.requests).not.toEqual(expect.arrayContaining([
++      expect.objectContaining({ model: 'preset-magpie-architect' }),
++    ]))
++  })
++
++  it('keeps the base table when no preset is composed at all', async () => {
++    const team = await stack({ presetRoles: { 'ai-compiler-magpie': table('magpie') } })
++    const spawned = await team.spawn('architect')
++    await team.idle(spawned.member.id)
++    expect(team.adapter.requests).toEqual(expect.arrayContaining([
++      expect.objectContaining({ provider: 'mock', model: 'mock' }),
++    ]))
++  })
++
++  it('resolves the same table for a teammate as for its Lead', async () => {
++    const team = await stack({ presetRoles: { 'ai-compiler-magpie': table('magpie') } },
++      undefined, ['hang'], false, 'ai-compiler-magpie')
++    const spawned = await team.spawn('architect')
++    const teammate = team.ctx.agents.get(spawned.member.id)!
++    expect(team.ctx.agentTeams.rolesFor(teammate).map(role => role.model))
++      .toEqual(team.ctx.agentTeams.rolesFor(team.lead).map(role => role.model))
++  })
++
++  it('rejects a role table that cannot fill the shared reserved slots', async () => {
++    // `slotPlan` is deployment-wide, so a preset table omitting a reserved role
++    // could never staff that position.
++    await expect(stack({
++      presetRoles: { 'ai-compiler-magpie': [testRoles[0]!] },
++    })).rejects.toThrow(/slotPlan/)
++  })
++
++  it('validates every preset table by the same role rules as the base table', async () => {
++    await expect(stack({
++      presetRoles: { 'ai-compiler-magpie': [{ ...testRoles[0]!, model: '' }] },
++    })).rejects.toThrow(/presetRoles\.ai-compiler-magpie/)
++    await expect(stack({
++      presetRoles: { 'ai-compiler-magpie': testRoles.map(role => ({ ...role, maxConcurrent: 0 })) },
++    })).rejects.toThrow(/maxConcurrent/)
++    await expect(stack({
++      presetRoles: { 'ai-compiler-magpie': [...testRoles, testRoles[0]!] },
++    })).rejects.toThrow(/presetRoles\.ai-compiler-magpie/)
++  })
++})
++
+ describe('role routes and capacity', () => {
+   it.each(DEFAULT_ROLES)('records the $id role route in the child request header', async (role) => {
+     const team = await stack({ roles: DEFAULT_ROLES })
+diff --git a/packages/experimental/tool-agent-team/src/index.ts b/packages/experimental/tool-agent-team/src/index.ts
+index 9ee33299ad..9ae62c0af8 100644
+--- a/packages/experimental/tool-agent-team/src/index.ts
++++ b/packages/experimental/tool-agent-team/src/index.ts
+@@ -4,7 +4,7 @@ import type { Context } from '@deepseek-ai/cordis'
+ import z from '@deepseek-ai/schemastery'
+ import type { Agent } from '@deepseek-ai/dsh-agent'
+ import { RoleId, TeamTaskId } from '@deepseek-ai/dsh-experimental-agent-team'
+-import type { TeamMemberView } from '@deepseek-ai/dsh-experimental-agent-team'
++import type { RoleSpec, TeamMemberView } from '@deepseek-ai/dsh-experimental-agent-team'
+ import { defineTool } from '@deepseek-ai/dsh-tools'
+ import type { InferValue, ValueSchemaSpec } from '@deepseek-ai/dsh-tools'
+ 
+@@ -30,11 +30,26 @@ export const Config: z<Config> = z.object({
+   forkProvider: z.string().default('fork'),
+ })
+ 
++/**
++ * Render the role catalog one Team actually routes by.
++ *
++ * The rows come from the Team-service configuration the Lead's preset selects,
++ * so this text cannot drift from the routes a spawn really uses: it is the same
++ * table `spawn_teammate` resolves. No route is hardcoded here.
++ * @param roles - the Team's resolved role table.
++ * @returns one inline catalog line, or a table-free sentence when none is configured.
++ */
++function roleCatalog(roles: readonly RoleSpec[]): string {
++  if (roles.length === 0) return 'Roles (role fixes the model route and its concurrency): this deployment configures no roles, so spawn_teammate cannot create a teammate.'
++  const rows = roles.map(role => `${role.id} (${role.provider}/${role.model}, ${role.description}, max ${role.maxConcurrent})`)
++  return `Roles (role fixes the model route and its concurrency): ${rows.join(' · ')}.`
++}
++
+ /** Model-facing collaboration guidance shared by Lead and teammates. */
+-function teamPolicy(interrupt: boolean): string {
++function teamPolicy(interrupt: boolean, roles: readonly RoleSpec[]): string {
+   return `Agent Teams is available in this session
+ 
+-Roles (role fixes the model route and its concurrency): architect (magpie/group/architect, design + review, max 1) · explorer (corp/Qwen3.8-Flash, investigate, max 2) · implementer (corp/DeepSeek-V4.1-Flash-1017, write code, max 2) · reviewer (corp/GLM-5.3-Flash, verify, max 1) · challenger (magpie/group/challenger, adversarial review, max 1) · validator (magpie/group/validator, validate, max 1). Dispatch by role: spawn_teammate({ role, task }). Reuse an idle teammate of the SAME role with send_message (pass expected_role to assert) before creating a new one. A task's required_role is enforced when claimed or reassigned. When capacity is full the runtime returns backpressure naming the blocked role: wait or reuse, and NEVER send a task to a mismatched role.
++${roleCatalog(roles)} Dispatch by role: spawn_teammate({ role, task }). Reuse an idle teammate of the SAME role with send_message (pass expected_role to assert) before creating a new one. A task's required_role is enforced when claimed or reassigned. When capacity is full the runtime returns backpressure naming the blocked role: wait or reuse, and NEVER send a task to a mismatched role.
+ 
+ The Team Lead and all teammates share the same working directory and filesystem. Edits are immediately visible to every member. Split write work into disjoint scopes, record expected write scopes on shared tasks, and use task dependencies when work must be ordered. Write-scope overlap is advisory, not a lock.
+ 
+@@ -220,7 +235,10 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
+     register(scoped.systemPrompt.section({
+       name: 'team:policy',
+       order: scoped.systemPrompt.getSectionOrder('TEAM_POLICY'),
+-      text: teamPolicy(config.interrupt),
++      // Resolved per assembly from the Team's own role table, so the catalog
++      // always matches the routes spawn_teammate will apply — including after
++      // the Lead switches preset.
++      text: () => teamPolicy(config.interrupt, ctx.agentTeams.rolesFor(agent)),
+     }))
+     register(scoped.systemPrompt.context({
+       name: 'team:identity',
+@@ -240,7 +258,7 @@ To message another teammate, use send_message({ target: "<teammate name>", messa
+       name: 'spawn_teammate',
+       description: 'Create one named, durable teammate. Only the Team Lead may call this tool.',
+       parameters: {
+-        role: { type: 'string', required: true, description: 'Declared role id to fill: architect, explorer, implementer, reviewer, challenger, or validator. The role fixes the model route and concurrency.' },
++        role: { type: 'string', required: true, description: 'Declared role id to fill. The role fixes the model route and concurrency; the role catalog in your Team policy lists the ids this deployment routes, and a route is deployment configuration that this tool cannot override.' },
+         task: { type: 'string', required: true, description: 'Complete initial task for the teammate.' },
+         context: {
+           type: 'string',
+diff --git a/packages/experimental/tool-agent-team/tests/tool-team.spec.ts b/packages/experimental/tool-agent-team/tests/tool-team.spec.ts
+index 4c56b8ca69..d26daaebec 100644
+--- a/packages/experimental/tool-agent-team/tests/tool-team.spec.ts
++++ b/packages/experimental/tool-agent-team/tests/tool-team.spec.ts
+@@ -36,7 +36,14 @@ afterEach(async () => {
+   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true })
+ })
+ 
+-async function setup() {
++/**
++ * @param options - optional Team-service configuration plus the preset the Lead
++ *   is reported as composed under, so a test can exercise per-preset routing.
++ */
++async function setup(options: {
++  readonly roleConfig?: Record<string, unknown>
++  readonly composedPreset?: string
++} = {}) {
+   const ctx = new Context()
+   contexts.add(ctx)
+   await mountAgentLoopTestDependencies(ctx)
+@@ -49,10 +56,19 @@ async function setup() {
+   await ctx.plugin(SubagentService)
+   await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
+   await ctx.plugin(SubagentFork, { providerName: 'fork' })
+-  await ctx.plugin(TeamService)
++  await ctx.plugin(TeamService, options.roleConfig ?? {})
+   await ctx.plugin(toolTeam)
+   const adapter = new MockAdapter([])
+   ctx.llm.registerAdapter(['mock'], adapter)
++  if (options.composedPreset !== undefined) {
++    // Team routing reads only `composedPreset` from the optional preset roster,
++    // and the in-process child composition probes the same service, so this
++    // stand-in reports an id and declines to join children to it.
++    ctx.provide('agentPresets', {
++      composedPreset: () => options.composedPreset,
++      composeFrom: () => undefined,
++    } as never)
++  }
+   const lead = await ctx.agentLoop.create(SessionId('tool-team-lead'), { provider: 'mock', model: 'mock' })
+   return { ctx, lead }
+ }
+@@ -136,4 +152,42 @@ describe('dsh-tool-team role API', () => {
+     expect(prompt).toContain('expected_role')
+     expect(prompt).toContain('backpressure')
+   })
++
++  it('renders the role catalog from the configured table, not a hardcoded list', async () => {
++    const { ctx, lead } = await setup({
++      roleConfig: {
++        roles: [{
++          id: 'architect', description: 'Design only', provider: 'magpie',
++          model: 'group/architect', maxConcurrent: 3,
++        }],
++        slotPlan: { reserved: [{ id: 'architect', roleId: 'architect' }], flex: [] },
++        maxMembers: 2,
++      },
++    })
++    const scope = scopeOf(lead.ctx)
++    if (scope === undefined) throw new Error('expected scope')
++    const prompt = renderPrompt(await ctx.systemPrompt.assemble({ scope }))
++    expect(prompt).toContain('Roles (role fixes the model route and its concurrency): architect (magpie/group/architect, Design only, max 3).')
++    // The built-in explorer route must not survive as boilerplate.
++    expect(prompt).not.toContain('Qwen3.8-Flash')
++  })
++
++  it('renders the catalog of the table the Lead preset selects', async () => {
++    const { ctx, lead } = await setup({
++      composedPreset: 'ai-compiler-magpie',
++      roleConfig: {
++        roles: [{ id: 'architect', description: 'Design only', provider: 'corp', model: 'corp-architect', maxConcurrent: 1 }],
++        presetRoles: {
++          'ai-compiler-magpie': [{ id: 'architect', description: 'Design only', provider: 'magpie', model: 'group/architect', maxConcurrent: 1 }],
++        },
++        slotPlan: { reserved: [{ id: 'architect', roleId: 'architect' }], flex: [] },
++        maxMembers: 2,
++      },
++    })
++    const scope = scopeOf(lead.ctx)
++    if (scope === undefined) throw new Error('expected scope')
++    const prompt = renderPrompt(await ctx.systemPrompt.assemble({ scope }))
++    expect(prompt).toContain('architect (magpie/group/architect, Design only, max 1)')
++    expect(prompt).not.toContain('corp-architect')
++  })
+ })
