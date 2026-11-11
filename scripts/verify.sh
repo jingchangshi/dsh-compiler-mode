@@ -6,6 +6,8 @@
 #   1. the profile records the bundle layer and the ai-compiler preset row
 #   1c. the harness team-reclaim patch is applied AND built (retireTeammate in lib)
 #   1d. the capability-patch helper passes its apply/idempotent/revert/conflict test
+#   1f. the FIRST composed agent-team row (the one cordis keeps) still carries
+#       the presetRoles routing tables - ORDER-SENSITIVE, see the step itself
 #   2. the preset declaration still matches official PTC + the declared diffs
 #   3. the MCP bridge actually registers the agentgates tools (see below)
 #   4. the deterministic composition suite passes (tools, planes, isolation)
@@ -120,6 +122,98 @@ if node "$checkout/apps/cli/lib/bin.js" --profile web --dump-config 2>/dev/null 
   ok "llm-fallback row composes into the profile"
 else
   bad "llm-fallback row missing from --dump-config"
+fi
+
+step "1f. agent-team presetRoles survive the duplicate row (ORDER-SENSITIVE)"
+# WHY THIS CHECK EXISTS
+# ---------------------
+# Profile "web" composes TWO rows with id "agent-team":
+#   * one from @local/dsh-ai-compiler-preset (config/bundle-ai-compiler/
+#     bundles.patch.yml) that carries the presetRoles routing tables;
+#   * one from the shipped bundle @deepseek-ai/dsh-experimental-agent-team-profile
+#     that has no presetRoles (it only carries the capacity limits).
+# cordis is FIRST-PROVIDE-WINS for a duplicated provide, so the row that takes
+# effect is simply the one whose bundle is listed first in
+# $profile_dir/package.json -> dsh.profile.bundles. Today that is the local
+# bundle, so the tables win -- but only by ORDER. Swap the two entries and the
+# second row silently takes over: the preset still mounts, the Host still looks
+# healthy, the Team tools still answer, and every teammate silently falls back
+# to the built-in "roles" table instead of the declared routes. No other check
+# notices, because the composition suite boots the scratch profile, which does
+# not select the shipped agent-team bundle at all.
+#
+# So this check asserts the FIRST composed agent-team segment -- the only one
+# that can win -- and deliberately does not use "grep -A" over the whole dump:
+# a global match would also hit the dropped row and report a false green while
+# the routing tables were inactive.
+dump="$(node "$checkout/apps/cli/lib/bin.js" --profile web --dump-config 2>/dev/null)"
+if [ -z "$dump" ]; then
+  bad "cannot read --dump-config for profile web, so agent-team presetRoles are UNVERIFIED (run the CLI by hand)"
+else
+  # First segment only: from the first "^- id: agent-team" up to the next
+  # "^- id: " at column 0. Nested rows are indented, so they cannot end it.
+  first_seg="$(printf '%s\n' "$dump" | awk '
+    /^- id: / {
+      if (in_seg) exit
+      if ($0 ~ /^- id: agent-team[[:space:]]*$/) { in_seg = 1; print; next }
+    }
+    in_seg { print }
+  ')"
+  seg_count="$(printf '%s\n' "$dump" | grep -cE '^- id: agent-team[[:space:]]*$')"
+
+  if [ -z "$first_seg" ]; then
+    nested="$(printf '%s\n' "$dump" | grep -cE '^[[:space:]]+- id: agent-team[[:space:]]*$')"
+    if [ "$nested" -gt 0 ]; then
+      bad "agent-team composes only INSIDE a group ($nested nested row(s), none at top level) - this check only knows how to read a top-level row, so presetRoles are UNVERIFIED"
+    else
+      bad 'no "- id: agent-team" row composes at all -- the Team plane is missing, so presetRoles cannot route any teammate'
+    fi
+  else
+    # The presetRoles block: from the presetRoles: line down to the first
+    # non-blank line indented at or above it. Keys are read from that block
+    # only, so a key anywhere else in the segment cannot mask a missing table.
+    pr_block="$(printf '%s\n' "$first_seg" | awk '
+      function indent(s,  i) { for (i = 1; i <= length(s); i++) if (substr(s, i, 1) != " ") return i - 1; return length(s) }
+      !in_block && /^[[:space:]]*presetRoles:[[:space:]]*$/ { in_block = 1; base = indent($0); print; next }
+      in_block {
+        if ($0 ~ /^[[:space:]]*$/) { print; next }
+        if (indent($0) <= base) exit
+        print
+      }
+    ')"
+
+    if [ -z "$pr_block" ]; then
+      bad "agent-team: the FIRST composed row (the winner) has NO presetRoles -- teammate routes fall back to the built-in table"
+      printf '      ORDER-SENSITIVE, not a broken table: %s selects two bundles that\n' "web"
+      printf '      both provide "- id: agent-team" and cordis is first-provide-wins.\n'
+      printf '        winner (must carry presetRoles) = the bundle listed FIRST in\n'
+      printf '          %s/package.json -> dsh.profile.bundles\n' "$profile_dir"
+      printf '        dropped (no presetRoles)        = @deepseek-ai/dsh-experimental-agent-team-profile\n'
+      printf '      Fix: move "@local/dsh-ai-compiler-preset" BEFORE\n'
+      printf '      "@deepseek-ai/dsh-experimental-agent-team-profile" in that bundles list\n'
+      printf '      (re-run scripts/install.sh, which appends in this order), or drop the\n'
+      printf '      shipped agent-team row from the profile. Do NOT add presetRoles to the\n'
+      printf '      shipped bundle: it is not ours to edit.\n'
+      printf '      Observed %s row(s) with id "agent-team"; the winner starts at:\n' "$seg_count"
+      printf '%s\n' "$first_seg" | head -3 | sed 's/^/      | /'
+    else
+      miss=""
+      printf '%s\n' "$pr_block" | grep -qE '^[[:space:]]+ai-compiler:[[:space:]]*$' || miss="$miss ai-compiler"
+      printf '%s\n' "$pr_block" | grep -qE '^[[:space:]]+ai-compiler-magpie:[[:space:]]*$' || miss="$miss ai-compiler-magpie"
+      if [ -z "$miss" ]; then
+        ok "first agent-team row (of $seg_count) carries presetRoles for ai-compiler + ai-compiler-magpie"
+      else
+        bad "agent-team: the FIRST composed row (the winner) has presetRoles but is MISSING key(s):$miss"
+        printf '      presetRoles replaces "roles" wholesale, so a preset whose key is\n'
+        printf '      absent silently reverts to the built-in routes. Keys must match the\n'
+        printf '      presets'"'"' config.id in config/bundle-ai-compiler/cordis.patch.yml.\n'
+        printf '      Intended table: config/bundle-ai-compiler/bundles.patch.yml -> agent-team.presetRoles\n'
+        printf '      If BOTH keys are reported missing, suspect bundle ORDER first: the\n'
+        printf '      winner may already be the shipped row instead of the local one.\n'
+        printf '%s\n' "$pr_block" | head -6 | sed 's/^/      | /'
+      fi
+    fi
+  fi
 fi
 
 step "1b. acceptance profile"
