@@ -266,7 +266,7 @@ P2验证：每个崩溃点（slot reservation、provisioning落盘、子prompt�
 | 角色误发保护 | 无，只有prompt约定 | 单靠命名依然无；若加校验才改善 | spawn/send任务/claim/reassign共同角色契约 |
 | 核心上下文保存 | 可能被角色盲回收 | 当前无pin会被回收；全pin又无弹性 | 成功pinned实例不idle回收；flex允许更替 |
 | 失败恢复 | 新名字、Lead手动记映射；满额优先清failed | 固定名字失败后不能复用，需额外恢复机制 | slot保留，自动新generation；旧name仍永久 |
-| 模型/成本 | 每次由Lead填agentOptions，可能漂移 | 每岗指定模型但仍需机器校验 | registry注入/allowlist/并发；累计费用硬限另验 |
+| 模型/成本 | 每次由Lead填agentOptions，可能漂移（**该做法已废弃**，见 `docs/design/preset-role-routing.md`） | 每岗指定模型但仍需机器校验 | registry注入/allowlist/并发；累计费用硬限另验 |
 | 上下文隔离 | 灵活但可频繁丢上下文 | 长驻污染风险，重置不方便 | role+context compatibility决定复用或新代 |
 | 用户零生命周期提示 | 部分；当前策略不能保证正确角色 | 常被固定规划与失败要求打断 | 默认由DSH管理；业务角色选择仍由Lead负责 |
 | 实施成本 | 已有，但D1–D4必须修 | 表面低；补pin/role/重建后接近结构性方案 | P1中等，P2高；协议边界明确，可分阶段 |

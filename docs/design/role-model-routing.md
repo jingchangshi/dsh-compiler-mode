@@ -1,6 +1,22 @@
 # 方案 3 设计：多角色 + 按角色分模型（Team 保留）
 
-状态：调研完成，待实施。所有结论均有源码位置或实测证据。
+状态：调研完成。**本文是设计过程记录，最终实现与本文不同，请看下面的更正块。**
+
+> ## ⚠️ 更正（2026-11-11）：最终实现不是本文的形态 A
+>
+> 本文正文描述的是"给 `spawn_teammate` 加 `agent_options` 参数，由 Lead 在运行时填路由"的方案。
+> **该方案已被否决并移除**：`patches/0001-team-agent-options.patch` 曾加入这个能力，
+> `patches/0002-team-roles-slots.patch` 已将它删除。今天的 `spawn_teammate` 只接受
+> `role`/`task`/`context`/`slot`/`description`，**没有** provider/model/`agent_options` 参数。
+>
+> 最终实现是**配置侧固定路由**：Host 行 `agent-team` 的 `presetRoles` 按 preset 提供完整角色表，
+> 由 `packages/experimental/agent-team/src/routes.ts` 的 `resolveRoles()` 在 spawn 时解析并下发。
+> Lead 不能改，任务/消息也不能改。详见 `docs/design/role-config-final.md` 与
+> `docs/design/preset-role-routing.md`。
+>
+> 因此：本文 §2 的"选形态 A"、§3 的"由 Lead 在运行时填 `agent_options`"、
+> §3 的选项 ①/②/③ 对比、以及 §4 的"建议取值"表，**均为历史记录，不代表当前行为**。
+> 本文其余部分（源码定位、实验结论）仍然有效。
 
 ---
 
@@ -54,6 +70,9 @@ corp/Qwen3.8-Flash                  -> child 回复自身 model id "Qwen3.8-Flas
 **预设作用域不能改模型**：`presets.serviceFor(lead, 'agentDefaultModel')` 返回 `undefined`，
 说明 `agent-default-model` 是 Host 平面服务；**在预设里声明它不会改变子 Agent 的模型**。
 → 所以"多预设分模型"必须走 `agentOptions` 或 `agentPreset`，不能靠预设里的默认模型行。
+  **⚠️ 更正（2026-11-11）**：这条结论已被证伪。最终实现走的是**配置侧** `agent-team.presetRoles`，
+  二者都不需要：`agentOptions` 在 spawn 时由服务从角色表注入（`routes.ts` → `roster.ts`），
+  `agentPreset` 只用来**读取** Lead 的 preset id 以选择表。
 
 ---
 
@@ -127,6 +146,11 @@ corp/Qwen3.8-Flash                  -> child 回复自身 model id "Qwen3.8-Flas
 
 ## 3. 角色配置的承载方式
 
+> **⚠️ 更正（2026-11-11）：本节描述的 `agent_options` 方案已经不存在。**
+> 下面的"由 Lead 在运行时填"是旧设计的推演，**不是当前行为**。现行实现是
+> `agent-team.presetRoles` 配置侧固定路由（见文首更正块与
+> `docs/design/preset-role-routing.md`）。保留本节仅为记录当时的取舍过程。
+
 `spawn_teammate` 的 `agent_options` 由 **Lead 在运行时填**。这带来一个风险：
 7 个角色 × 4 个字段，Lead 很可能写错。因此需要一个**权威来源**，三选一：
 
@@ -139,12 +163,17 @@ corp/Qwen3.8-Flash                  -> child 回复自身 model id "Qwen3.8-Flas
 **推荐 ①**：先把映射写进 persona，用现有 `verify-preset` 校验 persona 文本包含 6 个角色行；
 若实测发现 Lead 经常写错，再升级到 ③。
 
-> 注意：形态 A 的 `agent_options` 是**模型可见参数**，所以 Lead 可以按 persona 表填写；
-> 若要做到"模型无法改错"，需要 ③（把表变成不可见注入）。
+> **⚠️ 更正（2026-11-11）**：上一条注意事项已作废。最终落地的是③的精神——路由作为
+> **不可见注入**来自 Host 配置 `agent-team.presetRoles`，不是模型可见参数。Lead 无法填写、
+> 无法改错，因为 `spawn_teammate` 根本没有这个参数。
 
 ---
 
-## 4. 角色表的建议取值（待你确认）
+## 4. 角色表的建议取值（历史提案，未采用）
+
+> **⚠️ 更正（2026-11-11）**：下表是当时的**建议**，其中 `codex/gpt-6.1-sol`、以及所有
+> `reasoningEffort` 取值都**没有采用**。当前真实的两张表见 `docs/design/role-config-final.md`；
+> 六个角色模型均未声明 `reasoningEfforts`，任何显式 effort 会 `UNSUPPORTED_REASONING_EFFORT`。
 
 | 角色 | provider/model | reasoningEffort | maxTokens | 依据 |
 |---|---|---|---|---|
@@ -193,7 +222,7 @@ corp/Qwen3.8-Flash                  -> child 回复自身 model id "Qwen3.8-Flas
 |---|---|---|
 | DSH Core | 3 个 experimental 包、约 15 行 | `git apply -R patches/0001-*.patch` |
 | 预设 | persona 文本 + 角色表 | `verify-preset` 的 DECLARED 更新；bundle 可整体卸载 |
-| Team 行为 | 默认行为不变（`agent_options` 省略 = 继承，与现在完全一致） | 不传参数即回退 |
+| Team 行为 | 默认行为不变（未配置 `presetRoles` = 走内置 `roles`，与改造前完全一致） | 删除 `presetRoles` 即回退 |
 | 冷恢复 | descriptor 已持久化 model/provider，**无需额外改动** | — |
 | 权限 | 不变（子 Agent 仍 approval=never） | — |
 | 现有证据 | 全部保持有效 | — |

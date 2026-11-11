@@ -12,7 +12,7 @@ Two mechanisms are separated here because they are enforced by different code an
   delegation rows are declared `disabled: true` in the preset (Q18 defect, measured — the model
   preferred `subagent` and never touched the Team API).
 
-Verified by `tests/integration/composition-suite.mjs` (47 checks): wire list is `[run_code]`,
+Verified by `tests/integration/composition-suite.mjs` (59 checks): wire list is `[run_code]`,
 SDK binds 31 tools, direct delegation absent, Team tools present.
 
 ## 2. Runtime permission (what a call may actually do)

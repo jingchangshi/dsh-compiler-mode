@@ -12,7 +12,7 @@ surface.
 | Display name | **AI Compiler Engineering** |
 | Base | official `ptc` preset (33/33 rows, 2 declared diffs) |
 | Model surface | `run_code` only (PTC); role-based Agent Teams tools (`spawn_teammate` by role, `retire_teammate`, `send_message` with `expected_role`, task `required_role`) |
-| Delegation | Agent Teams only, **role-first**: 6 roles (architect/explorer/implementer/reviewer/challenger/validator) with per-role models, 4 reserved + 4 flex slots, generations; tools `spawn_teammate`/`send_message`/`retire_teammate`/`list_agents`/`wait_agent`/`interrupt_agent`/`team_task_*` |
+| Delegation | Agent Teams only, **role-first**: 6 roles (architect/explorer/implementer/reviewer/challenger/validator) with per-role models and **per-preset role routes**, 4 reserved + 4 flex slots, generations; tools `spawn_teammate`/`send_message`/`retire_teammate`/`list_agents`/`wait_agent`/`interrupt_agent`/`team_task_*` |
 | Code navigation | `lsp` over clangd, real `compile_commands.json` |
 | Skills | none preinstalled; the standard `skill-filesystem` + `tool-skill` pair is unchanged |
 | Compiler adapters | none (reserved entry point documented, not implemented) |
@@ -27,17 +27,25 @@ scripts/verify.sh         # all checks, exit 0 = installed
 
 Then: new chat → preset chip → **AI Compiler Engineering**.
 
-The Team role/slot topology is a source patch, so `install.sh` applies `patches/0002-team-roles-slots.patch`
-to the DSH checkout (idempotent, reversible; skip with `--no-harness-patch`) and rebuilds the Host
-`lib/`. Dispatch work by role; the runtime fixes each role's model and concurrency, reuses same-role
-idle members, rejects role-mismatched dispatch (`expected_role` / task `required_role`), and returns
+The Team role/slot topology and per-preset routing are source patches, so `install.sh` applies the
+registry's patch chain (`0002-team-roles-slots.patch`, `0003-team-preset-role-routes.patch`) to the
+DSH checkout (idempotent, reversible; skip with `--no-harness-patch`) and rebuilds the Host `lib/`.
+Dispatch work by role; the runtime fixes each role's model and concurrency, reuses same-role idle
+members, rejects role-mismatched dispatch (`expected_role` / task `required_role`), and returns
 backpressure instead of sending work to the wrong role.
+
+Each preset runs its **own** six-role table: `ai-compiler` mixes `magpie` and `corp`, while
+`ai-compiler-magpie` routes all six through `magpie`. None of this is a tool argument —
+`spawn_teammate` has no provider/model/`agent_options` parameter; the table lives in the
+`agent-team` row's `presetRoles` (`config/bundle-ai-compiler/bundles.patch.yml`) and a change
+requires a Host restart. See [`docs/design/preset-role-routing.md`](docs/design/preset-role-routing.md).
 
 A local `plugins/llm-fallback` host row (TS, no checkout patch) covers per-day quota exhaustion: when
 a `corp` route fails on a quota/auth-class error it remaps that agent to the same-family `magpie`
 model and stays pinned to it for the session (sticky — it never walks back to the spent key on its
 own; a new session or Host restart re-probes the primary). The table maps the three `corp` routes
-only; `magpie` routes (including the `group/*` role models) have no entry and are never rewritten.
+of the `ai-compiler` preset (explorer, implementer, reviewer) only; `magpie` routes — including
+every `group/*` model and the whole `ai-compiler-magpie` table — have no entry and are never rewritten.
 Switching model keeps the full context.
 
 Uninstall / rollback:
@@ -58,7 +66,7 @@ config/overlays/               alternative clangd builds (LLVM 22)
 scripts/                       install / uninstall / verify / rollback + harness-patch helper
 tests/
   preset/                      declaration vs official PTC (declared-diff gate)
-  integration/                 composition suite (47 deterministic checks) + harness-patch helper test
+  integration/                 composition suite (59 deterministic checks) + harness-patch helper test
   permissions/                 real allow/deny assertions
   clangd/                      how clangd parses a real compile_commands.json
   e2e/                         Web-session driver, case A/B/C, independent verifiers

@@ -22,6 +22,31 @@ routed to the wrong role. When capacity is full the runtime returns **backpressu
 role: wait, or retire a finished member; it will not steal a pinned role. A retired member keeps its
 name forever but is no longer addressable.
 
+#### A role's route depends on the preset
+
+`spawn_teammate` takes only `role`, `task`, `context`, `slot`, `description` — there is **no** provider,
+model or `agent_options` parameter, and no session can choose a route. The route comes from the Host row
+`agent-team`'s `presetRoles`, keyed by the **Lead's** preset id (`config/bundle-ai-compiler/cordis.patch.yml`
+declares `config.id: ai-compiler` / `ai-compiler-magpie`; the tables live in `bundles.patch.yml`):
+
+| role | `ai-compiler` (order 5) | `ai-compiler-magpie` (order 6) | max concurrent |
+|---|---|---|---|
+| architect | `magpie` / `group/architect` | `magpie` / `group/architect` | 1 |
+| explorer | `corp` / `Qwen3.8-Flash` | `magpie` / `group/explorer` | 2 |
+| implementer | `corp` / `DeepSeek-V4.1-Flash-1017` | `magpie` / `group/implementer` | 2 |
+| reviewer | `corp` / `GLM-5.3-Flash` | `magpie` / `group/reviewer` | 1 |
+| challenger | `magpie` / `group/challenger` | `magpie` / `group/challenger` | 1 |
+| validator | `magpie` / `group/validator` | `magpie` / `group/validator` | 1 |
+
+A preset with no entry in `presetRoles` falls back to `agent-team.roles` (the built-in mixed table,
+identical to the `ai-compiler` column above). A table **replaces** `roles` wholesale — it is never
+merged field by field — and because one `slotPlan` serves every preset, each table must name every
+reserved role (architect, reviewer, explorer, implementer) or startup validation rejects it.
+
+**To change a route**: edit that preset's table under `agent-team.presetRoles` in
+`config/bundle-ai-compiler/bundles.patch.yml`, reinstall the bundle, then **restart the Host**. Nothing
+at runtime can change it — not a task, a message, nor anything the Lead passes to `spawn_teammate`.
+
 ## After any configuration change
 
 **Restart the Host.** A running Host keeps its start-up composition; new or removed rows only
@@ -31,12 +56,24 @@ appear after a restart. Symptom of a stale Host: `--dump-config` lists a row the
 
 ```bash
 node tests/preset/verify-preset.mjs             # declaration still equals PTC + declared diffs
-node tests/integration/composition-suite.mjs    # 47 deterministic checks
+node tests/integration/composition-suite.mjs    # 59 deterministic checks, incl. the routes drift guard
 node tests/integration/harness-patches.mjs      # capability-patch apply/idempotent/revert/conflict
 node tests/permissions/permission-suite.mjs     # 4 allow/deny checks
-node scripts/lib/harness-patches.mjs status     # team-reclaim patch state (pending/applied/conflict)
+node scripts/lib/harness-patches.mjs status     # source-patch state: 0002 roles/slots, 0003 preset routes
 scripts/verify.sh                               # all of the above + profile untouched
 ```
+
+
+## 关于本套件的一个已知陷阱（2026-11-11 记录）
+
+> 本套件的判定曾经只看 `results` 里失败项的个数。如果中途抛异常导致前面已经跑完的检查
+> 被截断，剩下的全是 PASS，于是**半途而废的运行会打印绿色并 exit 0**。这个问题已修复：
+> 现在有 `uncaughtException`/`unhandledRejection` 处理器与外层 `catch (fatal)`，
+> 任何逃逸的异常都会记成一条 `[harness]` 失败并把整轮判为 FAIL。
+>
+> 记录在此只是提醒将来的人：**“N/N checks passed” 这句话本身不足以证明全部检查都跑过**。
+> 判断一轮是否可信，要同时看退出码、检查总数、以及每个 group 是否都出现过。
+> 其他测试脚本是否也有同类写法，本文件不做结论（未逐一审计）。
 
 ## Reading the evidence
 

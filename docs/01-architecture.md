@@ -3,7 +3,7 @@
 This document describes the composition that actually exists after implementation, not the
 proposal it started from. Everything below is checkable with
 `node apps/cli/lib/bin.js --profile web --dump-config` and
-`tests/integration/composition-suite.mjs` (44/44 deterministic checks).
+`tests/integration/composition-suite.mjs` (59 deterministic checks).
 
 ---
 

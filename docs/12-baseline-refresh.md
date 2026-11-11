@@ -40,7 +40,7 @@ scripts/verify.sh
   1. profile records the mode                     PASS
   2b. MCP bridge registers the agentgates tools   PASS (13 checks)
   2. preset declaration vs official PTC           PASS
-  4. composition suite                            PASS (47 checks)
+  4. composition suite                            PASS (59 checks)
   5. permission suite                             PASS (4 checks)
   6. user model configuration untouched           PASS
   verify: 0 failure(s)

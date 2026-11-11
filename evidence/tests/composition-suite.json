@@ -1,7 +1,7 @@
 {
   "profile": "ai-compiler-scratch",
   "patches": [],
-  "at": "2026-11-03T16:35:50.461Z",
+  "at": "2026-11-11T11:18:07.810Z",
   "results": [
     {
       "group": "preset",
@@ -224,6 +224,78 @@
       "name": "the only PTC tools removed are the direct-delegation pair",
       "ok": true,
       "detail": "subagent,subagent_fork"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler resolves its configured role table",
+      "ok": true,
+      "detail": "architect=magpie/group/architect, explorer=corp/Qwen3.8-Flash, implementer=corp/DeepSeek-V4.1-Flash-1017, reviewer=corp/GLM-5.3-Flash, challenger=magpie/group/challenger, validator=magpie/group/validator"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler policy text lists the same six roles",
+      "ok": true,
+      "detail": "parsed [architect,explorer,implementer,reviewer,challenger,validator] | want [architect,explorer,implementer,reviewer,challenger,validator]"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler policy text routes agree with the table row for row",
+      "ok": true,
+      "detail": "text and table agree"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler deployment persona lists the same six roles",
+      "ok": true,
+      "detail": "persona [architect,explorer,implementer,reviewer,challenger,validator] | want [architect,explorer,implementer,reviewer,challenger,validator]"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler deployment persona routes agree with the routed table",
+      "ok": true,
+      "detail": "persona and runtime agree"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler-magpie resolves its configured role table",
+      "ok": true,
+      "detail": "architect=magpie/group/architect, explorer=magpie/group/explorer, implementer=magpie/group/implementer, reviewer=magpie/group/reviewer, challenger=magpie/group/challenger, validator=magpie/group/validator"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler-magpie policy text lists the same six roles",
+      "ok": true,
+      "detail": "parsed [architect,explorer,implementer,reviewer,challenger,validator] | want [architect,explorer,implementer,reviewer,challenger,validator]"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler-magpie policy text routes agree with the table row for row",
+      "ok": true,
+      "detail": "text and table agree"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler-magpie deployment persona lists the same six roles",
+      "ok": true,
+      "detail": "persona [architect,explorer,implementer,reviewer,challenger,validator] | want [architect,explorer,implementer,reviewer,challenger,validator]"
+    },
+    {
+      "group": "routes",
+      "name": "ai-compiler-magpie deployment persona routes agree with the routed table",
+      "ok": true,
+      "detail": "persona and runtime agree"
+    },
+    {
+      "group": "routes",
+      "name": "preset without a presetRoles entry falls back to the base role table",
+      "ok": true,
+      "detail": "6 rows: architect=magpie/group/architect, explorer=corp/Qwen3.8-Flash, implementer=corp/DeepSeek-V4.1-Flash-1017, reviewer=corp/GLM-5.3-Flash, challenger=magpie/group/challenger, validator=magpie/group/validator"
+    },
+    {
+      "group": "routes",
+      "name": "a preset-owned agent resolves roles without throwing",
+      "ok": true,
+      "detail": "roles resolved"
     },
     {
       "group": "context",
