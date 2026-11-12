@@ -674,6 +674,144 @@ if (board !== null) {
   check('F9', 'an aborted FAILED operation can never become a success',
     neverOnFailure, neverOnFailure ? 'partial is never on a failure' : 'a failure could claim partial')
 }
+
+// ---------------------------------------------------------------------------
+// F10 (found while diagnosing session 4124e3de): the ai-compiler-magpie preset
+// routed every teammate to corp models. NOTHING in the routing code was wrong.
+// Profile "web" composed TWO top-level rows with id "agent-team": ours
+// (carrying presetRoles) and the shipped agent-team-profile bundle (carrying
+// only capacity limits). The loader is LAST-ROW-WINS for a duplicated id, so
+// the bare row replaced ours wholesale and TeamService saw presetRoles: {}.
+//
+// WHY THE EXISTING GUARDS MISSED IT: they exercise resolveRoleTable and the
+// catalog with a HAND-BUILT config, which was always correct. The table that
+// reaches the service is the one the PROFILE COMPOSES, so these guards read
+// the real composed profile instead of trusting a constructed one.
+//
+// REVERT THAT BREAKS THESE: re-add @deepseek-ai/dsh-experimental-agent-team-profile
+// to dsh.profile.bundles (install.sh now deselects it), or "fix" the collision
+// by reordering the list instead of removing the duplicate provider.
+// ---------------------------------------------------------------------------
+{
+  const appBoot = await lib("packages/boot/app-boot/lib/index.js")
+  const include = await lib("vendor/include/lib/index.js")
+  const agentTeam = await lib("packages/experimental/agent-team/lib/index.js")
+  check("F10", "the composition, patch, and routing libs are all built",
+    appBoot !== null && include !== null && agentTeam !== null,
+    [appBoot, include, agentTeam].map(m => m === null ? "MISSING" : "ok").join(" "))
+
+  // The rule itself, pinned to source: if the loader ever changes which
+  // duplicate row wins, this guard must be revisited rather than silently
+  // staying green while the real winner changed.
+  const group = source("vendor/loader/src/config/group.ts") ?? ""
+  const entry = source("vendor/loader/src/config/entry.ts") ?? ""
+  const patch = source("vendor/include/src/index.ts") ?? ""
+  check("F10", "duplicate inserts are pushed with no id dedupe",
+    /data\.push\(\.\.\.insert\)/.test(patch),
+    /data\.push\(\.\.\.insert\)/.test(patch) ? "no dedupe at patch layer" : "patch layer now dedupes -- revisit this guard")
+  check("F10", "the entry group keys rows by id, so the LAST row wins",
+    /Object\.fromEntries\(config\.map\(options => \[options\.id/.test(group),
+    /Object\.fromEntries\(config\.map\(options => \[options\.id/.test(group) ? "last-wins confirmed" : "CHANGED -- duplicate handling moved")
+  check("F10", "a winning row REPLACES options wholesale rather than merging",
+    /if \(create\) \{[\s\S]{0,80}?this\.options = options/.test(entry),
+    /if \(create\) \{[\s\S]{0,80}?this\.options = options/.test(entry) ? "wholesale replace" : "CHANGED -- a merge would have kept presetRoles")
+
+  // The EFFECTIVE row, per that rule, is the last same-id row.
+  const effectiveRow = (rows, id) => Object.fromEntries(rows.filter(r => r.id).map(r => [r.id, r]))[id]
+
+  // POSITIVE CONTROL: prove the hazard is real and that this guard can see it.
+  // Two rows in bundle order -- ours then the shipped one -- must LOSE presetRoles.
+  const shadowed = effectiveRow([
+    { id: "agent-team", config: { presetRoles: { "ai-compiler-magpie": [{ id: "explorer", provider: "magpie" }] } } },
+    { id: "agent-team", config: { maxMembers: 8 } },
+  ], "agent-team")
+  check("F10", "the hazard is real: a later bare row still drops presetRoles",
+    shadowed?.config?.presetRoles === undefined,
+    shadowed?.config?.presetRoles === undefined ? "later row wins, tables lost" : "MODEL BROKEN -- the guard cannot detect shadowing")
+
+  // THE REAL PROFILE. Guards above used constructed rows; this reads the
+  // composed web profile the Host actually boots.
+  const home = process.env.DSH_HOME ?? join(homedir(), ".dsh")
+  const profileDir = process.env.DSH_PROFILE_DIR ?? join(home, "profiles", "web")
+  const manifestPath = join(profileDir, "package.json")
+  const installAnchor = join(checkout, "apps/cli/package.json")
+  let composed = null
+  attempt(() => {
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8"))
+    const bundles = manifest.dsh?.profile?.bundles ?? []
+    const loaded = appBoot.loadProfileDirectory("dsh", profileDir, installAnchor)
+    composed = {
+      bundles,
+      entries: appBoot.composeEntries([...loaded.layers.flatMap(layer => layer.patches), ...loaded.patches]),
+    }
+  })
+  const profileReadable = composed !== null
+  check("F10", "the live web profile composes for inspection",
+    profileReadable, profileReadable ? profileDir : "could not compose " + profileDir)
+
+  if (profileReadable) {
+    const rows = composed.entries.filter(e => e.id === "agent-team")
+    check("F10", "the profile composes exactly ONE top-level agent-team row",
+      rows.length === 1,
+      rows.length === 1 ? "single provider" : rows.length + " providers -- the duplicate shadows presetRoles")
+
+    const winner = effectiveRow(composed.entries, "agent-team")
+    const tables = winner?.config?.presetRoles
+    check("F10", "the EFFECTIVE agent-team row still carries presetRoles",
+      tables !== undefined && tables !== null,
+      tables !== undefined && tables !== null ? "tables present" : "MISSING -- every teammate would fall back to the built-in corp table")
+
+    if (tables !== undefined && tables !== null && agentTeam !== null) {
+      const magpie = tables["ai-compiler-magpie"]
+      const allMagpie = Array.isArray(magpie) && magpie.length > 0 && magpie.every(r => r.provider === "magpie")
+      check("F10", "ai-compiler-magpie routes EVERY role through magpie",
+        allMagpie,
+        allMagpie ? magpie.length + " roles, all magpie" : "roles not all magpie: " + JSON.stringify(magpie?.map(r => r.provider)))
+
+      // End to end: the composed winning config, through the real resolver,
+      // for an agent whose preset IS ai-compiler-magpie. This is the assertion
+      // the shipped code failed: it reported table "roles" and corp models.
+      let resolved = null
+      attempt(() => {
+        const config = agentTeam.TeamService.Config(
+          { roles: agentTeam.DEFAULT_ROLES, slotPlan: { reserved: [], flex: [] }, ...winner.config })
+        const lead = {
+          ctx: {
+            get: name => ({
+              agentPresets: { composedPreset: () => "ai-compiler-magpie" },
+              sessionProjections: undefined,
+            })[name],
+          },
+          session: { events: [] },
+          options: {},
+        }
+        resolved = agentTeam.resolveRoleTable(config, lead)
+      })
+      const table = resolved?.table
+      check("F10", "the real resolver selects the PRESET table for ai-compiler-magpie",
+        table === "presetRoles",
+        table === undefined ? "resolver threw" : "table=" + table)
+      const routedCorp = resolved?.roles?.filter(r => r.provider !== "magpie") ?? []
+      check("F10", "no role reaches a teammate on a non-magpie provider",
+        resolved !== null && routedCorp.length === 0,
+        resolved === null ? "no resolution" : routedCorp.length === 0 ? "all magpie" : routedCorp.map(r => r.id + "=" + r.provider).join(", "))
+    }
+
+    // install.sh must keep the profile WAITING-free, not merely append.
+    const installScript = readFileSync(join(repo, "scripts/install.sh"), "utf8")
+    check("F10", "install.sh deselects the shadowing bundle",
+      installScript.includes("dsh-experimental-agent-team-profile"),
+      installScript.includes("dsh-experimental-agent-team-profile") ? "deselection present" : "MISSING -- re-installing re-breaks the profile")
+    // The deselect must be computed BEFORE the "already selected" early exit,
+    // or an already-installed machine writes nothing and stays broken.
+    const deselectedAt = installScript.indexOf("kept = bundles.filter")
+    const earlyExitAt = installScript.indexOf("already selected (no redundant")
+    const orderOk = deselectedAt !== -1 && earlyExitAt !== -1 && deselectedAt < earlyExitAt
+    check("F10", "the deselect is computed BEFORE the already-selected early exit",
+      orderOk,
+      orderOk ? "ordering correct" : "an installed machine would take the early exit and stay broken")
+  }
+}
 // ---------------------------------------------------------------------------
 // Verdict. A suite that dies halfway must never look green, so an empty run is
 // a failure too, and the exit code is derived from the collected results.

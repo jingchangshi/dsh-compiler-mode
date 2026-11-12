@@ -216,18 +216,77 @@ else
   [ "$before" = "$after" ] && say "bundle   : already installed"
 fi
 
-# 4. Select the bundle as a profile layer (idempotent append).
+# 4. Select the bundle as a profile layer, and DESELECT the redundant one.
+#
+# WHY DESELECTION EXISTS. Profile "web" can compose TWO top-level rows with id
+# "agent-team": ours (from config/bundle-ai-compiler/bundles.patch.yml, which
+# carries presetRoles) and the shipped @deepseek-ai/dsh-experimental-agent-team-profile
+# (which does not). The loader is LAST-ROW-WINS for a duplicated id -- group.ts
+# keys by id via Object.fromEntries, so a later insert replaces the earlier, and
+# entry.ts replaces its options wholesale -- so whichever bundle is listed LATER
+# in dsh.profile.bundles wins. If the shipped bundle is later, TeamService sees
+# presetRoles: {} and every teammate silently falls back to the built-in corp
+# table: the Host looks healthy, the Team tools answer, and the routes are gone.
+#
+# We cannot add presetRoles to the shipped bundle (not ours to edit), so our
+# bundle must simply be the only provider of that id. The four host rows the
+# shipped bundle would otherwise re-enable are ALREADY disabled by
+# @deepseek-ai/dsh-web-app's cordis.patch.yml (tool-subagent-control,
+# tool-subagent-list-agents, tool-subagent, tool-subagent-fork), so removing it
+# re-enables nothing.
+#
+# ORDER IS LOAD-BEARING BELOW: the deselect MUST be computed BEFORE the
+# "already selected" early-exit decision. On a machine that is already
+# installed, ours is already present, so an early exit taken first would report
+# success and write nothing -- leaving the broken profile broken forever.
 if [ "$dry" = 0 ]; then
   node - "$profile_dir/package.json" <<'NODE'
 const { readFileSync, writeFileSync } = require('node:fs')
 const path = process.argv[2]
+const OURS = '@local/dsh-ai-compiler-preset'
+/** The duplicate provider that shadows our presetRoles when it is listed later. */
+const SHADOWING = '@deepseek-ai/dsh-experimental-agent-team-profile'
+
 const manifest = JSON.parse(readFileSync(path, 'utf8'))
 const bundles = manifest.dsh?.profile?.bundles ?? []
-const name = '@local/dsh-ai-compiler-preset'
-if (bundles.includes(name)) { console.log('bundle   : already selected'); process.exit(0) }
-manifest.dsh = { ...manifest.dsh, profile: { ...manifest.dsh?.profile, bundles: [...bundles, name] } }
-writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`)
-console.log('bundle   : selected')
+
+// Deselect FIRST. Everything below decides on `kept`, never on `bundles`.
+const kept = bundles.filter((entry) => entry !== SHADOWING)
+const deselected = bundles.length - kept.length
+
+if (kept.includes(OURS) && deselected === 0) {
+  console.log('bundle   : already selected (no redundant agent-team bundle)')
+  process.exit(0)
+}
+
+// Ours was missing: append it so it is the LAST provider of "agent-team".
+const next = kept.includes(OURS) ? kept : [...kept, OURS]
+manifest.dsh = { ...manifest.dsh, profile: { ...manifest.dsh?.profile, bundles: next } }
+writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n')
+
+if (deselected > 0) console.log('bundle   : deselected ' + SHADOWING + ' (it shadowed presetRoles)')
+console.log(kept.includes(OURS) ? 'bundle   : already selected' : 'bundle   : selected')
+
+// Verify the OUTCOME instead of assuming the write took: a silent no-op here is
+// exactly what left the profile broken while install reported success.
+const written = JSON.parse(readFileSync(path, 'utf8')).dsh?.profile?.bundles ?? []
+const problems = []
+if (!written.includes(OURS)) problems.push(OURS + ' is not selected')
+if (written.includes(SHADOWING)) problems.push(SHADOWING + ' is still selected and will shadow presetRoles')
+if (problems.length > 0) {
+  console.error('install: profile did not reach the intended state: ' + problems.join('; '))
+  process.exit(1)
+}
+console.log('bundle   : verified -- ' + OURS + ' selected, ' + SHADOWING + ' absent')
+NODE
+else
+  node - "$profile_dir/package.json" <<'NODE'
+const { readFileSync } = require('node:fs')
+const manifest = JSON.parse(readFileSync(process.argv[2], 'utf8'))
+const bundles = manifest.dsh?.profile?.bundles ?? []
+const SHADOWING = '@deepseek-ai/dsh-experimental-agent-team-profile'
+console.log('bundle   : would select @local/dsh-ai-compiler-preset'
+  + (bundles.includes(SHADOWING) ? ', and deselect ' + SHADOWING : ''))
 NODE
 fi
 
