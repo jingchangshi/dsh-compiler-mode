@@ -375,6 +375,18 @@ if [ "$quick" = 0 ]; then
 '
   fi
 
+  step "4c. tool-call-failure guards (F11)"
+  # Pins the fix for session 633b5373: the last-row-wins FAIL/PASS demo must run
+  # on a throwaway profile copy (scripts/lib/last-row-wins-demo.sh), never the
+  # live HMR-watched profile; and the documented HMR-recomposition mechanism is
+  # still real. Structural only: reads source, boots no Host. See docs/15.
+  if node "$repo/tests/integration/tool-call-failure-guard.mjs" >/tmp/ai-compiler-tool-call.log 2>&1; then
+    ok "tool-call-failure guards $(grep -c '^PASS' /tmp/ai-compiler-tool-call.log) checks"
+  else
+    bad "tool-call-failure guards failed (see /tmp/ai-compiler-tool-call.log)"
+    grep -E '^FAIL' /tmp/ai-compiler-tool-call.log | head -8 | sed 's/^/      /'
+  fi
+
   step "5. permission suite"
   if node "$repo/tests/permissions/permission-suite.mjs" >/tmp/ai-compiler-permissions.log 2>&1; then
     ok "permission suite $(grep -c '^PASS' /tmp/ai-compiler-permissions.log) checks"
